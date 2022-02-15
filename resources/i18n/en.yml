@@ -1,0 +1,115 @@
+en:
+  help:
+    usage: 'Usage: %{program} [OPTION]... [COMMAND] [TARGET]...'
+    indent: '  '
+    description: >
+      rake-ruby-accounting (rra) is a workflow tool for transforming,
+      validating, and reporting your finances in PTA (plain text accounting) and
+      ruby. See the program github for more details.
+    command_introduction: >
+      COMMAND - This is a required parameter. Command-specific options are 
+      further available, once you've specified a command mode:
+    global_option_introduction: >
+      The following global options are available, to all commands:
+        -d --dir[=PATH]  Use the supplied PATH as the active rra directory. 
+                         If unsupplied, this option defaults to the basedir of 
+                         the LEDGER_FILE environment variable.
+    commands:
+      cashflow:
+        description: 'Output a convenient dashboard with income/expense flows, based on intention'
+        options: 
+          all: 'Output a dashboard for every intention in the system'
+          list: 'List all available intention-tag values'
+      reconcile:
+        description: 'Open an interactive vim session, to edit and build a transform'
+        options: 
+          all: 'Process all available transforms'
+          list: 'List all available transforms'
+      report:
+        description: "Generate Reports csv's in build/reports"
+        options: 
+          all: 'Process all available reports'
+          list: 'List all available reports'
+      transform:
+        description: 'Create/Update the build/*.journal, based on ./transformers/*.yml'
+        options: 
+          stdout: 'Output build to STDOUT instead of output_file'
+          all: 'Process all available transforms'
+          list: 'List all available transforms'
+      validate_journal:
+        description: 'Validate transformed journals, using the app/validations'
+        options: 
+          all: 'Process all available journals'
+          list: 'List all available journals'
+      validate_system:
+        description: 'Run validations on the ledger, once the individual journals are valid'
+        options: 
+          all: 'Process all available system validations'
+          list: 'List all available system validations'
+  commands:
+    cashflow:
+      list_targets: 'The following cashflow intentions are available:'
+      account: 'Account'
+      expenses: 'Expenses'
+      income: 'Income'
+      cash_flow: 'Cash Flow'
+      errors:
+        screen_too_small: 'Screen width "%{screen_width}" is too small. Minimum width is %{minimum_width}.'
+        unrecognized_path: 'Unrecognized path: %{file}'
+    report:
+      list_targets: 'The following reports are available:'
+      target_description: '%{description} for %{year}'
+    transform:
+      list_targets: 'The following transforms are available:'
+      target_description: 'Validate the "%{input_file}" journal'
+      errors:
+        journal_missing: 'Journal(s) Missing.'
+    validate_journal:
+      list_targets: 'The following journal validations are available:'
+      target_description: 'Validate the "%{input_file}" journal'
+    validate_system:
+      list_targets: 'The following system validations are available:'
+
+  error:
+    error: 'Error'
+    warning: 'Warning'
+    missing_entry_in_prices_db: ": The following entry is missing in the prices database:\n P %{time} %{from} %{to}"
+    end_of_args: 'Missing an expected parameter value, in the argument list'
+    unexpected_arguments: 'Unexpected arguments encountered: %{args}'
+    no_targets: "No targets specified"
+    missing_target: "One or more targets not found : %{targets}"
+    command_unrecognized: '%{command} command is unrecognized. Consult the help page.'
+    command_errors: "Unable to %{command}:"
+    command_error: "  🟢 %{error}"
+    no_application_dir: "Unable to determine the directory of your application. Consider setting the LEDGER_FILE environment variable, or providing a directory via the --dir parameter"
+    invalid_application_dir: 'Invalid or missing project found at the directory "%{directory}"'
+  status:
+    indicators:
+      complete: '🟢'
+      complete_and: '%{left} & %{right} '
+      fill: '.'
+      indent: '   '
+      truncated: '…'
+      attention1: '🟢'
+      attention2: ' ▩ '
+    commands:
+      transform:
+        icon: '🏗️ '
+        header: Building Journals from Feeds
+        prefix: Expanding
+      generate:
+        icon: 💸
+        header: Generating Historical Cash Distributions
+        prefix: Making
+      validate_journal:
+        icon: 📒
+        header: Inspecting Individual Journal Files
+        prefix: Validating
+      validate_system:
+        icon: 📚
+        header: Inspecting System State
+        prefix: Validating
+      report:
+        icon: 📊
+        header: Generating Reports
+        prefix: Calculating

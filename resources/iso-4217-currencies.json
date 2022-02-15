@@ -1,0 +1,171 @@
+[
+  {
+    "Entity":"UNITED STATES",
+    "Currency":"US Dollar",
+    "Alphabetic Code":"USD",
+    "Numeric Code":"840",
+    "Minor unit":"2",
+    "Symbol":"$"
+  },
+  {
+    "Entity":"EUROPEAN UNION ",
+    "Currency":"Euro",
+    "Alphabetic Code":"EUR",
+    "Numeric Code":"978",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"HONDURAS",
+    "Currency":"Lempira",
+    "Alphabetic Code":"HNL",
+    "Numeric Code":"340",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"COLOMBIA",
+    "Currency":"Colombian Peso",
+    "Alphabetic Code":"COP",
+    "Numeric Code":"170",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"COLOMBIA",
+    "Currency":"Unidad de Valor Real",
+    "Alphabetic Code":"COU",
+    "Numeric Code":"970",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"THAILAND",
+    "Currency":"Baht",
+    "Alphabetic Code":"THB",
+    "Numeric Code":"764",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"UNITED KINGDOM",
+    "Currency":"Pound Sterling",
+    "Alphabetic Code":"GBP",
+    "Numeric Code":"826",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"CANADA",
+    "Currency":"Canadian Dollar",
+    "Alphabetic Code":"CAD",
+    "Numeric Code":"124",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"ARGENTINA",
+    "Currency":"Argentine Peso",
+    "Alphabetic Code":"ARS",
+    "Numeric Code":"032",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"CHILE",
+    "Currency":"Unidades de fomento",
+    "Alphabetic Code":"CLF",
+    "Numeric Code":"990",
+    "Minor unit":"0"
+  },
+  {
+    "Entity":"CHILE",
+    "Currency":"Chilean Peso",
+    "Alphabetic Code":"CLP",
+    "Numeric Code":"152",
+    "Minor unit":"0"
+  },
+  {
+    "Entity":"NICARAGUA",
+    "Currency":"Cordoba",
+    "Alphabetic Code":"NIC",
+    "Numeric Code":"—",
+    "Withdrawal Date":"1990-10"
+  },
+  {
+    "Entity":"PANAMA",
+    "Currency":"Balboa",
+    "Alphabetic Code":"PAB",
+    "Numeric Code":"590",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"COSTA RICA",
+    "Currency":"Costa Rican Colon",
+    "Alphabetic Code":"CRC",
+    "Numeric Code":"188",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"BRAZIL",
+    "Currency":"Brazilian Real",
+    "Alphabetic Code":"BRL",
+    "Numeric Code":"986",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"MEXICO",
+    "Currency":"Mexican Peso",
+    "Alphabetic Code":"MXN",
+    "Numeric Code":"484",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"MEXICO",
+    "Currency":"Mexican Unidad de Inversion (UDI)",
+    "Alphabetic Code":"MXV",
+    "Numeric Code":"979",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"EL SALVADOR",
+    "Currency":"El Salvador Colon",
+    "Alphabetic Code":"SVC",
+    "Numeric Code":"222",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"URUGUAY",
+    "Currency":"Uruguay Peso en Unidades Indexadas (URUIURUI)",
+    "Alphabetic Code":"UYI",
+    "Numeric Code":"940",
+    "Minor unit":"0"
+  },
+  {
+    "Entity":"URUGUAY",
+    "Currency":"Peso Uruguayo",
+    "Alphabetic Code":"UYU",
+    "Numeric Code":"858",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"PARAGUAY",
+    "Currency":"Guarani",
+    "Alphabetic Code":"PYG",
+    "Numeric Code":"600",
+    "Minor unit":"0"
+  },
+  {
+    "Entity":"PERU",
+    "Currency":"Nuevo Sol",
+    "Alphabetic Code":"PEN",
+    "Numeric Code":"604",
+    "Minor unit":"2"
+  },
+  {
+    "Entity":"JAPAN",
+    "Currency":"Yen",
+    "Alphabetic Code":"JPY",
+    "Numeric Code":"392",
+    "Minor unit":"0"
+  },
+  {
+    "Entity":"GUATEMALA",
+    "Currency":"Quetzal",
+    "Alphabetic Code":"GTQ",
+    "Numeric Code":"320",
+    "Minor unit":"2"
+  }
+]

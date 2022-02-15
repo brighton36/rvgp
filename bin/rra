@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+# vim: syntax=ruby
+
+require_relative '../lib/rra/commands'
+
+RRA::Commands.dispatch! *ARGV
