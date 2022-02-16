@@ -19,7 +19,6 @@ require_relative 'rra/gem'
 I18n.load_path << Dir[RRA::Gem.root.resources.i18n('*.yml')]
 RRA::Journal::Currency.currencies_config = \
   RRA::Gem.root.resources('iso-4217-currencies.json')
-$: << RRA::Gem.root.lib.to_s
 
 module RRA
   def self.initialize_app(from_path)

@@ -58,7 +58,9 @@ module RRA
         # Dispatch the command:
         command_klass = RRA.commands.find{ |klass| klass.name == arg_command }
 
-        if command_klass
+        if arg_command.nil?
+          error! 'error.missing_command'
+        elsif command_klass
           command = command_klass.new *command_args
           if command.valid?
             command.execute!

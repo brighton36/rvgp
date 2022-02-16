@@ -1,4 +1,5 @@
 require 'psych'
+require 'pathname'
 
 Psych::add_builtin_type('proc') {|_, val| eval("proc { #{val} }") }
 Psych::add_builtin_type('include') {|_, val| 
@@ -19,12 +20,14 @@ module RRA
         @path = path
       end
 
-      def contents
-        Psych.load_file path, symbolize_names: true
+      def contents(basedir)
+        Psych.load_file(
+          (Pathname.new(path).absolute?) ? path : [basedir,path].join('/'),
+          symbolize_names: true)
       end
     end
 
-    attr_reader :path, :dependencies
+    attr_reader :path, :basedir, :dependencies
 
     def [](attr); @yaml[attr]; end
     def has_key?(attr); @yaml.has_key? attr; end
@@ -41,12 +44,14 @@ module RRA
       end
     end
 
-    def initialize(path)
-      @path, @dependencies = path, []
+    def initialize(path, basedir = nil)
+      @path, @dependencies, @basedir = path, [], 
+        basedir || File.expand_path(File.dirname(path))
+
       @yaml = replace_each_in_yaml( Psych.load_file(path, symbolize_names: true),
         PsychInclude ){|psych_inc|
           @dependencies << psych_inc.path
-          psych_inc.contents
+          psych_inc.contents basedir
         }
     end
   end

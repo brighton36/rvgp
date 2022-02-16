@@ -3,7 +3,7 @@ en:
     usage: 'Usage: %{program} [OPTION]... [COMMAND] [TARGET]...'
     indent: '  '
     description: >
-      rake-ruby-accounting (rra) is a workflow tool for transforming,
+      rra : rra : Ruby Rake Accounting is a workflow tool for transforming,
       validating, and reporting your finances in PTA (plain text accounting) and
       ruby. See the program github for more details.
     command_introduction: >
@@ -78,6 +78,7 @@ en:
     unexpected_arguments: 'Unexpected arguments encountered: %{args}'
     no_targets: "No targets specified"
     missing_target: "One or more targets not found : %{targets}"
+    missing_command: 'No command specified. Try running --help to view the available program modes'
     command_unrecognized: '%{command} command is unrecognized. Consult the help page.'
     command_errors: "Unable to %{command}:"
     command_error: "  🟢 %{error}"

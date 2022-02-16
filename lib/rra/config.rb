@@ -9,7 +9,7 @@ module RRA
       @build_path = '%s/build' % project_path
 
       @yaml = (File.exist?(project_path('config/rra.yml'))) ? 
-        RRA::Yaml.new(project_path('config/rra.yml')) : nil
+        RRA::Yaml.new(project_path('config/rra.yml'), project_path) : nil
 
       # I'm not crazy about this default.. Mabe we should raise an error if 
       # this value isn't set...
