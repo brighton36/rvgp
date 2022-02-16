@@ -12,6 +12,7 @@ module RRA
 
       def dispatch!(*args)
         RRA::Commands.require_files!
+        # TODO: Project_dir
 
         # Let's start parsing args:
         arg_command_index = args.find_index{|arg| 
@@ -32,9 +33,6 @@ module RRA
         error! 'error.unexpected_arguments', args: targets.join(',') if (
           targets.length > 0 )
 
-        # Process Help:
-        RRA::Commands.help! if options[:help]
-
         # Process global options:
         app_dir = if options[:dir]
           options[:dir]
@@ -42,8 +40,18 @@ module RRA
           app_dir = File.dirname(ENV['LEDGER_FILE'])
         end
 
-        error! 'error.no_application_dir', dir: app_dir unless app_dir and 
-          File.directory?(app_dir)
+        # To solve the chicken and the egg problem, that's caused by
+        # user-defined commands adding to our help. We have two ways of 
+        # displaying help. Here, we display the help, if there's no app_dir:
+        unless app_dir and File.directory?(app_dir)
+          if options[:help]
+            # This will only show the help for built-in commands, as we were
+            # not able to load the project_dir's commands
+            RRA::Commands.help! 
+          else
+            error! 'error.no_application_dir', dir: app_dir 
+          end
+        end
 
         # Initialize the provided app:
         begin
@@ -52,8 +60,14 @@ module RRA
           error! 'error.invalid_application_dir', directory: app_dir
         end
 
+        RRA.app.require_commands!
         RRA.app.require_validations!
         RRA.app.require_reports!
+
+        # If we were able to load the project directory, and help was requested,
+        # we offer help here, as we can show them help for their user defined
+        # commands, at this time:
+        RRA::Commands.help! if options[:help]
 
         # Dispatch the command:
         command_klass = RRA.commands.find{ |klass| klass.name == arg_command }
