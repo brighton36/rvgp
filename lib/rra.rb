@@ -10,6 +10,8 @@ require_relative 'rra/transformers/journal_transformer'
 require_relative 'rra/transformer_modules/mortgage'
 require_relative 'rra/transformer_modules/investment'
 
+require_relative 'rra/validation_base'
+
 require_relative 'rra/journal'
 require_relative 'rra/ledger/ledger'
 require_relative 'rra/hledger/hledger'

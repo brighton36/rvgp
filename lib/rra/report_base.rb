@@ -1,5 +1,4 @@
 require 'csv'
-require_relative '../rra'
 require_relative 'descendant_registry'
 require_relative 'utilities'
 

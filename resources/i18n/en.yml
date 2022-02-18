@@ -75,7 +75,7 @@ en:
     warning: 'Warning'
     missing_entry_in_prices_db: ": The following entry is missing in the prices database:\n P %{time} %{from} %{to}"
     end_of_args: 'Missing an expected parameter value, in the argument list'
-    unexpected_arguments: 'Unexpected arguments encountered: %{args}'
+    unexpected_argument: 'Unexpected argument encountered: %{arg}'
     no_targets: "No targets specified"
     missing_target: "One or more targets not found : %{targets}"
     missing_command: 'No command specified. Try running --help to view the available program modes'

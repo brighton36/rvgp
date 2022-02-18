@@ -48,9 +48,18 @@ module RRA
             ].join ' '
           } 
       end
+
+      # Include all the project files:
+      require_commands!
+      require_validations!
+      require_reports!
     end
 
     def require_commands!
+      # Built-in commands:
+      RRA::Commands.require_files!
+
+      # App commands:
       require_app_files! 'commands'
     end
 
@@ -60,9 +69,10 @@ module RRA
 
     def require_validations!
       # Built-in validations:
-      Dir.glob('%s/lib/rra/validations/*.rb' % project_directory).each do |file|
-        require file
+      Dir.glob(RRA::Gem.root.lib.rra.validations('*.rb').to_s).each do |file| 
+        require file 
       end
+      # App validations:
       require_app_files! 'validations'
     end
 
@@ -72,14 +82,6 @@ module RRA
 
     def initialize_rake!(rake_main)
       require 'rake/clean'
-
-      # Gem built-ins:
-      RRA::Commands.require_files!
-
-      # Application files:
-      require_commands!
-      require_reports!
-      require_validations!
 
       CLEAN.include FileList[RRA.app.config.build_path('*')]
 

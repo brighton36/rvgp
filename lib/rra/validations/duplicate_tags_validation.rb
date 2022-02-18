@@ -1,5 +1,3 @@
-require_relative '../validation_base'
-
 class DuplicateTagsValidation < RRA::JournalValidationBase
   def validate
     journal = RRA::Journal.parse(File.open(transformer.output_file).read)

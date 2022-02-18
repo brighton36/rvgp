@@ -1,4 +1,3 @@
-require_relative '../rra'
 require_relative 'command_base'
 
 module RRA
@@ -11,27 +10,16 @@ module RRA
       end
 
       def dispatch!(*args)
-        RRA::Commands.require_files!
-        # TODO: Project_dir
-
         # Let's start parsing args:
-        arg_command_index = args.find_index{|arg| 
-          RRA.commands.find{ |klass| klass.name == arg } }
 
-        if arg_command_index
-          arg_command = args[arg_command_index]
-          global_args = args[0...arg_command_index]
-          command_args = args[(arg_command_index+1)..args.length]
-        else
-          global_args = args
-        end
-
-        options, targets = RRA::CommandBase::Option.remove_options_from_args [
+        # NOTE: There's a kind of outstanding 'bug' here, where, any commands
+        # that have -d or --help options would be picked up by the global
+        # handling here. The solution is not to have -d or --help in your 
+        # local commands. We don't detect that atm, but we may want to at some
+        # point. For now, just, don't use these options
+        options, command_args = RRA::CommandBase::Option.remove_options_from_args [
           [:help, :h], [:dir, :d, {has_value: true}]
-          ].collect{|args| RRA::CommandBase::Option.new(*args) }, global_args
-
-        error! 'error.unexpected_arguments', args: targets.join(',') if (
-          targets.length > 0 )
+          ].collect{|args| RRA::CommandBase::Option.new(*args) }, args
 
         # Process global options:
         app_dir = if options[:dir]
@@ -47,6 +35,10 @@ module RRA
           if options[:help]
             # This will only show the help for built-in commands, as we were
             # not able to load the project_dir's commands
+            #
+            # Load up the built-in commands:
+            require_files!
+
             RRA::Commands.help! 
           else
             error! 'error.no_application_dir', dir: app_dir 
@@ -60,32 +52,32 @@ module RRA
           error! 'error.invalid_application_dir', directory: app_dir
         end
 
-        RRA.app.require_commands!
-        RRA.app.require_validations!
-        RRA.app.require_reports!
-
         # If we were able to load the project directory, and help was requested,
         # we offer help here, as we can show them help for their user defined
         # commands, at this time:
         RRA::Commands.help! if options[:help]
 
         # Dispatch the command:
-        command_klass = RRA.commands.find{ |klass| klass.name == arg_command }
+        command_name = command_args.shift
+        command_klass = RRA.commands.find{ |klass| klass.name == command_name }
 
-        if arg_command.nil?
+        error! 'error.unexpected_argument', arg: command_klass unless command_klass
+
+        if command_klass.nil?
           error! 'error.missing_command'
         elsif command_klass
           command = command_klass.new *command_args
           if command.valid?
             command.execute!
           else
-            puts RRA.pastel.bold(I18n.t("error.command_errors", command: arg_command))
+            puts RRA.pastel.bold(
+              I18n.t("error.command_errors", command: command_klass.name))
             command.errors.each do |error|
               puts RRA.pastel.red(I18n.t('error.command_error', error: error))
             end
           end
         else 
-          error! 'error.command_unrecognized', command: arg_command
+          error! 'error.command_unrecognized', command: command_klass.name
         end
       end
 

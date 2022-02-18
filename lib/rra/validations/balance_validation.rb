@@ -1,5 +1,3 @@
-require_relative '../validation_base'
-
 class BalanceValidation < RRA::JournalValidationBase
   def validate
     if transformer.balances.nil? || transformer.balances.length == 0
