@@ -1,48 +1,65 @@
 require 'tempfile'
 
 class RRA::Commands::Reconcile < RRA::CommandBase
-  VIMSCRIPT_TEMPLATE = <<-EOD
-  function ReloadIfChanged(timer)
-    " There's a bug here where we scroll to the top of the file sometimes, on 
-    " reload. Not sure what to do about that...
-    checktime
-  endfunction
+  accepts_options OPTION_ALL, OPTION_LIST, [:vsplit, :v]
 
-  " Here's the output pane
-  edit %s
-
-  setl autoread
-  autocmd FileChangedShellPost * echohl WarningMsg | echo "Buffer changed!" | echohl None
-  autocmd VimEnter * let timer=timer_start(1000,'ReloadIfChanged', {'repeat': -1} )
-  call feedkeys("lh")
-
-  " TODO: vertical split
-  split
-
-  " Here's the transformer pane
-  edit %s
-
-  " TODO
-  "autocmd BufWritePost * execute '! /var/www/sites/mysite/vendor/bin/ecs check %%'
-  "autocmd BufWritePost * echo "on save"
-
-  " TODO: Mark the journal buffer read only
+  VIMSCRIPT_HEADER = <<-EOD
+    let $LANG='en_US.utf-8'
+    function ReloadIfChanged(timer)
+      " There's a bug here where we scroll to the top of the file sometimes, on 
+      " reload. Not sure what to do about that...
+      checktime
+    endfunction
   EOD
 
+  def initialize(*args)
+    super *args
+
+    @errors << I18n.t( 'commands.reconcile.errors.unsupported_editor', 
+      editor: ENV['EDITOR'].inspect ) unless /vi[m]?\Z/.match ENV['EDITOR']
+  end
+
   def execute!
-    # TODO: Block
-    # TODO: if EDITOR == vim
-    file = Tempfile.new('reconcile.vim')
-    # TODO: We need to go through each target, not just zero.
-    # TODO: ALso we need to escape
-    file.write VIMSCRIPT_TEMPLATE % [
-      @transformers[0].output_file, @transformers[0].file ]
-    file.close
+    Tempfile.create 'reconcile.vim' do |file|
+      file.write VIMSCRIPT_HEADER+targets.collect{ |target| 
+        target.to_vimscript options[:vsplit] 
+      }.join("\ntabnew\n")
+      file.close
 
-    system('vim -S %s' % file.path)
-    puts "AFter"
-
-    file.unlink
+      system 'vim -S %s' % file.path
+    end
   end
   
+  class Target < RRA::CommandBase::TransformerTarget
+    VIMSCRIPT_TEMPLATE = <<-EOD
+    edit %s " output file
+
+    setl autoread
+
+    " NOTE : This was useful for debugging.... Probably this should be nixed...
+    " autocmd FileChangedShellPost * echohl WarningMsg | echo "Buffer changed!" | echohl None
+
+    autocmd VimEnter * let timer=timer_start(1000,'ReloadIfChanged', {'repeat': -1} )
+    call feedkeys("lh")
+
+    setl nomodifiable
+
+    %s " NOTE: split or vsplit is expected here
+
+    edit %s " input file
+
+    autocmd BufWritePost * execute '! %s transform %%'
+
+    " NOTE : This was useful for debugging.... Probably this should be nixed...
+    "autocmd BufWritePost * echo "on save"
+    EOD
+
+    def to_vimscript(is_vsplit)
+      # NOTE: I guess we don't need to escape these paths, so long as there arent
+      #       any \n's in the path name... I guess
+      VIMSCRIPT_TEMPLATE % [ @transformer.output_file, 
+        (is_vsplit) ? 'vsplit' : 'split', @transformer.file, $0 ]
+    end
+
+  end
 end

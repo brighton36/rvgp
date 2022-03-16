@@ -19,6 +19,36 @@ class RRA::CommandBase
     end
   end
 
+  class TransformerTarget < RRA::CommandBase::TargetBase
+    def initialize(transformer)
+      @transformer, @name, @status_name = transformer, transformer.as_taskname,
+        transformer.label
+    end
+
+    def matches?(by_identifier)
+      @transformer.matches_argument? by_identifier
+    end
+
+    def description
+      I18n.t 'commands.%s.target_description' % self.class.command, 
+        input_file: @transformer.input_file
+    end
+
+    def self.all
+      RRA.app.transformers.collect{|transformer| self.new transformer}
+    end
+
+    # This is a little goofy. But, atm, it mostly lets us DRY up the description
+    # method
+    def self.for_command(underscorized_command_name)
+      @for_command = underscorized_command_name
+    end
+
+    def self.command
+      @for_command
+    end
+  end
+
   class Option
     class UnexpectedEndOfArgs < StandardError; end
 

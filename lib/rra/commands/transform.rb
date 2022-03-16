@@ -9,15 +9,8 @@ class RRA::Commands::Transform < RRA::CommandBase
     (options[:stdout]) ? execute_each_target : super
   end
 
-  class Target < RRA::CommandBase::TargetBase
-    def initialize(transformer)
-      @transformer, @name, @status_name = transformer, transformer.as_taskname,
-        transformer.label
-    end
-
-    def matches?(by_identifier)
-      @transformer.matches_argument? by_identifier
-    end
+  class Target < RRA::CommandBase::TransformerTarget
+    for_command :validate_journal
 
     def description
       I18n.t 'commands.transform.target_description', 
@@ -36,10 +29,6 @@ class RRA::Commands::Transform < RRA::CommandBase
       end
 
       return nil
-    end
-
-    def self.all
-      RRA.app.transformers.collect{|transformer| self.new transformer}
     end
   end
 

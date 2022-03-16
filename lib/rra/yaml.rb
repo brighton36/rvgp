@@ -23,7 +23,7 @@ module RRA
       def contents(basedir)
         Psych.load_file(
           (Pathname.new(path).absolute?) ? path : [basedir,path].join('/'),
-          symbolize_names: true)
+          symbolize_names: true, permitted_classes: [Date])
       end
     end
 
@@ -48,7 +48,8 @@ module RRA
       @path, @dependencies, @basedir = path, [], 
         basedir || File.expand_path(File.dirname(path))
 
-      @yaml = replace_each_in_yaml( Psych.load_file(path, symbolize_names: true),
+      @yaml = replace_each_in_yaml( 
+        Psych.load_file(path, symbolize_names: true, permitted_classes: [Date]),
         PsychInclude ){|psych_inc|
           @dependencies << psych_inc.path
           psych_inc.contents basedir
