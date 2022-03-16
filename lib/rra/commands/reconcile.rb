@@ -13,7 +13,7 @@ class RRA::Commands::Reconcile < RRA::CommandBase
     endfunction
 
     function ExecuteTransform()
-      execute '! /bin/bash -c "\\$(%s transform --concise %%) || read -p \\"(Hit Enter to continue)\\""'
+      execute '! /bin/bash -c "\\$(%{rra_path} transform --concise %%) || read -p \\"(Hit Enter to continue)\\""'
       redraw!
     endfunction
   EOD
@@ -27,44 +27,32 @@ class RRA::Commands::Reconcile < RRA::CommandBase
 
   def execute!
     Tempfile.create 'reconcile.vim' do |file|
-      file.write (VIMSCRIPT_HEADER % [$0])+targets.collect{ |target| 
+      file.write (VIMSCRIPT_HEADER % {rra_path: $0})+targets.collect{ |target| 
         target.to_vimscript options[:vsplit] 
       }.join("\ntabnew\n")
       file.close
 
-      system 'vim -S %s' % file.path
+      system [ENV['EDITOR'], '-S', file.path].join(' ')
     end
   end
   
   class Target < RRA::CommandBase::TransformerTarget
     VIMSCRIPT_TEMPLATE = <<-EOD
-    edit %s " output file
-
+    edit %{output_file}
     setl autoread
-
-    " NOTE : This was useful for debugging.... Probably this should be nixed...
-    " autocmd FileChangedShellPost * echohl WarningMsg | echo "Buffer changed!" | echohl None
-
     autocmd VimEnter * let timer=timer_start(1000,'ReloadIfChanged', {'repeat': -1} )
     call feedkeys("lh")
-
     setl nomodifiable
-
-    %s " NOTE: split or vsplit is expected here
-
-    edit %s " input file
-
+    %{split}
+    edit %{input_file}
     autocmd BufWritePost * silent call ExecuteTransform()
-
-    " NOTE : This was useful for debugging.... Probably this should be nixed...
-    "autocmd BufWritePost * echo "on save"
     EOD
 
     def to_vimscript(is_vsplit)
       # NOTE: I guess we don't need to escape these paths, so long as there arent
       #       any \n's in the path name... I guess
-      VIMSCRIPT_TEMPLATE % [ @transformer.output_file, 
-        (is_vsplit) ? 'vsplit' : 'split', @transformer.file ]
+      VIMSCRIPT_TEMPLATE % { output_file: @transformer.output_file, 
+        input_file: @transformer.file, split: (is_vsplit) ? 'vsplit' : 'split' }
     end
 
   end
