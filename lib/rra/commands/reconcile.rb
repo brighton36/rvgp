@@ -13,7 +13,9 @@ class RRA::Commands::Reconcile < RRA::CommandBase
     endfunction
 
     function ExecuteTransform()
-      execute '! /bin/bash -c "\\$(%{rra_path} transform --concise %%) || read -p \\"(Hit Enter to continue)\\""'
+      let transform_path = expand("%%")
+      execute '! /bin/bash -c "\\$(%{rra_path} transform --concise ' . 
+        \\ shellescape(transform_path, 1) . ') || read -p \\"(%{to_continue})\\""'
       redraw!
     endfunction
   EOD
@@ -27,9 +29,13 @@ class RRA::Commands::Reconcile < RRA::CommandBase
 
   def execute!
     Tempfile.create 'reconcile.vim' do |file|
-      file.write (VIMSCRIPT_HEADER % {rra_path: $0})+targets.collect{ |target| 
-        target.to_vimscript options[:vsplit] 
-      }.join("\ntabnew\n")
+      file.write [
+        VIMSCRIPT_HEADER % {
+          rra_path: $0, to_continue: I18n.t('commands.reconcile.to_continue') 
+        }, 
+        targets.collect{|target| target.to_vimscript options[:vsplit]}.join("\ntabnew\n")
+      ].join
+
       file.close
 
       system [ENV['EDITOR'], '-S', file.path].join(' ')
