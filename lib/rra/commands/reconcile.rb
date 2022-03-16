@@ -5,10 +5,16 @@ class RRA::Commands::Reconcile < RRA::CommandBase
 
   VIMSCRIPT_HEADER = <<-EOD
     let $LANG='en_US.utf-8'
+
     function ReloadIfChanged(timer)
       " There's a bug here where we scroll to the top of the file sometimes, on 
       " reload. Not sure what to do about that...
       checktime
+    endfunction
+
+    function ExecuteTransform()
+      execute '! /bin/bash -c "\\$(%s transform --concise %%) || read -p \\"(Hit Enter to continue)\\""'
+      redraw!
     endfunction
   EOD
 
@@ -21,7 +27,7 @@ class RRA::Commands::Reconcile < RRA::CommandBase
 
   def execute!
     Tempfile.create 'reconcile.vim' do |file|
-      file.write VIMSCRIPT_HEADER+targets.collect{ |target| 
+      file.write (VIMSCRIPT_HEADER % [$0])+targets.collect{ |target| 
         target.to_vimscript options[:vsplit] 
       }.join("\ntabnew\n")
       file.close
@@ -48,7 +54,7 @@ class RRA::Commands::Reconcile < RRA::CommandBase
 
     edit %s " input file
 
-    autocmd BufWritePost * execute '! %s transform %%'
+    autocmd BufWritePost * silent call ExecuteTransform()
 
     " NOTE : This was useful for debugging.... Probably this should be nixed...
     "autocmd BufWritePost * echo "on save"
@@ -58,7 +64,7 @@ class RRA::Commands::Reconcile < RRA::CommandBase
       # NOTE: I guess we don't need to escape these paths, so long as there arent
       #       any \n's in the path name... I guess
       VIMSCRIPT_TEMPLATE % [ @transformer.output_file, 
-        (is_vsplit) ? 'vsplit' : 'split', @transformer.file, $0 ]
+        (is_vsplit) ? 'vsplit' : 'split', @transformer.file ]
     end
 
   end

@@ -25,6 +25,7 @@ en:
         options: 
           all: 'Process all available transforms'
           list: 'List all available transforms'
+          vsplit: 'Split the input and output panes vertically, instead of horizontally (the default)'
       report:
         description: "Generate Reports csv's in build/reports"
         options: 
@@ -36,6 +37,7 @@ en:
           stdout: 'Output build to STDOUT instead of output_file'
           all: 'Process all available transforms'
           list: 'List all available transforms'
+          concise: "Concise output mode. Strips output that's unrelated to errors and warnings. (Mostly used by the reconcile command)"
       validate_journal:
         description: 'Validate transformed journals, using the app/validations'
         options: 
@@ -64,6 +66,7 @@ en:
       target_description: 'Validate the "%{input_file}" journal'
       errors:
         journal_missing: 'Journal(s) Missing.'
+        either_concise_or_stdout: 'Either -concise or -stdout mode can be specified. But, alas, not both.'
     validate_journal:
       list_targets: 'The following journal validations are available:'
       target_description: 'Validate the "%{input_file}" journal'

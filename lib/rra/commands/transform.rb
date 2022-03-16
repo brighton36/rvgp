@@ -1,12 +1,19 @@
 class RRA::Commands::Transform < RRA::CommandBase
-  accepts_options OPTION_ALL, OPTION_LIST, [:stdout, :s] 
+  accepts_options OPTION_ALL, OPTION_LIST, [:stdout, :s], [:concise, :c]
 
   include RakeTask
   rake_tasks :transform
 
+  def initialize(*args)
+    super *args
+
+    @errors << I18n.t( 'commands.transform.errors.either_concise_or_stdout'
+      ) if [:stdout, :concise].all?{|output| options[output]}
+  end
+
   def execute!
     RRA.app.ensure_build_dir! 'journals' unless options[:stdout]
-    (options[:stdout]) ? execute_each_target : super
+    (options[:stdout] || options[:concise]) ? execute_each_target : super
   end
 
   class Target < RRA::CommandBase::TransformerTarget

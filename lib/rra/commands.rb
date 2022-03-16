@@ -75,6 +75,7 @@ module RRA
             command.errors.each do |error|
               puts RRA.pastel.red(I18n.t('error.command_error', error: error))
             end
+            exit 1
           end
         else 
           error! 'error.command_unrecognized', command: command_klass.name
@@ -115,7 +116,7 @@ module RRA
       def error!(i18n_key, **options)
         puts [RRA.pastel.red(I18n.t('error.error')), 
           I18n.t(i18n_key, **options)].join(': ')
-        exit
+        exit 1
       end
     end
   end
