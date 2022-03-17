@@ -14,9 +14,18 @@ class RRA::Commands::Reconcile < RRA::CommandBase
 
     function ExecuteTransform()
       let transform_path = expand("%%")
-      execute '! /bin/bash -c "\\$(%{rra_path} transform --concise ' . 
-        \\ shellescape(transform_path, 1) . ') || read -p \\"(%{to_continue})\\""'
-      redraw!
+      let output_path = tempname()
+      # TODO: Let's try seeing if there's a PAGER in env
+      execute('!%{rra_path} transform --concise ' .
+        \\ shellescape(transform_path, 1) . 
+        \\ ' 2>'. output_path .' > ' . output_path)
+      if v:shell_error
+				echoerr "The following error(s) occurred during transformation:"
+        execute '!/bin/less -r ' . output_path
+        redraw!
+      endif
+			" TODO: Why is this weird:
+      " delete(output_path)
     endfunction
   EOD
 
@@ -29,10 +38,7 @@ class RRA::Commands::Reconcile < RRA::CommandBase
 
   def execute!
     Tempfile.create 'reconcile.vim' do |file|
-      file.write [
-        VIMSCRIPT_HEADER % {
-          rra_path: $0, to_continue: I18n.t('commands.reconcile.to_continue') 
-        }, 
+      file.write [ (VIMSCRIPT_HEADER % {rra_path: $0}), 
         targets.collect{|target| target.to_vimscript options[:vsplit]}.join("\ntabnew\n")
       ].join
 
