@@ -15,17 +15,21 @@ class RRA::Commands::Reconcile < RRA::CommandBase
     function ExecuteTransform()
       let transform_path = expand("%%")
       let output_path = tempname()
-      # TODO: Let's try seeing if there's a PAGER in env
+      let pager = '/bin/less'
+      if len($PAGER) > 0
+        pager = $PAGER
+      endif
+
       execute('!%{rra_path} transform --concise ' .
         \\ shellescape(transform_path, 1) . 
-        \\ ' 2>'. output_path .' > ' . output_path)
+        \\ ' 2>' . shellescape(output_path, 1) .
+        \\ ' > ' . shellescape(output_path, 1))
       if v:shell_error
 				echoerr "The following error(s) occurred during transformation:"
-        execute '!/bin/less -r ' . output_path
+        execute '!' . pager . ' -r ' . shellescape(output_path, 1)
         redraw!
       endif
-			" TODO: Why is this weird:
-      " delete(output_path)
+      silent execute('!rm '. shellescape(output_path,1))
     endfunction
   EOD
 
