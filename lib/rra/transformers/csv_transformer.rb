@@ -3,7 +3,8 @@ require_relative '../journal'
 
 module RRA::Transformers
   class CsvTransformer < RRA::TransformerBase
-    attr_reader :fields_format, :csv_format, :invert_amount
+    attr_reader :fields_format, :csv_format, :invert_amount, :skip_lines,
+      :trim_lines
 
     def initialize(yaml)
       super yaml
@@ -17,6 +18,8 @@ module RRA::Transformers
           @invert_amount = yaml[:format][:invert_amount] || false
         end
 
+        @skip_lines = yaml[:format][:skip_lines] || 0
+        @trim_lines = yaml[:format][:trim_lines] || 0
 
         if yaml[:format].has_key? :csv_headers
           @csv_format = {headers: yaml[:format][:csv_headers]}
@@ -35,12 +38,16 @@ module RRA::Transformers
       def [](k); k.respond_to?(:call) ? instance_eval(&k) : row[k]; end
     end
 
+    def input_file_contents
+      File.read(input_file).lines[skip_lines..(-1*(trim_lines+1))].join
+    end
+
     # We actually returned semi-transformed transactions here. That lets us do
     # some remedial parsing before rule application, as well as reversing the order
     # which, is needed for the to_module to run in sequence.
     def source_postings
       @source_postings ||= begin 
-        rows = CSV.parse File.read(input_file), **csv_format
+        rows = CSV.parse input_file_contents, **csv_format
         rows.collect.with_index{ |csv_row, i| 
           row = RowTransformer.new csv_row
 

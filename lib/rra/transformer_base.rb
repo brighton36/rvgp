@@ -89,7 +89,8 @@ module RRA
     end
 
     # This is kinda weird I guess, but, we use it to identify whether the 
-    # provided str matches this object
+    # provided str matches one of the unique fields that identifying this object
+    # this is mostly (only?) used by the command objects, to resolve parameters
     def matches_argument?(str)
       str_as_file = File.expand_path str
       ( as_taskname == str || from == str || label == str || 

@@ -3,12 +3,12 @@ require 'tempfile'
 class RRA::Commands::Reconcile < RRA::CommandBase
   accepts_options OPTION_ALL, OPTION_LIST, [:vsplit, :v]
 
+  # There's a bug here where we scroll to the top of the file sometimes, on 
+  # reload. Not sure what to do about that...
   VIMSCRIPT_HEADER = <<-EOD
     let $LANG='en_US.utf-8'
 
     function ReloadIfChanged(timer)
-      " There's a bug here where we scroll to the top of the file sometimes, on 
-      " reload. Not sure what to do about that...
       checktime
     endfunction
 
