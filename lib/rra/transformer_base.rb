@@ -189,7 +189,7 @@ module RRA
           end
 
           {to: rule_target[:to], commodity: commodity, 
-           complex_commodity: complex_commodity}
+           complex_commodity: complex_commodity, tags: rule_target[:tags]}
         }
 
         posting
