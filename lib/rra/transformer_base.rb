@@ -133,6 +133,7 @@ module RRA
       # NOTE: The modules produce more than one tx per csv line, sometimes:
 
       to = rule[:to].dup
+      posting.from = rule[:from] if rule.has_key? :from
 
       posting.tags << rule[:tag] if rule.has_key? :tag
 
