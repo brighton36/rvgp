@@ -9,8 +9,16 @@ class BalanceValidation < RRA::JournalValidationBase
 
         balances_on_day = RRA::Ledger.balance transformer.from, depth: 1, end: d.to_s
         
-        found = balances_on_day.accounts.collect(&:amounts).flatten.find{|amount|
+        balances_found = balances_on_day.accounts.collect(&:amounts).flatten.find_all{|amount|
           amount.code == expected_balance.code }
+
+        found = if balances_found.length == 0
+          # Rather than operate from nil, we'll establish that we're '0' of units
+          # of the expected symbol
+          RRA::Journal::Commodity.from_symbol_and_amount expected_balance.code, 0
+        else
+          balances_found.sum
+        end
 
         if found
           found_as_s = "Found: %s" % found.to_s
