@@ -120,7 +120,9 @@ module RRA
     end
 
     def transform_commodity(from)
-      if @transform_commodities.has_key? from.code.to_sym
+      # NOTE: We could be dealing with a ComplexCommodity, hence the check
+      # for a .code
+      if from.respond_to?(:code) and @transform_commodities.has_key?(from.code.to_sym)
         # NOTE: Maybe we need to Create a new Journal::Commodity, so that the 
         # alphacode reloads?
         from.code = @transform_commodities[from.code.to_sym]

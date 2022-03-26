@@ -56,9 +56,17 @@ module RRA::Transformers
 
           # Amount is a special case, which, we have now converted into 
           # commodity
-          commodity = RRA::Journal::Commodity.from_symbol_and_amount(
-            default_currency, tx[:amount])
-          commodity.invert! if invert_amount
+          commodity = (
+            if tx[:amount].kind_of?(RRA::Journal::ComplexCommodity)
+              tx[:amount] 
+            elsif tx[:amount].kind_of?(RRA::Journal::Commodity)
+              tx[:amount] 
+            else
+              RRA::Journal::Commodity.from_symbol_and_amount(default_currency, tx[:amount])
+            end
+          )
+
+          commodity.invert! if invert_amount 
 
           RRA::TransformerBase::Posting.new i+1, date: tx[:date], 
             description: tx[:description], 
