@@ -48,7 +48,7 @@ class RRA::Journal::ComplexCommodity
   # may want to test the right commodity at some point here, and determine if 
   # the net operation is positive or negative.
   def positive?; left.positive?; end
-  def invert!; left.invert!; end
+  def invert!; left.invert!; self; end
 
   def to_s
     [ 

@@ -28,4 +28,20 @@ class TestPosting < Minitest::Test
      "  ; Collection: Baseball",
      "  Cash"].join("\n"), posting.to_ledger
   end
+
+  def test_posting_with_complex_commodity_to_ledger
+    complex_commodity = RRA::Journal::ComplexCommodity.from_s(
+      [ '-1000.0001 VBTLX', '@@', '$ 100000.00' ].join(' ') )
+
+    posting = RRA::Journal::Posting.new( '2022-03-28', 
+      'VANGUARD TOTAL BOND MARKET INDEX Sell', transfers: [
+      RRA::Journal::Posting::Transfer.new(
+        'Personal:Assets:Vanguard:VBTLX', commodity: complex_commodity),
+      RRA::Journal::Posting::Transfer.new('Personal:Assets:Vanguard:MoneyMarket') 
+    ] )
+
+    assert_equal ["2022-03-28 VANGUARD TOTAL BOND MARKET INDEX Sell",
+     "  Personal:Assets:Vanguard:VBTLX    -1000.0001 VBTLX @@ $ 100000.00",
+     "  Personal:Assets:Vanguard:MoneyMarket"].join("\n"), posting.to_ledger
+  end
 end

@@ -103,7 +103,7 @@ en:
         prefix: Expanding
       generate:
         icon: 💸
-        header: Generating Historical Cash Distributions
+        header: Generating Automatic Transactions
         prefix: Making
       validate_journal:
         icon: 📒
