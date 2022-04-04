@@ -11,11 +11,11 @@ class RRA::CommandBase
     end
 
     def matches?(by_identifier)
-      name == by_identifier
+      File.fnmatch? by_identifier, name
     end
 
     def self.from_s(str)
-      all.find{ |target| target.matches? str }
+      all.find_all{ |target| target.matches? str }
     end
   end
 
@@ -127,10 +127,10 @@ class RRA::CommandBase
     missing_targets = []
     remainders.each do |remainder|
       if target_klass
-        target = target_klass.from_s remainder
+        targets = target_klass.from_s remainder
 
-        if target
-          @targets << target
+        if targets
+          @targets += targets
         else
           missing_targets << remainder
         end
