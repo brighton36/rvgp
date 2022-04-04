@@ -31,7 +31,7 @@ module RRA
           series_name = series_data.delete @series_label
           series_data.each do |col, cell|
             next unless (!options.has_key?(:select_columns) || 
-              selected_headers.include?(col) if options[:select_columns])
+              selected_headers.include?(col))
 
             series_data[col] = options[:store_cell].call cell
           end if options.has_key? :store_cell

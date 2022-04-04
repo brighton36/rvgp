@@ -142,7 +142,7 @@ class RRA::CommandBase
     if options[:list] and target_klass
       indent = I18n.t('status.indicators.indent')
       puts ([RRA.pastel.bold(I18n.t('commands.%s.list_targets' % self.class.name))]+
-        target_klass.all.collect{|targets| indent+targets.name }).join("\n")
+        target_klass.all.collect{|target| indent+target.name }).join("\n")
       exit
     end
 
