@@ -88,7 +88,7 @@ module RRA
       end
 
       # Do we Truncate Columns?
-      if opts[:truncate_cols] and grid_columns.length > opts[:truncate_cols]
+      if opts[:truncate_cols] and grid[0].length > opts[:truncate_cols]
         # Go through each row, pop off the excess cells, and sum them onto the end
         grid.each_with_index do |row, i|
           # The plus one is to make room for the 'Other' column
