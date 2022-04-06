@@ -49,6 +49,20 @@ class RRA::CommandBase
     end
   end
 
+  class RRA::CommandBase::PlotTarget < RRA::CommandBase::TargetBase
+    attr_reader :name, :plot
+
+    def initialize(name, plot)
+      @name, @plot = name, plot
+    end
+
+    def self.all
+      RRA::Plot.all(RRA.app.config.project_path('app/plots')).collect{|plot| 
+        plot.variants.collect{|params| self.new params[:name], plot}
+      }.flatten
+    end
+  end
+
   class Option
     class UnexpectedEndOfArgs < StandardError; end
 
