@@ -102,7 +102,7 @@ en:
         header: Building Journals from Feeds
         prefix: Expanding
       generate:
-        icon: 💸
+        icon: 🏦
         header: Generating Automatic Transactions
         prefix: Making
       validate_journal:
@@ -117,3 +117,7 @@ en:
         icon: 📊
         header: Generating Reports
         prefix: Calculating
+      publish_gsheets:
+        icon: 📑 
+        header: Publishing to Google Sheets
+        prefix: Sheeting
