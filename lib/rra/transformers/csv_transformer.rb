@@ -29,15 +29,6 @@ module RRA::Transformers
 
     private
 
-    # This takes the csv row, and uses the formatting config to return a hash
-    # representation. Mostly we need this class to that the yaml can access a
-    # named parameter, 'row'
-    class RowTransformer
-      attr_accessor :row
-      def initialize(row); @row = row; end
-      def [](k); k.respond_to?(:call) ? instance_eval(&k) : row[k]; end
-    end
-
     def input_file_contents
       File.read(input_file).lines[skip_lines..(-1*(trim_lines+1))].join
     end
@@ -49,10 +40,11 @@ module RRA::Transformers
       @source_postings ||= begin 
         rows = CSV.parse input_file_contents, **csv_format
         rows.collect.with_index{ |csv_row, i| 
-          row = RowTransformer.new csv_row
-
           # Set the object values, return the transformed row:
-          tx = Hash[ fields_format.collect{ |k,v| [k.to_sym, row[v]] }.compact ]
+          tx = Hash[ fields_format.collect{ |field, formatter| 
+            [ field.to_sym, formatter.respond_to?(:call) ? 
+                formatter.call(row: csv_row) : csv_row[field] ] 
+          }.compact ]
 
           # Amount is a special case, which, we have now converted into 
           # commodity

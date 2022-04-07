@@ -1,10 +1,8 @@
 require 'psych'
 require 'pathname'
 
-Psych::add_builtin_type('proc') {|_, val| eval("proc { #{val} }") }
-Psych::add_builtin_type('include') {|_, val| 
-  # We mark this value here, and come back to after the load
-  RRA::Yaml::PsychInclude.new val }
+Psych::add_builtin_type('proc') {|_, val| RRA::Yaml::PsychProc.new val }
+Psych::add_builtin_type('include') {|_, val| RRA::Yaml::PsychInclude.new val }
 
 module RRA
   # We added this class because the Psych.add_builtin_type wasn't able to 
@@ -24,6 +22,24 @@ module RRA
         Psych.load_file(
           (Pathname.new(path).absolute?) ? path : [basedir,path].join('/'),
           symbolize_names: true, permitted_classes: [Date])
+      end
+    end
+
+    class PsychProc
+      def initialize(proc_as_string)
+        @block = eval("proc { %s }" % proc_as_string)
+      end
+
+      # params, here, act as instance variables, since we don't support named
+      # params in the provided string, the way you typically would.
+      # NOTE: We expect symbol to value here
+      def call(params = {})
+        @params = params
+        @block.call
+      end
+
+      def method_missing(name)
+        (@params and @params.has_key? name.to_sym) ? @params[name] : super(name)
       end
     end
 
