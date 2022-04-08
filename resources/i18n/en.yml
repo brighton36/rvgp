@@ -20,6 +20,15 @@ en:
         options: 
           all: 'Output a dashboard for every intention in the system'
           list: 'List all available intention-tag values'
+          date: 'Specify a date to use, when calculatingg the "recent months" to display. Defaults to "today".'
+      publish_gsheets:
+        description: 'Publish plots, both as a spreadsheet, as well as a graph, into a google sheets workbook.'
+        options: 
+          all: 'Publish all available plots'
+          list: 'List all available plot variants'
+          csvdir: 'Output the provided plots, as csvs, with grid hacks applied, into the specified directory. Mostly useful for debugging.'
+          title: 'The title of the Google doc being published. Defaults to "RRA Finance Report %m/%d/%y %H:%M". '
+          sleep: 'Seconds to sleep, between each sheet upload. This sleep prevents Google from aborting the publish, under the auspice of api spamming. Defaults to 5.'
       reconcile:
         description: 'Open an interactive vim session, to edit and build a transform'
         options: 
