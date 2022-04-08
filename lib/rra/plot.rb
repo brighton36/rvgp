@@ -22,7 +22,7 @@ class RRA::Plot
 
     @title = yaml[:title] if yaml.has_key? :title
     @grid_hacks = (yaml.has_key? :grid_hacks) ? yaml[:grid_hacks] : {}
-    @google_options = yaml[:google_options] if yaml.has_key? :google_options
+    @google_options = yaml[:google] if yaml.has_key? :google
   end
 
   def variants(name = nil)
