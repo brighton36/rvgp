@@ -67,6 +67,10 @@ class RRA::Plot
 
       gopts[:truncate_rows] = @grid_hacks[:truncate_rows].to_i if (
         @grid_hacks.has_key? :truncate_rows )
+
+      gopts[:switch_rows_columns] = @grid_hacks[:switch_rows_columns] if (
+        @grid_hacks.has_key? :switch_rows_columns )
+      
       gopts[:truncate_cols] = @grid_hacks[:truncate_columns].to_i if (
         @grid_hacks.has_key? :truncate_columns )
 

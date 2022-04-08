@@ -103,6 +103,11 @@ module RRA
         end
       end
 
+      # Google offers this option in its GUI, but doesn't seem to support it via
+      # the API. So, we can just do that ourselves:
+      grid = 0.upto(grid[0].length-1).collect{ |i| 
+        grid.collect{|row| row[i]} } if opts[:switch_rows_columns]
+
       grid
     end
 

@@ -249,12 +249,17 @@ class OutputGoogleSheets
 
     if sheet.options.key?(:google)
       gparams = sheet.options[:google]
-      series_colors = gparams[:series_colors] 
-      series_types = gparams[:series_types] 
+
       default_series_type = gparams[:default_series_type]
-      series_line_styles = gparams[:series_line_styles]
       chart_type = (gparams[:chart_type]) ? gparams[:chart_type].to_s.upcase : nil
       stacked_type = gparams[:stacked_type] if gparams[:stacked_type]
+
+      series_colors = (gparams[:series_colors]) ? 
+        gparams[:series_colors].transform_keys(&:to_s) : nil
+      series_types = (gparams[:series_types]) ? 
+        gparams[:series_types].transform_keys(&:to_s) : nil
+      series_line_styles = (gparams[:series_line_styles]) ? 
+        gparams[:series_line_styles].transform_keys(&:to_s) : nil
 
       axis = gparams[:axis].collect{|position, title|
         SV4::BasicChartAxis.new position: '%s_AXIS' % position.to_s.upcase,
