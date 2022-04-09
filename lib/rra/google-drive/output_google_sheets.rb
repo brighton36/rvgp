@@ -45,7 +45,8 @@ class OutputGoogleSheets
       "redirect_uris" => ["urn:ietf:wg:oauth:2.0:oob","http://localhost"]
     } )
 
-    @token_store = Google::Auth::Stores::FileTokenStore.new file: config[:token_path]
+    @token_store = Google::Auth::Stores::FileTokenStore.new( file: [
+      File.dirname(options[:secrets_file]), config[:token_path]].join('/'))
     @application_name = config[:application_name]
 
     @service.client_options.application_name = @application_name

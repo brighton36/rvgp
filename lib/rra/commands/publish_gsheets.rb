@@ -20,33 +20,30 @@ class RRA::Commands::PublishGsheets < RRA::CommandBase
 
   def initialize(*args)
     super *args
+
+    options[:title] ||= "RRA Finance Report %m/%d/%y %H:%M"
+    options[:sleep] = options.has_key?(:sleep) ? 
+      options[:sleep].to_i : DEFAULT_SLEEP_BETWEEN_SHEETS
+
+    if options.has_key? :csvdir
+      @errors << I18n.t(
+        'commands.publish_gsheets.errors.unable_to_write_to_csvdir', 
+        csvdir: options[:csvdir]
+      ) unless File.writable? options[:csvdir]
+    else
+      @secrets_path = RRA.app.config.project_path('config/google-secrets.yml')
+
+      @errors << I18n.t(
+        'commands.publish_gsheets.errors.missing_google_secrets'
+      ) unless File.readable?(@secrets_path)
+    end
   end
 
   def execute!
-    # TODO: Move this into an initialize
-    title = options.has_key?(:title) ? 
-      options[:title] : "RRA Finance Report %m/%d/%y %H:%M"
-
-    sleep_seconds = options.has_key?(:sleep) ? 
-      options[:sleep].to_i : DEFAULT_SLEEP_BETWEEN_SHEETS
-
-    output = if options.has_key? :csvdir
-      # TODO: I18n
-      raise StandardError, "Unable to write to path \"%s\"" % [
-        options[:csvdir] ] unless File.writable? options[:csvdir]
-
-      OutputCsv.new destination: options[:csvdir], format: 'csv'
-    else
-      secrets_path = RRA.app.config.project_path('config/google-secrets.yml')
-
-      # TODO: I18n
-      raise StandardError, 
-        "Missing a config/google-secrets.yml file in your project directory" unless (
-          File.readable?(secrets_path) )
-
-      OutputGoogleSheets.new format: 'google_sheets', title: title,
-        secrets_file: secrets_path
-    end
+    output = options.has_key?(:csvdir) ?
+      OutputCsv.new(destination: options[:csvdir], format: 'csv') :
+      OutputGoogleSheets.new(format: 'google_sheets', title: options[:title],
+        secrets_file: @secrets_path)
 
     targets.each do |target|
       RRA.app.logger.info self.class.name, target.name do 
@@ -54,7 +51,7 @@ class RRA::Commands::PublishGsheets < RRA::CommandBase
 
         # NOTE: This should fix the complaints that google issues, from too many 
         # requests per second.
-        sleep sleep_seconds if output.kind_of? OutputGoogleSheets
+        sleep options[:sleep] if output.kind_of? OutputGoogleSheets
 
         {}
       end
