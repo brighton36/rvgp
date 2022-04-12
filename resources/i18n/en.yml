@@ -127,9 +127,13 @@ en:
         header: Inspecting System State
         prefix: Validating
       report:
-        icon: 📊
+        icon: ▦
         header: Generating Reports
         prefix: Calculating
+      plot:
+        icon: 📈 
+        header: Generating Plots
+        prefix: Plotting
       publish_gsheets:
         icon: 📑 
         header: Publishing to Google Sheets
