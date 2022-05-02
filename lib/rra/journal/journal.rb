@@ -17,6 +17,10 @@ class RRA::Journal
     @postings = postings
   end
 
+  def to_s
+    @postings.collect{|posting| posting.to_ledger}.join "\n\n"
+  end
+
   def self.parse(contents)
     postings = []
 
