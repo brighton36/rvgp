@@ -72,6 +72,7 @@ module RRA::HLedger
   private
 
   # TODO: We could probably DRY this against the ledger implementation. 
+  # TODO: Similarly, we should support the from_s syntax
   def self.opts_to_args(opts)
     opts.collect{|k, v| ['--%s' % [k.to_s], (v == true) ? nil : v] }.flatten.compact
   end

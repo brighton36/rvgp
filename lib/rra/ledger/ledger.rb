@@ -1,4 +1,5 @@
 require 'shellwords'
+require 'open3'
 
 require_relative 'output'
 require_relative '../pricer'
@@ -10,7 +11,7 @@ module RRA::Ledger
   end
 
   def self.balance(account, opts = {})
-    RRA::Ledger::Output::Balance.new account, command(*opts_to_args(opts)+["xml"])
+    RRA::Ledger::Output::Balance.new account, command("xml", opts)
   end
 
   def self.register(*args)
@@ -18,15 +19,32 @@ module RRA::Ledger
     
     pricer = opts.delete :pricer
     
-    RRA::Ledger::Output::Register.new command(*opts_to_args(opts)+["xml"]+args), 
+    RRA::Ledger::Output::Register.new command("xml", *args, opts), 
       monthly: (opts[:monthly] == true), pricer: pricer
   end
 
   def self.command(*args)
+    opts = args.pop if args.last.kind_of? Hash
+    open3_opts = {}
+    args += opts.collect{|k, v| 
+      if k == :from_s
+        open3_opts[:stdin_data] = v
+        ['-f', '-']
+      else
+        ['--%s' % [k.to_s], (v == true) ? nil : v] 
+      end
+    }.flatten.compact if opts
+
     cmd = ([LEDGER]+args.collect{|a| Shellwords.escape a}).join(' ')
+
     # We should probably send this to a RRA.logger.trace...
     #pretty_cmd = ([LEDGER]+args).join(' ')
-    IO.popen(cmd).read
+
+    output, error, status = Open3.capture3 cmd, open3_opts
+
+    raise StandardError, "ledger exited non-zero (%d)" % status.exit unless status.success?
+
+    output
   end
 
   def self.path(relfile = nil)
@@ -53,10 +71,6 @@ module RRA::Ledger
       reg.transactions.length == 1)
 
     reg.transactions.first
-  end
-
-  def self.opts_to_args(opts)
-    opts.collect{|k, v| ['--%s' % [k.to_s], (v == true) ? nil : v] }.flatten.compact
   end
 
 end
