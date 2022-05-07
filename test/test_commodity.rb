@@ -141,6 +141,36 @@ class TestCommodity < Minitest::Test
     assert_equal '$ 2584.9', '$ 2584.9'.to_commodity.round(1).to_s
   end
 
+  def test_floor
+    assert_equal '$ 123.45', '$ 123.455'.to_commodity.floor(2).to_s
+    assert_equal '$ -123.45', '$ -123.455'.to_commodity.floor(2).to_s
+    assert_equal '$ 123.45', '$ 123.459999999999'.to_commodity.floor(2).to_s
+    assert_equal '$ 123.454545', '$ 123.4545454545454'.to_commodity.floor(6).to_s
+    assert_equal '$ -123.45', '$ -123.459999999999'.to_commodity.floor(2).to_s
+    assert_equal '$ 123.45', '$ 123.454444449'.to_commodity.floor(2).to_s
+    assert_equal '$ -123.45', '$ -123.454444449'.to_commodity.floor(2).to_s
+    assert_equal '$ 123.44', '$ 123.44'.to_commodity.floor(2).to_s
+    assert_equal '$ -123.44', '$ -123.44'.to_commodity.floor(2).to_s
+    assert_equal '$ 123.4000', '$ 123.4'.to_commodity.floor(4).to_s
+    assert_equal '$ -123.4000', '$ -123.4'.to_commodity.floor(4).to_s
+    assert_equal '$ 123.0000', '$ 123'.to_commodity.floor(4).to_s
+    assert_equal '$ -123.0000', '$ -123'.to_commodity.floor(4).to_s
+    assert_equal '$ 123', '$ 123.0455555555'.to_commodity.floor(0).to_s
+    assert_equal '$ -123', '$ -123.0455555555'.to_commodity.floor(0).to_s
+    assert_equal '$ 999.99', '$ 999.99999'.to_commodity.floor(2).to_s
+    assert_equal '$ -999.99', '$ -999.99999'.to_commodity.floor(2).to_s
+
+    assert_equal '$ 123.45', '$ 123.454'.to_commodity.floor(2).to_s
+    assert_equal '$ -123.45', '$ -123.454'.to_commodity.floor(2).to_s
+
+    # Found/fixed on 2021-10-25:
+    assert_equal '$ 2584.09', '$ 2584.09'.to_commodity.floor(2).to_s
+    assert_equal '$ 2584.009', '$ 2584.009'.to_commodity.floor(3).to_s
+    assert_equal '$ 2584.009', '$ 2584.009'.to_commodity.floor(3).to_s
+    assert_equal '$ 2584.900', '$ 2584.900'.to_commodity.floor(3).to_s
+    assert_equal '$ 2584.9', '$ 2584.9'.to_commodity.floor(1).to_s
+  end
+
   def test_to_s_features
     assert_equal '$ 0.00', '$ 0'.to_commodity.to_s(commatize: true)
     assert_equal '$ 1.00', '$ 1.00'.to_commodity.to_s(commatize: true)

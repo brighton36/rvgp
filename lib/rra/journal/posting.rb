@@ -67,7 +67,7 @@ class RRA::Journal::Posting
       # Let's see if it'll parse as a commodity:
       begin
         opts[:commodity] = RRA::Journal::Commodity.from_s commodity_part
-      rescue RRA::Journal::Commodity::Error
+      rescue RRA::Journal::Commodity::UnimplementedError
         # Then let's see if it parses as a commodity pair
         opts[:complex_commodity] = RRA::Journal::ComplexCommodity.from_s commodity_part
       end

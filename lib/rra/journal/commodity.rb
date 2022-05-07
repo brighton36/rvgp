@@ -15,8 +15,8 @@ class RRA::Journal::Commodity
   # This appears to be a ruby limit, in float's
   MAX_DECIMAL_DIGITS = 17
 
-  class Error < StandardError; end
   class ConversionError < StandardError; end
+  class UnimplementedError < StandardError; end
 
   def initialize(code, alphabetic_code, quantity, precision)
     @code, @alphabetic_code, @quantity, @precision = code, alphabetic_code, 
@@ -70,8 +70,9 @@ class RRA::Journal::Commodity
     RRA::Journal::Commodity.new code, alphabetic_code, quantity.abs, precision
   end
 
-  def round(to_digit)
-    raise StandardError, "Assertion fail" unless to_digit >= 0
+  def round_or_floor(to_digit)
+    raise UnimplementedError unless to_digit >= 0
+
     characteristic, mantissa = quantity_as_decimal_pair
 
     new_characteristic = characteristic * 10**(to_digit)
@@ -81,7 +82,7 @@ class RRA::Journal::Commodity
     new_quantity = new_characteristic+new_mantissa
 
     # Round up?
-    if mantissa > 0
+    if (__callee__ == :round) and (mantissa > 0)
       num_mantissa_digits = Math.log10(mantissa).floor+1
 
       if num_mantissa_digits > to_digit
@@ -95,6 +96,9 @@ class RRA::Journal::Commodity
     RRA::Journal::Commodity.new code, alphabetic_code,
       (positive?) ? new_quantity : new_quantity*-1 , to_digit
   end
+
+  alias :floor :round_or_floor
+  alias :round :round_or_floor
 
   [:>, :<, :<=>, :>=, :<=, :==, :!=].each do |operation|
     define_method(operation) do |rvalue|
@@ -115,7 +119,7 @@ class RRA::Journal::Commodity
       else
         assert_commodity rvalue 
 
-        raise StandardError, "Unimplemented: TODO?"
+        raise UnimplementedError
       end
 
       RRA::Journal::Commodity.from_symbol_and_amount code, 
@@ -175,7 +179,7 @@ class RRA::Journal::Commodity
       assert_commodity args[0]
 
       unless commodity.precision == precision
-        raise Error, "Unimplemented operation %s Wot do?" % name.inspect 
+        raise UnimplementedError, "Unimplemented operation %s Wot do?" % name.inspect 
       end
 
       RRA::Journal::Commodity.new code, alphabetic_code, 
@@ -223,8 +227,9 @@ class RRA::Journal::Commodity
       [ $2, [$3, $4].compact.reject(&:empty?).first ]
     end
 
-    raise Error, "Unimplemented Commodity::from_s. Against: %s. Wot do?" % [
-      string.inspect ] if !amount or !code or amount.empty? or code.empty?
+    raise UnimplementedError, 
+      "Unimplemented Commodity::from_s. Against: %s. Wot do?" % [
+        string.inspect ] if !amount or !code or amount.empty? or code.empty?
 
     commodity = from_symbol_and_amount code, amount.tr(',', '')
 

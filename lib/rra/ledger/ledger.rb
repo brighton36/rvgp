@@ -27,7 +27,7 @@ module RRA::Ledger
     opts = args.pop if args.last.kind_of? Hash
     open3_opts = {}
     args += opts.collect{|k, v| 
-      if k == :from_s
+      if k.to_sym == :from_s
         open3_opts[:stdin_data] = v
         ['-f', '-']
       else

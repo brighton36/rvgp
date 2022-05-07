@@ -3,7 +3,7 @@
 require "csv"
 require "minitest/autorun"
 
-require 'rra'
+require_relative '../lib/rra'
 require_relative '../lib/rra/fake_journal'
 
 class TestCashBalanceValidation < Minitest::Test
@@ -53,25 +53,45 @@ class TestCashBalanceValidation < Minitest::Test
 		  Cash
     EOD
 
-    balance = RRA::Ledger.balance 'Cash', from_s: journal.to_s
+    balance = RRA::Ledger.balance 'Expense', from_s: journal.to_s
     assert_equal 1, balance.accounts.length
-    assert_equal "Cash", balance.accounts[0].fullname
+    assert_equal "Expense", balance.accounts[0].fullname
     assert_equal 1, balance.accounts[0].amounts.length
-    assert_equal "$ -100.00", balance.accounts[0].amounts[0].to_s
-
+    assert_equal "$ 100.00", balance.accounts[0].amounts[0].to_s
   end
 
   def test_basic_cash_balance
-    # journal = FakeJournal.new.basic_cash Date.new(2020, 1, 1), 
-    #   Date.new(2020, 1, 10), '$ 100.00'.to_commodity, 10
+    10.times.collect{rand(1..10000000)}.each do |i|
+      amount = ('$ %.2f' % (i.to_f/100) ).to_commodity
 
-		# TODO: Test out some modulus' with the total amout (off by 1/n)
-    # puts "Returned:" + ledger_balance(journal).inspect
+      journal = FakeJournal.new.basic_cash(Date.new(2020, 1, 1), 
+        Date.new(2020, 1, 10), amount, 10)
+
+      balance = RRA::Ledger.balance 'Expense', from_s: journal.to_s
+
+      assert_equal 1, balance.accounts.length
+      assert_equal "Expense", balance.accounts[0].fullname
+      assert_equal 1, balance.accounts[0].amounts.length
+      assert_equal amount.to_s, balance.accounts[0].amounts[0].to_s
+    end
+
   end
 
   def test_basic_cash_dates
-		# TODO: The end date is broken... test it out a few ways to figure out where
-    # journal = FakeJournal.new.basic_cash Date.new(2020, 1, 1), 
+    assert_equal ["2020-01-01", "2020-01-03", "2020-01-05", "2020-01-07", 
+      "2020-01-09", "2020-01-11", "2020-01-13", "2020-01-15", "2020-01-17", 
+      "2020-01-20"], FakeJournal.new.basic_cash(
+        Date.new(2020, 1, 1), Date.new(2020, 1, 20), 
+        '$ 100.00'.to_commodity, 10
+      ).postings.collect(&:date).collect(&:to_s)
+
+    assert_equal ["2020-01-01", "2020-02-09", "2020-03-19", "2020-04-27", 
+      "2020-06-05", "2020-07-14", "2020-08-22", "2020-09-30", "2020-11-08", 
+      "2020-12-20"], 
+      FakeJournal.new.basic_cash(
+        Date.new(2020, 1, 1), Date.new(2020, 12, 20), 
+        '$ 100.00'.to_commodity, 10
+      ).postings.collect(&:date).collect(&:to_s)
   end
 
 end
