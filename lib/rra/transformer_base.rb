@@ -307,9 +307,13 @@ module RRA
           captures = $~.named_captures.dup if $~ && $~.length > 1
         end
 
-        next if ( rule.has_key?(:amount_less_than) && 
-         (posting.commodity.abs >= RRA::Journal::Commodity.from_symbol_and_amount(
-            default_currency, rule[:amount_less_than].to_s) ) )
+        if rule.has_key? :amount_less_than
+          amount_less_than = rule[:amount_less_than].to_s.to_commodity
+
+          next if ( 
+            (posting.commodity.alphabetic_code != amount_less_than.alphabetic_code ) ||
+            (posting.commodity.abs >= amount_less_than ) )
+        end
 
         if rule.has_key? :amount_equals
           amount_equals = rule[:amount_equals].to_s.to_commodity
