@@ -42,7 +42,8 @@ module RRA::Ledger
 
     output, error, status = Open3.capture3 cmd, open3_opts
 
-    raise StandardError, "ledger exited non-zero (%d)" % status.exit unless status.success?
+    raise StandardError, "ledger exited non-zero (%d): %s" % [
+      status.exitstatus, error] unless status.success?
 
     output
   end
