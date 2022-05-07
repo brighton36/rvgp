@@ -311,9 +311,13 @@ module RRA
          (posting.commodity.abs >= RRA::Journal::Commodity.from_symbol_and_amount(
             default_currency, rule[:amount_less_than].to_s) ) )
 
-        next if ( rule.has_key?(:amount_equals) && 
-         ( posting.commodity.abs != RRA::Journal::Commodity.from_symbol_and_amount(
-            default_currency, rule[:amount_equals].to_s) ) )
+        if rule.has_key? :amount_equals
+          amount_equals = rule[:amount_equals].to_s.to_commodity
+
+          next if ( 
+            ( posting.commodity.alphabetic_code != amount_equals.alphabetic_code ) ||
+            ( posting.commodity.abs != rule[:amount_equals].to_s.to_commodity) )
+        end
 
         if rule.has_key? :on_date
           date_regex = s_to_regex rule[:on_date].to_s
