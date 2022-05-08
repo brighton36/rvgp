@@ -74,10 +74,6 @@ class RRA::Plot
       gopts[:truncate_cols] = @grid_hacks[:truncate_columns].to_i if (
         @grid_hacks.has_key? :truncate_columns )
 
-      gopts[:convert_null_to_zero] = @grid_hacks[:convert_null_to_zero] if (
-        @grid_hacks.has_key? :convert_null_to_zero )
-
-
       RRA::ReportViewer.new(variant_files(variant_name), rvopts).to_grid(gopts)
     end
   end

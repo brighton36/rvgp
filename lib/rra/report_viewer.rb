@@ -108,9 +108,6 @@ module RRA
       grid = 0.upto(grid[0].length-1).collect{ |i| 
         grid.collect{|row| row[i]} } if opts[:switch_rows_columns]
 
-      grid.collect!{|row| row.collect{|cell| cell.nil? ? 0 : cell}} if (
-        opts[:convert_null_to_zero])
-
       grid
     end
 
