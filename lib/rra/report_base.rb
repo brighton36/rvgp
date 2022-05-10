@@ -17,12 +17,11 @@ class RRA::ReportBase
 
   attr_reader :starting_at, :ending_at, :year
 
-  def initialize(year)
-    @year, @starting_at, @ending_at = year, Date.new(year,1,1), 
-      # NOTE: It seems that with monthly queries, the ending date works a bit
-      # differently. It's not necessariy to add one to the day here. If you do,
-      # you get the whole month of January, in the next year added to the output.
-      Date.new(year, 12, 31)
+  def initialize(starting_at, ending_at)
+    # NOTE: It seems that with monthly queries, the ending date works a bit
+    # differently. It's not necessariy to add one to the day here. If you do,
+    # you get the whole month of January, in the next year added to the output.
+    @year, @starting_at, @ending_at = starting_at.year, starting_at, ending_at
   end
 
   def to_file!

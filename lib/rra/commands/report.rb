@@ -10,29 +10,45 @@ class RRA::Commands::Report < RRA::CommandBase
   end
 
   class Target < RRA::CommandBase::TargetBase
-    def initialize(report_klass, year)
-      @report_klass, @year, @name, @status_name  = report_klass, 
-        year.to_i, [year,report_klass.name.tr('_', '-')].join('-'), 
-        report_klass.status_name(year) 
+    def initialize(report_klass, starting_at, ending_at)
+      @starting_at, @ending_at = starting_at, ending_at
+      @report_klass, @name, @status_name = report_klass,
+        [year,report_klass.name.tr('_', '-')].join('-'),
+        report_klass.status_name(year)
     end
 
     def description
       I18n.t 'commands.report.target_description', 
-        description: @report_klass.description, year: @year
+        description: @report_klass.description, year: year
     end
 
     def uptodate?
-      @report_klass.uptodate? @year
+      @report_klass.uptodate? year
     end
 
     def execute(options)
-      @report_klass.new(@year).to_file! 
+      # RRA.app.config.report_years
+      @report_klass.new(@starting_at, @ending_at).to_file!
     end
 
     def self.all
-      RRA.app.config.report_years.collect{|year|
-        RRA.reports.classes.collect{|klass| self.new klass, year }
+      starting_at = RRA.app.config.report_starting_at
+      ending_at = RRA.app.config.report_ending_at
+
+      starting_at.year.upto(ending_at.year).collect{ |y|
+        RRA.reports.classes.collect do |klass|
+          self.new klass,
+            ((y == starting_at.year) ? starting_at : Date.new(y, 1,1)),
+            ((y == ending_at.year) ? ending_at : Date.new(y, 12, 31))
+        end
       }.flatten
     end
+
+    private
+
+    def year
+      @starting_at.year
+    end
+
   end
 end

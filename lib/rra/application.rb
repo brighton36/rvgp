@@ -95,6 +95,9 @@ module RRA
         command_klass.initialize_rake rake_main if command_klass.respond_to? :initialize_rake
       end
 
+      # TODO: I think we should maybe break these into tasks, which multitask within,
+      # that way we don't call the reports.task_names here, and instead call that
+      # once we've completed the transform/validate/etc
       rake_main.instance_eval do 
         multitask transform: RRA.app.transformers.collect{ |transformer|
           'transform:%s' % transformer.as_taskname }
