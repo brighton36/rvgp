@@ -23,6 +23,7 @@ module RRA::Utilities
     #       want to switch between ledger/hledger, and this will achieve that.
     args = ['tags', '--values', for_tag]
     args += ['--begin', options[:year], '--end', options[:year]+1] if options[:year]
+    args += [options[:query]].flatten if options[:query]
     RRA::HLedger.command(*args).lines.collect{|l| l.chomp.to_sym}.sort
   end
 end

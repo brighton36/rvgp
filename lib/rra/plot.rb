@@ -1,10 +1,17 @@
+require_relative 'gnuplot'
+
 class RRA::Plot
-  attr_reader :glob, :grid_hacks, :google_options, :sort_by_rows, 
+  attr_reader :glob, :grid_hacks, :google_options, :gnuplot_options, :sort_by_rows,
     :truncate_rows, :switch_rows_columns
 
   REQUIRED_FIELDS = [:glob, :title]
 
-  def initialize(yaml)
+  attr_reader :path
+
+  def initialize(path)
+    @path = path
+    yaml = RRA::Yaml.new path, RRA.app.config.project_path
+
     raise StandardError, "Missing one or more required fields in %s: %s" % [
       yaml.path, REQUIRED_FIELDS] unless REQUIRED_FIELDS.all?{|f| yaml.has_key? f}
 
@@ -23,6 +30,7 @@ class RRA::Plot
     @title = yaml[:title] if yaml.has_key? :title
     @grid_hacks = (yaml.has_key? :grid_hacks) ? yaml[:grid_hacks] : {}
     @google_options = yaml[:google] if yaml.has_key? :google
+    @gnuplot_options = yaml[:gnuplot] if yaml.has_key? :gnuplot
   end
 
   def variants(name = nil)
@@ -35,6 +43,10 @@ class RRA::Plot
 
   def title(variant_name)
     @title % variants(variant_name)[:pairs]
+  end
+
+  def output_file(name, ext)
+    RRA.app.config.build_path('plots/%s.%s' % [name, ext])
   end
 
   def grid(variant_name)
@@ -86,6 +98,24 @@ class RRA::Plot
     grid(variant_name)[1..]
   end
 
+  def gnuplot(name)
+    @gnuplots ||= Hash.new
+    @gnuplots[name] ||= RRA::Gnuplot.chart grid(name), title(name), gnuplot_options
+  end
+
+  def script(name)
+     # TODO: Maybe we should just have a gnuplot(name).script
+    gnuplot(name).script
+  end
+
+  def show(name)
+    gnuplot(name).execute!
+  end
+
+  def write!(name)
+    File.open(output_file(name, 'gpi'), 'w') { |f| f.write gnuplot(name).script }
+  end
+
   # This returns what plot variants are possible, given the glob, against the 
   # provided files.
   # If pair_values contains key: value combinations, then, any of the returned
@@ -119,9 +149,7 @@ class RRA::Plot
   end
 
   def self.all(plot_directory_path)
-    Dir.glob("%s/*.yml" % plot_directory_path).collect{|path|
-      self.new RRA::Yaml.new(path, RRA.app.config.project_path)
-    }
+    Dir.glob("%s/*.yml" % plot_directory_path).collect{|path| self.new path }
   end
 end
 
