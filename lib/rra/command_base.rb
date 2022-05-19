@@ -53,7 +53,12 @@ class RRA::CommandBase
     attr_reader :name, :plot
 
     def initialize(name, plot)
-      @name, @plot = name, plot
+      @name, @plot, @status_name = name, plot, name
+    end
+    
+    def uptodate?
+       # TODO
+      false
     end
 
     def self.all
@@ -218,6 +223,31 @@ module RRA::CommandBase::RakeTask
       @rake_namespace = namespace
     end
 
+    def task_exec(target)
+      # NOTE: We'd probably be better served by taking the target out of here, 
+      #       and putting that into the task, or task_args somehow.... then
+      #       passing this &function to the task() method, instead of returning
+      #       a block...
+      return lambda{|task, task_args|
+        error_count = 0
+        command = self.new target.name
+
+        begin
+          rets = command.execute!
+          raise StandardError, "This should never happen" if rets.length > 1
+          error_count += rets[0][:errors].length
+        end unless target.uptodate?
+
+        # NOTE: It would be kind of nice, IMO, if the namespace continued
+        # to run, and then failed. Instead of having all tasks in the 
+        # namespace halt, on an error. I don't know how to do this, without
+        # a lot of monkey patching and such. 
+        # Or, maybe, we could just not use multitask() and instead write
+        # our own multitasking loop, which, is a similar pita
+        abort if error_count > 0
+      }
+    end
+
     def initialize_rake(rake_main)
       command_klass = self
 
@@ -225,27 +255,12 @@ module RRA::CommandBase::RakeTask
         namespace command_klass.rake_namespace do 
           command_klass.const_get('Target').all.each do |target|
             desc target.description
-            task target.name do
-              error_count = 0
-              command = command_klass.new target.name
-
-              begin
-                rets = command.execute!
-                raise StandardError, "This should never happen" if rets.length > 1
-                error_count += rets[0][:errors].length
-              end unless target.uptodate?
-
-              # NOTE: It would be kind of nice, IMO, if the namespace continued
-              # to run, and then failed. Instead of having all tasks in the 
-              # namespace halt, on an error. I don't know how to do this, without
-              # a lot of monkey patching and such. 
-              # Or, maybe, we could just not use multitask() and instead write
-              # our own multitasking loop, which, is a similar pita
-              abort if error_count > 0
-            end
+            task target.name, &command_klass.task_exec(target)
           end
         end
       end if rake_namespace
     end
+
+
   end
 end

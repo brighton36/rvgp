@@ -1,6 +1,8 @@
 require_relative 'gnuplot'
 
 class RRA::Plot
+  include RRA::DescendantRegistry
+
   attr_reader :glob, :grid_hacks, :google_options, :gnuplot_options, :sort_by_rows,
     :truncate_rows, :switch_rows_columns
 

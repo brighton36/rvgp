@@ -106,7 +106,13 @@ module RRA
         multitask validate_system: RRA.system_validations.task_names
         multitask report: RRA.reports.task_names
 
-        task default: [:transform, :validate_journal, :validate_system, :report]
+        # NOTE: We really have no way of determininig what plots will be 
+        # available at program initialization. Mostly, this is because the
+        # reports create sheets, based on the results of the build step.
+        # So, what we'll do instead, is offer the reports, as plot targets.
+        # And let the plot task determine which reports contain which plots
+
+        task default: [:transform, :validate_journal, :validate_system, :report, :plot]
       end
     end
 
