@@ -139,6 +139,11 @@ class TestCommodity < Minitest::Test
     assert_equal '$ 2584.009', '$ 2584.009'.to_commodity.round(3).to_s
     assert_equal '$ 2584.900', '$ 2584.900'.to_commodity.round(3).to_s
     assert_equal '$ 2584.9', '$ 2584.9'.to_commodity.round(1).to_s
+
+    # Found/fixed on 2022-11-13:
+    # The reason this is a bug, is because the mantissa begins with zero's. We
+    # had to cheange the implementation to switch to precision, from a log10() operation
+    assert_equal "$ 5.01", ("$ 139.76".to_commodity * (22290.0 / 622290.0)).round(2).to_s
   end
 
   def test_floor

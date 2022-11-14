@@ -79,12 +79,12 @@ class TestPricer < Minitest::Test
       price_on p, '2019-12-31', 'EUR', 'USD' }
     assert_raises(RRA::Pricer::NoPriceError){ 
       price_on p, '2019-12-31', 'USD', 'EUR' }
-    assert_equal "1.119596408 USD", 
+    assert_equal "1.11959640788688494 USD",
       price_on(p, '2020-01-01', 'EUR', 'USD')
     assert_equal "0.893179 EUR", 
       price_on(p, '2020-01-01', 'USD', 'EUR')
 
-    assert_equal "1.119596408 USD", 
+    assert_equal "1.11959640788688494 USD",
       price_on(p, '2020-01-15', 'EUR', 'USD')
     assert_equal "0.893179 EUR", 
       price_on(p, '2020-01-15', 'USD', 'EUR')
@@ -94,12 +94,12 @@ class TestPricer < Minitest::Test
     assert_equal "0.90148971174866467 EUR", 
       price_on(p, '2020-02-01', 'USD', 'EUR')
 
-    assert_equal "1.102436163 USD", 
+    assert_equal "1.10243616343395636 USD",
       price_on(p, '2020-03-01', 'EUR', 'USD')
     assert_equal "0.907082 EUR", 
       price_on(p, '2020-03-01', 'USD', 'EUR')
 
-    assert_equal "1.102436163 USD", 
+    assert_equal "1.10243616343395636 USD",
       price_on(p, '2020-03-01', 'EUR', 'USD')
     assert_equal "0.907082 EUR", 
       price_on(p, '2020-03-15', 'USD', 'EUR')

@@ -1,4 +1,5 @@
 require 'bigdecimal'
+require 'pry'
 
 class RRA::Journal::Commodity
   attr_accessor :quantity, :code, :alphabetic_code, :precision
@@ -83,11 +84,9 @@ class RRA::Journal::Commodity
 
     # Round up?
     if (__callee__ == :round) and (mantissa > 0)
-      num_mantissa_digits = Math.log10(mantissa).floor+1
-
-      if num_mantissa_digits > to_digit
-        round_determinant = (
-          ( mantissa / 10**(num_mantissa_digits-to_digit-1) ) % 10).to_i
+      if precision > to_digit
+        # We want the determinant to be the right-most digit in the round_determinant, then we mod 10 that
+        round_determinant = ( mantissa / (10**(precision-to_digit-1)) % 10).to_i
 
         new_quantity += 1 if round_determinant >= 5
       end
