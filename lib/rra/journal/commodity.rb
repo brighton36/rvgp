@@ -1,5 +1,4 @@
 require 'bigdecimal'
-require 'pry'
 
 class RRA::Journal::Commodity
   attr_accessor :quantity, :code, :alphabetic_code, :precision
