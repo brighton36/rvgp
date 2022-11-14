@@ -53,7 +53,8 @@ module RRA::Transformers::Modules
 
         operation_cost_fees = (amount_after_conversion_fees * operation_cost_fraction).round(
           RRA::Journal::Currency.from_code_or_symbol(amount_after_conversion_fees.code).minor_unit)
-        targets << {to: operation_cost_to, commodity: operation_cost_fees}
+        targets << {to: operation_cost_to, complex_commodity: RRA::Journal::ComplexCommodity.new(
+                    left: operation_cost, operation: :per_lot, right: operation_cost_fees) }
       end
 
       remitted = [reported_amount, conversion_markup_fees, operation_cost_fees].compact.reduce(:-)
