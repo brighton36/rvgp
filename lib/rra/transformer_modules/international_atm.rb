@@ -46,8 +46,7 @@ module RRA::Transformers::Modules
 
       if operation_cost
         amount_with_operation_cost = amount + operation_cost
-        # I have no idea why to_f is needed here... This appears to be how BigDecimal was designed?
-        operation_cost_fraction = operation_cost.quantity_as_bigdecimal.to_f / amount_with_operation_cost.quantity_as_bigdecimal.to_f
+        operation_cost_fraction = operation_cost.quantity_as_bigdecimal / amount_with_operation_cost.quantity_as_bigdecimal
 
         amount_after_conversion_fees = [reported_amount, conversion_markup_fees].compact.reduce(:-)
 
