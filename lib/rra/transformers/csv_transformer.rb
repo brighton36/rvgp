@@ -18,8 +18,8 @@ module RRA::Transformers
           @invert_amount = yaml[:format][:invert_amount] || false
         end
 
-        @skip_lines = yaml[:format][:skip_lines] || 0
-        @trim_lines = yaml[:format][:trim_lines] || 0
+        @skip_lines = yaml[:format][:skip_lines]
+        @trim_lines = yaml[:format][:trim_lines]
 
         if yaml[:format].has_key? :csv_headers
           @csv_format = {headers: yaml[:format][:csv_headers]}
@@ -29,8 +29,29 @@ module RRA::Transformers
 
     private
 
+    # TODO: Testing this would be prudent. Maybe make this a class method, have
+    # it take input_file as a parameter, and add some tests...
     def input_file_contents
-      File.read(input_file).lines[skip_lines..(-1*(trim_lines+1))].join
+      contents = File.read input_file
+
+      start_offset = 0
+      end_offset = 0
+
+      if skip_lines
+        skip_lines_regex = s_to_regex skip_lines.to_s
+        skip_lines_regex = /(?:[^\n]*\n){#{skip_lines}}/m unless skip_lines_regex
+        match = skip_lines_regex.match contents
+        start_offset = match.end 0 if match
+      end
+
+      if trim_lines
+        trim_lines_regex = s_to_regex trim_lines.to_s
+        trim_lines_regex = /(?:[^\n]*\n){#{trim_lines}}\Z/m unless trim_lines_regex
+        match = trim_lines_regex.match contents
+        end_offset = match.begin 0 if match
+      end
+
+      contents[start_offset..(end_offset-1)]
     end
 
     # We actually returned semi-transformed transactions here. That lets us do
