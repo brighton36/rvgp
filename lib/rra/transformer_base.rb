@@ -1,5 +1,8 @@
+require_relative 'utilities'
+
 module RRA
   class TransformerBase
+    include RRA::Utilities
 
     class MissingFields < StandardError
       def initialize(*args)
@@ -78,7 +81,7 @@ module RRA
         end
 
         if yaml[:format].has_key?(:cash_back)
-          @cash_back = s_to_regex yaml[:format][:cash_back][:match]
+          @cash_back = string_to_regex yaml[:format][:cash_back][:match]
           @cash_back_to = yaml[:format][:cash_back][:to]
         end
       end
@@ -234,27 +237,27 @@ module RRA
             # NOTE: This section should possibly DRY up with the 
             # transform_posting() method
             if tag_rule.has_key? :account_is_not
-              account_isnt_regex = s_to_regex tag_rule[:account_is_not]
+              account_isnt_regex = string_to_regex tag_rule[:account_is_not]
               next if (account_isnt_regex) ?
                 account_isnt_regex.match(target[:to]) : 
                 (tag_rule[:account_is_not] == target[:to])
             end
 
             if tag_rule.has_key? :from_is_not
-              from_isnt_regex = s_to_regex tag_rule[:from_is_not]
+              from_isnt_regex = string_to_regex tag_rule[:from_is_not]
               next if (from_isnt_regex) ?
                 from_isnt_regex.match(posting.from) : 
                 (tag_rule[:from_is_not] == posting.from)
             end
 
             if tag_rule.has_key? :from
-              from_regex = s_to_regex tag_rule[:from]
+              from_regex = string_to_regex tag_rule[:from]
               next if (from_regex) ? from_regex.match(posting.from).nil? :
                 (tag_rule[:from] != posting.from) 
             end
 
             if tag_rule.has_key? :account
-              account_regex = s_to_regex tag_rule[:account]
+              account_regex = string_to_regex tag_rule[:account]
               next if (account_regex) ? account_regex.match(target[:to]).nil? :
                 (tag_rule[:account] != target[:to]) 
             end
@@ -279,7 +282,7 @@ module RRA
       rules.each_with_index do |rule, i|
         captures = nil
         if rule.has_key? :match
-          match_regex = s_to_regex rule[:match]
+          match_regex = string_to_regex rule[:match]
 
           # Not crazy about the nested ifs here, but it seems this is the best
           # we can do:
@@ -294,7 +297,7 @@ module RRA
 
         # :account was added when we added journal_transform
         if rule.has_key? :account
-          match_regex = s_to_regex rule[:account]
+          match_regex = string_to_regex rule[:account]
 
           # Not crazy about the nested ifs here, but it seems this is the best
           # we can do:
@@ -324,7 +327,7 @@ module RRA
         end
 
         if rule.has_key? :on_date
-          date_regex = s_to_regex rule[:on_date].to_s
+          date_regex = string_to_regex rule[:on_date].to_s
 
           if date_regex
             next if !date_regex.match(posting.date.strftime('%Y-%m-%d'))
@@ -379,18 +382,6 @@ module RRA
               "Unrecognized file extension for input file \"%s\"" % yaml[:input]
         end
       }
-    end
-
-    private
-
-    def s_to_regex(s)
-      Regexp.new $1, $2.chars.collect{|c| 
-        case c
-          when 'i' then Regexp::IGNORECASE
-          when 'x' then Regexp::EXTENDED
-          when 'm' then Regexp::MULTILINE
-        end
-      }.reduce(:|) if /\A\/(.*)\/([imx]?[imx]?[imx]?)\Z/.match s
     end
   end
 end

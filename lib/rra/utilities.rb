@@ -26,4 +26,14 @@ module RRA::Utilities
     args += [options[:query]].flatten if options[:query]
     RRA::HLedger.command(*args).lines.collect{|l| l.chomp.to_sym}.sort
   end
+
+  def string_to_regex(s)
+    Regexp.new $1, $2.chars.collect{|c| 
+      case c
+        when 'i' then Regexp::IGNORECASE
+        when 'x' then Regexp::EXTENDED
+        when 'm' then Regexp::MULTILINE
+      end
+    }.reduce(:|) if /\A\/(.*)\/([imx]?[imx]?[imx]?)\Z/.match s
+  end
 end

@@ -30,7 +30,7 @@ module RRA
     depend_on :jewel, '~> 0.0.9'
     depend_on :finance, '~> 2.0.0'
     depend_on 'tty-table', '~> 0.12.0'
-    depend_on 'shellwords' 
+    depend_on 'shellwords', '~> 0.1.0'
     depend_on 'open3', '~> 0.1.1'
   end
 end

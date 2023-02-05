@@ -27,31 +27,41 @@ module RRA::Transformers
       end
     end
 
+    class << self
+      include RRA::Utilities
+
+      # Mostly this is a class mathed, to make testing easier
+      def input_file_contents(contents, skip_lines = nil, trim_lines = nil)
+        start_offset = 0
+        end_offset = 0
+        
+        if [skip_lines, trim_lines].select{|n| n.kind_of? Integer}.sum > contents.lines.count
+          return String.new 
+        end
+
+        if trim_lines
+          trim_lines_regex = string_to_regex trim_lines.to_s
+          trim_lines_regex = /(?:[^\n]*[\n]?){#{trim_lines}}\Z/m unless trim_lines_regex
+          match = trim_lines_regex.match contents
+          end_offset = match.begin 0 if match
+          return String.new if end_offset == 0
+        end
+
+        if skip_lines
+          skip_lines_regex = string_to_regex skip_lines.to_s
+          skip_lines_regex = /(?:[^\n]*\n){#{skip_lines}}/m unless skip_lines_regex
+          match = skip_lines_regex.match contents
+          start_offset = match.end 0 if match
+        end
+
+        contents[start_offset..(end_offset-1)]
+      end
+    end
+
     private
 
-    # TODO: Testing this would be prudent. Maybe make this a class method, have
-    # it take input_file as a parameter, and add some tests...
     def input_file_contents
-      contents = File.read input_file
-
-      start_offset = 0
-      end_offset = 0
-
-      if skip_lines
-        skip_lines_regex = s_to_regex skip_lines.to_s
-        skip_lines_regex = /(?:[^\n]*\n){#{skip_lines}}/m unless skip_lines_regex
-        match = skip_lines_regex.match contents
-        start_offset = match.end 0 if match
-      end
-
-      if trim_lines
-        trim_lines_regex = s_to_regex trim_lines.to_s
-        trim_lines_regex = /(?:[^\n]*\n){#{trim_lines}}\Z/m unless trim_lines_regex
-        match = trim_lines_regex.match contents
-        end_offset = match.begin 0 if match
-      end
-
-      contents[start_offset..(end_offset-1)]
+      self.class.input_file_contents File.read(input_file), skip_lines, trim_lines
     end
 
     # We actually returned semi-transformed transactions here. That lets us do
