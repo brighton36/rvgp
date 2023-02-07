@@ -104,6 +104,25 @@ module RRA
       self.new title do |gnuplot|
         case type
           when :area
+            gnuplot.set 'xdata time'
+            gnuplot.set 'timefmt "%m-%y"'
+            gnuplot.set 'xrange ["%s":"%s"]' % [dataset[1][0], dataset[dataset.length-1][0]]
+            gnuplot.unset 'mxtics'
+            gnuplot.set 'mytics 2'
+            gnuplot.set 'grid xtics ytics mytics'
+            gnuplot.set 'title "Wealthgrow"'
+            gnuplot.set 'ylabel "Amount"' # TODO
+            gnuplot.set 'style fill solid 1 noborder'
+
+            # for [<var> = <start> : <end> {: <incr>}]
+            RRA::Gnuplot::DataSet.new(dataset, 'plot for [i=2:%d:1]' % num_cols,
+              0.upto(num_cols-2).map{ |i|
+               'using 1:%d with filledcurves x1 title "%s" linecolor rgb "%s"%s ' % [
+               i+2, dataset[0][i+1], palette.series_colors[i], (i == 0) ? ', \'\'' : '' ]
+              } ).apply! gnuplot
+
+          when :stacked_area
+            # TODO: I think this is always a stacked area. I think
             # Both:
             gnuplot.set 'timefmt "%b-%y"'
 
