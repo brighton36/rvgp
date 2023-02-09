@@ -1,39 +1,82 @@
 require 'open3'
 
-# TODO: Do we really need this gem? We've practically rewritten it...
-require 'gnuplot'
-
 module RRA
   class Gnuplot
     CHART_TYPES = [:area, :column]
 
     attr_reader :script, :palette
+    attr_accessor :data, :arbitrary_lines, :settings, :cmd # TODO: These were copied from gnuplot, let's choose better variables
+
+    # TODO: Let's pick a better anme
+    QUOTED = %w(title output xlabel x2label ylabel y2label clabel cblabel zlabel)
 
     # This is an updated version of the gnuplot gem's open, but which uses popen3
     # and prevents that stupid 'decimal_sign in locale is .' output on stderr
-    def initialize( title, &block )
+    def initialize(title, &block)
+      @settings = []
+      @arbitrary_lines = []
+      @data = []
+      @cmd = 'plot'
+
       @title = title
       # TODO: This should be a series_themes, and base_themes
 
       @palette = Palette.new
 
       @script = String.new
-      ::Gnuplot::Plot.new(@script) do |gnuplot|
-        header!(gnuplot)
-        block.call(gnuplot)
-      end
+      header!
+      block.call(self)
+
+      # TODO: THis was copied over...
+      @script << to_gplot
+      @script << store_datasets
     end
 
-    def header!(gnuplot)
+    # TODO: Refactor
+    def set(var, value = "")
+      value = "\"#{value}\"" if QUOTED.include? var unless value =~ /^'.*'$/
+      @settings << [ :set, var, value ]
+    end
+
+    # TODO: Refactor
+    def unset(var)
+      @settings << [:unset, var]
+    end
+
+    # TODO: This was copied over. Refactor
+    def to_gplot(io = "")
+      @settings.each do |setting|
+        io << setting.map(&:to_s).join(" ") << "\n"
+      end
+      @arbitrary_lines.each { |line| io << line << "\n" }
+
+      io
+    end
+
+    # TODO: This was copied over. Refactor
+    def store_datasets (io = "")
+      if @data.size > 0
+        io << @cmd << " " << @data.collect { |e| e.plot_args }.join(", ")
+        io << "\n"
+
+        v = @data.collect { |ds| ds.to_gplot }
+        io << v.compact.join("e\n")
+      end
+
+      io
+    end
+
+
+    def header!
       # TODO: We should probably encode the data at the top
 
       # TODO: Maybe supporting a color here would be smart. to do so, append
       #       this to the font declaration: "textcolor linetype 1"
-      gnuplot.set 'title "%s" font "Bitstream Vera,11" textcolor rgb "%s" enhanced' % [
+      set 'title "%s" font "Bitstream Vera,11" textcolor rgb "%s" enhanced' % [
         @title, @palette.title ]
 
       # TODO: I thhink we can take persist out of here and into the open()
-      gnuplot.set ["terminal",
+      set ["terminal",
         "wxt size 1200,400 persist",
         # NOTE: This seems to determine the key title font, and nothing else:
         # TODO: How can we set this color? maybe, to Base03...
@@ -42,17 +85,17 @@ module RRA
 
       # Background grid:
       # TODO: We need to take these from zero, and maybe move the pallette to (reserved number)
-      gnuplot.set "style line 102 lc rgb '%s' lt 0 lw 1" % [@palette.grid]
-      gnuplot.set "grid back ls 102"
+      set "style line 102 lc rgb '%s' lt 0 lw 1" % [@palette.grid]
+      set "grid back ls 102"
 
       # Lighten the y and x axis labels:
       # TODO: We need to take these from zero, and maybe move the pallette to (reserved number)
-      gnuplot.set "style line 101 lc rgb '%s' lt 1 lw 1" % [@palette.axis]
-      gnuplot.set "border 3 front ls 101"
+      set "style line 101 lc rgb '%s' lt 1 lw 1" % [@palette.axis]
+      set "border 3 front ls 101"
 
       # Fonts:
-      gnuplot.set 'xtics font ",9"'
-      gnuplot.set 'ytics font ",11"'
+      set 'xtics font ",9"'
+      set 'ytics font ",11"'
 
       # TODO: Color the x and y axis font labels
       # TODO: Color the axis lines
@@ -62,11 +105,11 @@ module RRA
       # gnuplot.ylabel "Amount (USD)" # TODO: Do we get this from somewhere
 
       # TODO: Reenabled
-      gnuplot.unset "colorbox"
+      unset "colorbox"
 
       # Legend
       # TODO: Why can't we set the key title color?
-      gnuplot.set ["key on",
+      set ["key on",
       "under center",
       'textcolor rgb "%s"' % @palette.key_text,
       # 'box lt 3 lc rgb "%s"' % solarized_Base02,
@@ -76,7 +119,7 @@ module RRA
       # TODO: Why is this outputting text on console...
       # This  to populate numbers with the commas after every three
       # digits:
-      gnuplot.set 'decimal locale'
+      set 'decimal locale'
     end
 
     def execute!(persist = true)
@@ -129,7 +172,7 @@ module RRA
             # X-axis:
             gnuplot.set 'xdata time'
             gnuplot.set 'format x "%b-%y"'
-            gnuplot.xtics "scale 0 rotate by 45 offset -1.4,-1.4"
+            gnuplot.set "xtics", "scale 0 rotate by 45 offset -1.4,-1.4"
 
             # Y-axis:
             gnuplot.set 'format y "$ %\'.0f"'
@@ -145,7 +188,7 @@ module RRA
 
               gnuplot.set 'tics front' # TODO: What's this do?
               gnuplot.set 'xtics 60*60*24*30'
-              gnuplot.xtics "scale 0 rotate by 45 offset -1.4,-1.4"
+              gnuplot.set "xtics", "scale 0 rotate by 45 offset -1.4,-1.4"
               gnuplot.set 'xtics out'
 
               # Data related:
@@ -197,8 +240,8 @@ module RRA
                   palette.series_colors.length, palette.series_colors.length]
                 ] ).apply! gnuplot
             else
-              gnuplot.style "data histograms"
-              gnuplot.style "histogram rowstacked"
+              gnuplot.set "style", "data histograms"
+              gnuplot.set "style", "histogram rowstacked"
               gnuplot.set "boxwidth 0.75 relative"
               gnuplot.set "style fill solid"
               gnuplot.set 'timefmt "%b-%y"'
@@ -209,7 +252,7 @@ module RRA
 
               # X-axis
               gnuplot.set 'format x "%b-%y"'
-              gnuplot.xtics "scale 0 rotate by 45 offset -2.8,-1.4"
+              gnuplot.set "xtics", "scale 0 rotate by 45 offset -2.8,-1.4"
 
               # Y-axis
               gnuplot.set 'format y "$ %\'.0f"'
@@ -222,8 +265,8 @@ module RRA
                 ] ).apply! gnuplot
             end
           when :column_and_lines
-            gnuplot.style "data histograms"
-            gnuplot.style "histogram rowstacked"
+            gnuplot.set "style", "data histograms"
+            gnuplot.set "style", "histogram rowstacked"
             gnuplot.set "boxwidth 0.75 relative"
             gnuplot.set "style fill solid"
             gnuplot.set 'timefmt "%b-%y"'
@@ -238,7 +281,7 @@ module RRA
 
             # X-axis
             gnuplot.set 'format x "%b-%y"'
-            gnuplot.xtics "scale 0 rotate by 45 offset -2.8,-1.4"
+            gnuplot.set "xtics", "scale 0 rotate by 45 offset -2.8,-1.4"
 
             # Y-axis
             gnuplot.set 'format y "$ %\'.0f"'
@@ -369,6 +412,7 @@ module RRA
         nil
       end
 
+
       def to_csv
         CSV.generate{ |csv| @dataset.each{|row| csv << row} }
       end
@@ -393,7 +437,7 @@ module RRA
         # This only reason this should trigger, is if we're calling apply! more
         # than once:
         raise StandardError, "Unimplemented" unless (
-            (plot.cmd == 'plot') and (plot.arbitrary_lines.kind_of? Array) )
+          (plot.cmd == 'plot') and (plot.arbitrary_lines.kind_of? Array) )
 
         # The "plot '-'" format was just buggy. This encoding works more reliably
         plot.arbitrary_lines << "$%s << EOD\n%sEOD" % [name, to_csv] if inline?
