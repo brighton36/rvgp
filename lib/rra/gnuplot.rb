@@ -92,55 +92,6 @@ module RRA
       end
     end
 
-    # This is a replacement for the gnuplot Dataset, which, has a number of bugs
-    # that make it useless for us.
-    # TODO: Remove this class. It's no longer needed.
-    class DataSet
-      # TODO: Move this dataset parameter into the gnuplot class, and move the related functions there
-      # Probably we can just remove this class entirely
-      def initialize(cmd, plot_attrs, opts = {})
-        @cmd, @plot_attrs, @opts = cmd, plot_attrs, opts
-      end
-
-      def inline?
-        (@opts.has_key?(:inline)) ? @opts[:inline] : true
-      end
-
-      def name
-        @opts.has_key?(:name) ? @opts[:name] : 'DATA'
-      end
-
-      def to_tmppath
-        unless @datafile
-          @datafile = Tempfile.new 'gnuplot'
-          @datafile.write to_csv
-          @datafile.close
-        end
-
-        @datafile.path
-      end
-
-      def plot_args(io = "")
-        sep = " \\\n  "
-        io << [ (inline?) ? ('$%s' % name) : ("'%s'" % [to_tmppath]),
-          sep, @plot_attrs.join(sep)].join
-      end
-
-      def apply!(plot)
-        # This only reason this should trigger, is if we're calling apply! more
-        # than once:
-        raise StandardError, "Unimplemented" unless (
-          (plot.cmd == 'plot') and (plot.arbitrary_lines.kind_of? Array) )
-
-        plot.set 'datafile separator ","'
-
-        plot.cmd = @cmd
-        plot.data ||= []
-        plot.data << self
-      end
-
-    end
-
     CHART_TYPES = [:area, :column]
 
     attr_reader :script, :palette
@@ -169,13 +120,27 @@ module RRA
 
       # TODO: THis was copied over...
       @script << to_gplot
-      @script << store_datasets
+      @script << @cmd
+      @script << "\n"
     end
 
     def to_csv
       CSV.generate{ |csv| @dataset.each{|row| csv << row} }
     end
 
+    def plot(starting: 1, ending: nil, increment: nil, var: false, ranges: [])
+      ending ||= @dataset[0].length
+      var = 'i' if var == true
+
+      plot_declaration = 'plot for [%s] $DATA' % [
+        var ? '%s=%d' % [var, starting || 1] : starting, ending, increment
+      ].compact.join(':')
+
+      # TODO: This belongs towards the top of the output
+      set 'datafile separator ","'
+
+      @cmd = [plot_declaration, ranges.map{ |range| "  "+range }].flatten.join(" \\\n")
+    end
 
     # TODO: Refactor
     def set(var, value = "")
@@ -200,20 +165,6 @@ module RRA
 
       io
     end
-
-    # TODO: This was copied over. Refactor
-    def store_datasets (io = "")
-      if @data.size > 0
-        io << @cmd << " " << @data.collect { |e| e.plot_args }.join(", ")
-        io << "\n"
-
-        #v = @data.collect { |ds| ds.to_gplot }
-        #io << v.compact.join("e\n")
-      end
-
-      io
-    end
-
 
     def header!
       # TODO: We should probably encode the data at the top
@@ -304,13 +255,11 @@ module RRA
             gnuplot.set 'title "Wealthgrow"'
             gnuplot.set 'ylabel "Amount"' # TODO
             gnuplot.set 'style fill solid 1 noborder'
-
-            # for [<var> = <start> : <end> {: <incr>}]
-            RRA::Gnuplot::DataSet.new('plot for [i=2:%d:1]' % num_cols,
-              0.upto(num_cols-2).map{ |i|
+            # TODO: Remove increment, seems unneeded
+            gnuplot.plot starting: 2, var: true, increment: 1, ranges: 0.upto(num_cols-2).map{ |i|
                'using 1:%d with filledcurves x1 title "%s" linecolor rgb "%s"%s ' % [
                i+2, dataset[0][i+1], palette.series_colors[i], (i == 0) ? ', \'\'' : '' ]
-              } ).apply! gnuplot
+              }
 
           when :stacked_area
             # TODO: I think this is always a stacked area. I think
@@ -340,12 +289,12 @@ module RRA
               gnuplot.set 'xtics out'
 
               # Data related:
-              RRA::Gnuplot::DataSet.new('plot for [i=%d:2:-1]' % num_cols, [
+              gnuplot.plot starting: num_cols, var: true, ending: 2, increment: -1, ranges: [
                 'using 1:(sum [col=2:i] (valid(col) ? column(col) : 0.0)):((i-2) %% %d)' % [
                   palette.series_colors.length],
                 'with filledcurves x1 fillstyle solid linecolor palette',
                 'title columnheader(i)'
-                ] ).apply! gnuplot
+                ]
             else
               # TODO: Wealth Grow
               # gnuplot.set 'bmargin at screen 0.4'
@@ -356,13 +305,13 @@ module RRA
                 ).apply_series_colors! gnuplot
               # gnuplot.ytics "add ('' 0) scale 0"
               # Data:
-              RRA::Gnuplot::DataSet.new('plot for [i=2:%d]' % num_cols, [
-              "using 1:((valid(i) ? column(i) : 0.0)):i",
-              # NOTE: The reason we're not getting borders, is because of the x1
-              # TODO: This would be nice 'with filledcurves x1 fillstyle pattern 10 fillcolor palette',
-              'with filledcurves x1 fillstyle fillcolor palette',
-              'title columnheader(i)'
-              ] ).apply! gnuplot
+              gnuplot.plot starting: 2, var: true, ranges: [
+                "using 1:((valid(i) ? column(i) : 0.0)):i",
+                # note: the reason we're not getting borders, is because of the x1
+                # todo: this would be nice 'with filledcurves x1 fillstyle pattern 10 fillcolor palette',
+                'with filledcurves x1 fillstyle fillcolor palette',
+                'title columnheader(i)'
+                ]
             end
           when :column
             # TODO: DRY these two subformats out
@@ -382,11 +331,11 @@ module RRA
               palette.apply_series_colors! gnuplot, fractional: true
 
               # Data related
-              RRA::Gnuplot::DataSet.new('plot for [i=2:%d]' % [num_cols], [
+              gnuplot.plot starting: 2, var: true, ranges: [
                 'using (valid(i) ? column(i) : 0.0):xticlabels(1)',
                 'linetype palette frac ((i-2) %% %d)/%.1f title columnheader(i)' % [
                   palette.series_colors.length, palette.series_colors.length]
-                ] ).apply! gnuplot
+                ]
             else
               gnuplot.set "style", "data histograms"
               gnuplot.set "style", "histogram rowstacked"
@@ -405,12 +354,11 @@ module RRA
               # Y-axis
               gnuplot.set 'format y "$ %\'.0f"'
 
-              # Data related:
-              RRA::Gnuplot::DataSet.new('plot for [i=2:%d]' % num_cols, [
+              gnuplot.plot starting: 2, var: true, ranges: [
                 "using i:xtic(1) linetype palette frac ((i-2) %% %d)/%.1f" % [
                   palette.series_colors.length, palette.series_colors.length],
                 'title columnheader(i)'
-                ] ).apply! gnuplot
+                ]
             end
           when :column_and_lines
             gnuplot.set "style", "data histograms"
@@ -435,14 +383,13 @@ module RRA
             gnuplot.set 'format y "$ %\'.0f"'
 
             # Data related:
-            RRA::Gnuplot::DataSet.new('plot for [i=2:%d]' % [num_cols-2], [
+            gnuplot.plot starting: 2, ending: num_cols-2, var: true, ranges: [
               'using i:xtic(1) linetype palette frac ((i-2) %% %d)/%.1f title columnheader(i),' % [
                 palette.series_colors.length, palette.series_colors.length],
               # TODO: We need to decide how we're going to work these, see the note above
               # These are the rolling average and annual average lines:
               "\"\" using 5 smooth unique title columnheader(5) with lines linestyle 103,",
-              "\"\" using 6 smooth unique title columnheader(6) with lines linestyle 104"
-              ] ).apply! gnuplot
+              "\"\" using 6 smooth unique title columnheader(6) with lines linestyle 104"]
         end
 
       end
