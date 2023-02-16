@@ -63,10 +63,9 @@ module RRA
       end
 
       def apply_series_colors!(gnuplot, opts = {})
-        gnuplot.set 'palette maxcolors %d' % series_colors.length unless opts[:fractional]
+        gnuplot.set 'palette', 'maxcolors %d' % series_colors.length unless opts[:fractional]
 
-        # TODO Let's make this a multiline at maybe 80 chars or so...
-        gnuplot.set "palette defined ( %s )" % [
+        gnuplot.set "palette", "defined ( %s )" % [
           series_colors.collect.with_index{ |color, i|
             # NOTE: Some charts (histogram) don't support indexed palettes, and
             # instead support color spectrums
@@ -94,83 +93,75 @@ module RRA
 
     CHART_TYPES = [:area, :column]
 
-    attr_reader :script, :palette
-    attr_accessor :data, :arbitrary_lines, :settings, :cmd # TODO: These were copied from gnuplot, let's choose better variables
+    attr_reader :palette, :settings, :plot_command
 
-    # TODO: Let's pick a better anme
-    QUOTED = %w(title output xlabel x2label ylabel y2label clabel cblabel zlabel)
+    SET_QUOTED = %w(title output xlabel x2label ylabel y2label clabel cblabel zlabel)
 
-    # This is an updated version of the gnuplot gem's open, but which uses popen3
+    # This uses an updated version of the gnuplot gem's open, but which uses popen3
     # and prevents that stupid 'decimal_sign in locale is .' output on stderr
     def initialize(title, dataset, &block)
-      @settings = []
-      @arbitrary_lines = []
-      @data = []
-      @dataset = dataset
-      @cmd = 'plot'
+      @title, @dataset = title, dataset
 
-      @title = title
+      @settings, @plot_command = [], 'plot'
+
       # TODO: This should be a series_themes, and base_themes
-
       @palette = Palette.new
 
-      @script = String.new
       header!
       block.call(self)
+    end
 
-      # TODO: THis was copied over...
-      @script << to_gplot
-      @script << @cmd
-      @script << "\n"
+    def script
+      [ "$DATA << EOD\n%sEOD\n" % to_csv,
+        @settings.map{ |setting| setting.map(&:to_s).join(" ") << "\n" },
+        @plot_command, "\n" ].flatten.join
     end
 
     def to_csv
       CSV.generate{ |csv| @dataset.each{|row| csv << row} }
     end
 
-    def plot(starting: 1, ending: nil, increment: nil, var: false, ranges: [])
+    def plot(starting: 1, ending: nil, increment: nil, iterator: 'i', elements: [])
       ending ||= @dataset[0].length
-      var = 'i' if var == true
 
-      plot_declaration = 'plot for [%s] $DATA' % [
-        var ? '%s=%d' % [var, starting || 1] : starting, ending, increment
-      ].compact.join(':')
-
-      # TODO: This belongs towards the top of the output
-      set 'datafile separator ","'
-
-      @cmd = [plot_declaration, ranges.map{ |range| "  "+range }].flatten.join(" \\\n")
+      @plot_command = [
+        'plot for [%s] $DATA' % [
+          iterator ? '%s=%d' % [iterator, starting || 1] : starting, ending, increment
+        ].compact.join(':'),
+        " \\\n",
+        # These elements might as well be 'series' in the way we use them. But,
+        # gnuplot's documentation calles them elements. So, I kept that here:
+        elements.map.with_index{ |element, i|
+          [ element.key?(:using) ? [
+              ' ',
+              (i.zero?) ? nil : '\'\'',
+              'using',
+              Array(element[:using]).map(&:to_s).join(':')
+            ].compact.join(' ') : nil,
+            # TODO: Default this to column(i)
+            '    title %s' % [element[:title] || 'columnheader(i)'],
+            element.key?(:with)  ? '    with %s' % element[:with] : nil
+          ].compact.join(" \\\n")
+        }.join(", \\\n")
+      ].join
     end
 
-    # TODO: Refactor
-    def set(var, value = "")
-      value = "\"#{value}\"" if QUOTED.include? var unless value =~ /^'.*'$/
-      @settings << [ :set, var, value ]
+    def set(key, value = "")
+      @settings << [:set, key,
+        SET_QUOTED.include?(key) && !(value =~ /^'.*'$/) ? "\"#{value}\"" : value]
     end
 
-    # TODO: Refactor
-    def unset(var)
-      @settings << [:unset, var]
+    def unset(key)
+      @settings << [:unset, key]
     end
 
-    # TODO: This was copied over. Refactor
-    def to_gplot(io = "")
-      # The "plot '-'" format was just buggy. This encoding works more reliably
-      io << "$DATA << EOD\n%sEOD\n" % to_csv
-
-      @settings.each do |setting|
-        io << setting.map(&:to_s).join(" ") << "\n"
-      end
-      @arbitrary_lines.each { |line| io << line << "\n" }
-
-      io
-    end
-
+    # I'm not crazy about this method name. Can we even delete this maybe..
+    # TODO: Stick this in the builder base class?
     def header!
-      # TODO: We should probably encode the data at the top
-
       # TODO: Maybe supporting a color here would be smart. to do so, append
       #       this to the font declaration: "textcolor linetype 1"
+      set 'datafile separator ","'
+
       set 'title "%s" font "Bitstream Vera,11" textcolor rgb "%s" enhanced' % [
         @title, @palette.title ]
 
@@ -202,28 +193,30 @@ module RRA
       # I don't know that I want these:
       # gnuplot.xlabel 'Month' # TODO: Do we get this from somewhere
       # gnuplot.ylabel "Amount (USD)" # TODO: Do we get this from somewhere
+      set 'timefmt "%m-%y"'
+
+      set 'format x "%b-%y"'
+      set 'format y "$ %\'.0f"'
 
       # TODO: Reenabled
       unset "colorbox"
 
       # Legend
       # TODO: Why can't we set the key title color?
-      set ["key on",
-      "under center",
-      'textcolor rgb "%s"' % @palette.key_text,
-      # 'box lt 3 lc rgb "%s"' % solarized_Base02,
-      "enhanced font 'Bitstream Vera,9'"
-      ].join(' ')
+      set ["key on", "under center", 'textcolor rgb "%s"' % @palette.key_text,
+        # 'box lt 3 lc rgb "%s"' % solarized_Base02,
+        "enhanced font 'Bitstream Vera,9'" ].join(' ')
 
-      # TODO: Why is this outputting text on console...
-      # This  to populate numbers with the commas after every three
+      # NOTE: This outputs 'decimal_sign in locale is .' text on the console...
+      #       no idea why.
+      # This is used to populate numbers with the commas after every three
       # digits:
       set 'decimal locale'
     end
 
     def execute!(persist = true)
       output, errors, status = Open3.capture3 ::Gnuplot.gnuplot(persist),
-        stdin_data: @script
+        stdin_data: script
 
       # For reasons unknown, this is sent to stderr, in response to the
       # 'set decimal locale' instruction. Which we need to set.
@@ -235,7 +228,9 @@ module RRA
       output
     end
 
-    # TODO: Maybe take this type out of here, and into the options...
+    # TODO: Once we've factored this out, let's make each of these cases a
+    # Builder class... and really, we should be able to join chart/lines/etc into
+    # a single builder... probably. Let's see what the factoring shows
     def self.chart(dataset, title, opts = {})
       type = opts[:chart_type].downcase.to_sym
 
@@ -243,36 +238,17 @@ module RRA
       palette = RRA::Gnuplot::Palette.new
 
       # TODO: Probably should just move this into the .new... and then make these private methods
+      #       or, maybe, change the syntax in the yml to not have a type. And let each series be a type.
       self.new title, dataset do |gnuplot|
         case type
           when :area
-            gnuplot.set 'xdata time'
-            gnuplot.set 'timefmt "%m-%y"'
-            gnuplot.set 'xrange ["%s":"%s"]' % [dataset[1][0], dataset[dataset.length-1][0]]
-            gnuplot.unset 'mxtics'
-            gnuplot.set 'mytics 2'
-            gnuplot.set 'grid xtics ytics mytics'
-            gnuplot.set 'title "Wealthgrow"'
-            gnuplot.set 'ylabel "Amount"' # TODO
-            gnuplot.set 'style fill solid 1 noborder'
-            # TODO: Remove increment, seems unneeded
-            gnuplot.plot starting: 2, var: true, increment: 1, ranges: 0.upto(num_cols-2).map{ |i|
-               'using 1:%d with filledcurves x1 title "%s" linecolor rgb "%s"%s ' % [
-               i+2, dataset[0][i+1], palette.series_colors[i], (i == 0) ? ', \'\'' : '' ]
-              }
-
-          when :stacked_area
-            # TODO: I think this is always a stacked area. I think
             # Both:
-            gnuplot.set 'timefmt "%b-%y"'
 
             # X-axis:
             gnuplot.set 'xdata time'
-            gnuplot.set 'format x "%b-%y"'
+            # TODO: You'll note that there are cases where these angles are different, below.
+            # That should be a param..
             gnuplot.set "xtics", "scale 0 rotate by 45 offset -1.4,-1.4"
-
-            # Y-axis:
-            gnuplot.set 'format y "$ %\'.0f"'
 
             if opts[:is_stacked]
               # TODO: Cashflow: probably needs an is_stacked
@@ -283,89 +259,70 @@ module RRA
               # TODO: Move this into the above palette section. Probably this needds to be in the yml
               palette.apply_series_colors! gnuplot
 
+              # TODO: I don't think this should be part of is_stacked.. move it into the yaml. Maybe as
+              # an additional_lines...
               gnuplot.set 'tics front' # TODO: What's this do?
-              gnuplot.set 'xtics 60*60*24*30'
-              gnuplot.set "xtics", "scale 0 rotate by 45 offset -1.4,-1.4"
-              gnuplot.set 'xtics out'
+              gnuplot.set 'xtics 60*60*24*30' # TODO: Is this needed
+              gnuplot.set 'xtics out' # TODO: IS this needed?
 
               # Data related:
-              gnuplot.plot starting: num_cols, var: true, ending: 2, increment: -1, ranges: [
-                'using 1:(sum [col=2:i] (valid(col) ? column(col) : 0.0)):((i-2) %% %d)' % [
-                  palette.series_colors.length],
-                'with filledcurves x1 fillstyle solid linecolor palette',
-                'title columnheader(i)'
-                ]
+              gnuplot.plot starting: num_cols, ending: 2, increment: -1, elements: [
+                { using: [1,'(sum [col=2:i] (valid(col) ? column(col) : 0.0))',
+                          '((i-2) %% %d)' % [palette.series_colors.length]],
+                  with: 'filledcurves x1 fillstyle solid linecolor palette' }
+              ]
             else
-              # TODO: Wealth Grow
               # gnuplot.set 'bmargin at screen 0.4'
               # gnuplot.set "key title 'Legend'"
-              # TODO: Clean this up, probably put it in the constructor and header
+              # TODO: Clean this up, probably put it in the yaml
               Palette.new(
                 series_colors: Palette.series_colors_from_themes('Retro Metro')
                 ).apply_series_colors! gnuplot
               # gnuplot.ytics "add ('' 0) scale 0"
               # Data:
-              gnuplot.plot starting: 2, var: true, ranges: [
-                "using 1:((valid(i) ? column(i) : 0.0)):i",
-                # note: the reason we're not getting borders, is because of the x1
-                # todo: this would be nice 'with filledcurves x1 fillstyle pattern 10 fillcolor palette',
-                'with filledcurves x1 fillstyle fillcolor palette',
-                'title columnheader(i)'
-                ]
+              gnuplot.plot starting: 2, elements: [
+                { using: [1,'((valid(i) ? column(i) : 0.0))','i'],
+                  # NOTE: the reason we're not getting borders, is because of the x1
+                  # todo: this would be nice 'with filledcurves x1 fillstyle pattern 10 fillcolor palette',
+                  with: 'filledcurves x1 fillstyle fillcolor palette' }
+              ]
             end
           when :column
-            # TODO: DRY these two subformats out
-            if opts[:is_clustered]
-              gnuplot.set "style data histogram"
+            gnuplot.set "style fill solid"
+
+            # Palette
+            palette.apply_series_colors! gnuplot, fractional: true
+
+            using_columns = if opts[:is_clustered]
+              # Seems like this sets the style of all histograms
               gnuplot.set "style histogram clustered"
-              gnuplot.set "style fill solid"
-              gnuplot.set 'timefmt "%b-%y"'
 
-              # X-axis
-              gnuplot.set 'format x "%b-%y"'
-
-              # Y-axis
-              gnuplot.set 'format y "$ %\'.0f"'
-
-              # Palette
-              palette.apply_series_colors! gnuplot, fractional: true
-
-              # Data related
-              gnuplot.plot starting: 2, var: true, ranges: [
-                'using (valid(i) ? column(i) : 0.0):xticlabels(1)',
-                'linetype palette frac ((i-2) %% %d)/%.1f title columnheader(i)' % [
-                  palette.series_colors.length, palette.series_colors.length]
-                ]
+              # NOTE: Here, we're setting nil to 0, with the ternary syntax. That
+              # should maybe be an option...
+              ['(valid(i) ? column(i) : 0.0)','xticlabels(1)']
             else
-              gnuplot.set "style", "data histograms"
               gnuplot.set "style", "histogram rowstacked"
+              # TODO: Move these into the yaml
               gnuplot.set "boxwidth 0.75 relative"
-              gnuplot.set "style fill solid"
-              gnuplot.set 'timefmt "%b-%y"'
-              gnuplot.set "key title 'Expenses'"
-
-              # Palette
-              palette.apply_series_colors! gnuplot, fractional: true
-
-              # X-axis
-              gnuplot.set 'format x "%b-%y"'
+              gnuplot.set "key title 'Expenses'" # TODO: hmm
               gnuplot.set "xtics", "scale 0 rotate by 45 offset -2.8,-1.4"
 
-              # Y-axis
-              gnuplot.set 'format y "$ %\'.0f"'
-
-              gnuplot.plot starting: 2, var: true, ranges: [
-                "using i:xtic(1) linetype palette frac ((i-2) %% %d)/%.1f" % [
-                  palette.series_colors.length, palette.series_colors.length],
-                'title columnheader(i)'
-                ]
+              ["i","xtic(1)"]
             end
+
+            gnuplot.plot starting: 2, elements: [
+              { using: using_columns,
+                with: "histogram linetype palette frac ((i-2) %% %d)/%.1f" % ([
+                  palette.series_colors.length]*2)
+              }
+            ]
           when :column_and_lines
-            gnuplot.set "style", "data histograms"
+            # NOTE: when merging above , this couples with the !is_clustered
             gnuplot.set "style", "histogram rowstacked"
+
+            # TODO: Move these into the yaml
             gnuplot.set "boxwidth 0.75 relative"
             gnuplot.set "style fill solid"
-            gnuplot.set 'timefmt "%b-%y"'
             gnuplot.set "key title 'Incomes'"
 
             # Palette
@@ -375,21 +332,18 @@ module RRA
             gnuplot.set "style line 103 lc rgb '%s' lt 1 lw 2" % [palette.green]
             gnuplot.set "style line 104 lc rgb '%s' lt 1 lw 2" % [palette.orange]
 
-            # X-axis
-            gnuplot.set 'format x "%b-%y"'
             gnuplot.set "xtics", "scale 0 rotate by 45 offset -2.8,-1.4"
 
-            # Y-axis
-            gnuplot.set 'format y "$ %\'.0f"'
-
             # Data related:
-            gnuplot.plot starting: 2, ending: num_cols-2, var: true, ranges: [
-              'using i:xtic(1) linetype palette frac ((i-2) %% %d)/%.1f title columnheader(i),' % [
-                palette.series_colors.length, palette.series_colors.length],
-              # TODO: We need to decide how we're going to work these, see the note above
+            gnuplot.plot starting: 2, ending: num_cols-2, elements: [
+              { using: ['i', 'xtic(1)'],
+                with: 'histograms linetype palette frac ((i-2) %% %d)/%.1f' % ([
+                  palette.series_colors.length]*2)
+              },
               # These are the rolling average and annual average lines:
-              "\"\" using 5 smooth unique title columnheader(5) with lines linestyle 103,",
-              "\"\" using 6 smooth unique title columnheader(6) with lines linestyle 104"]
+              { using: 5, title: 'columnheader(5)', with: 'lines smooth unique linestyle 103' },
+              { using: 6, title: 'columnheader(6)', with: 'lines smooth unique linestyle 104' }
+            ]
         end
 
       end
