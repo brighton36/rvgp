@@ -1,5 +1,7 @@
 require 'open3'
 
+require 'pry'
+
 module RRA
   class Gnuplot
     class Palette
@@ -101,8 +103,8 @@ module RRA
     # and prevents that stupid 'decimal_sign in locale is .' output on stderr
     def initialize(title, dataset, &block)
       @title, @dataset = title, dataset
-
       @settings, @plot_command = [], 'plot'
+      @additional_lines = []
 
       # TODO: This should be a series_themes, and base_themes
       @palette = Palette.new
@@ -114,20 +116,28 @@ module RRA
     def script
       [ "$DATA << EOD\n%sEOD\n" % to_csv,
         @settings.map{ |setting| setting.map(&:to_s).join(" ") << "\n" },
+        @additional_lines.join("\n"),
         @plot_command, "\n" ].flatten.join
+    end
+
+    def <<(lines)
+      @additional_lines += lines
     end
 
     def to_csv
       CSV.generate{ |csv| @dataset.each{|row| csv << row} }
     end
 
+    # TODO: We may want/need to change these defaults... lets see what happens
+    # with columns_and_lines. We may want to also break this into separate
+    # plot_for, plot_elements,  etc methods
     def plot(starting: 1, ending: nil, increment: nil, iterator: 'i', elements: [])
-      ending ||= @dataset[0].length
+      plot_for ='for [%s]' % [
+        iterator ? '%s=%d' % [iterator, starting || 1] : starting, ending || @dataset[0].length, increment
+      ].compact.join(':') if starting
 
       @plot_command = [
-        'plot for [%s] $DATA' % [
-          iterator ? '%s=%d' % [iterator, starting || 1] : starting, ending, increment
-        ].compact.join(':'),
+        ['plot', plot_for, '$DATA'].compact.join(' '),
         " \\\n",
         # These elements might as well be 'series' in the way we use them. But,
         # gnuplot's documentation calles them elements. So, I kept that here:
@@ -146,9 +156,16 @@ module RRA
       ].join
     end
 
-    def set(key, value = "")
+    # TODO: Probably we need to test this, and/or move it to private. We may
+    # even want to just nix this encoding feature entirely..
+    def encode_value(value)
+      # TODO: this is a crappy encoder. pulled from gnuplot. make it reasonable
+      (value =~ /^["'].*['"]$/) ? value : "\"#{value}\""
+    end
+
+    def set(key, value = nil)
       @settings << [:set, key,
-        SET_QUOTED.include?(key) && !(value =~ /^'.*'$/) ? "\"#{value}\"" : value]
+        (value and SET_QUOTED.include?(key)) ? encode_value(value) : value].compact
     end
 
     def unset(key)
@@ -162,7 +179,7 @@ module RRA
       #       this to the font declaration: "textcolor linetype 1"
       set 'datafile separator ","'
 
-      set 'title "%s" font "Bitstream Vera,11" textcolor rgb "%s" enhanced' % [
+      set 'title "%s" font "sans,11" textcolor rgb "%s" enhanced' % [
         @title, @palette.title ]
 
       # TODO: I thhink we can take persist out of here and into the open()
@@ -170,7 +187,7 @@ module RRA
         "wxt size 1200,400 persist",
         # NOTE: This seems to determine the key title font, and nothing else:
         # TODO: How can we set this color? maybe, to Base03...
-        "enhanced font 'Bitstream Vera,10'",
+        "enhanced font 'sans,10'",
         "background rgb '%s'" % [@palette.background] ].join(' ')
 
       # Background grid:
@@ -205,7 +222,7 @@ module RRA
       # TODO: Why can't we set the key title color?
       set ["key on", "under center", 'textcolor rgb "%s"' % @palette.key_text,
         # 'box lt 3 lc rgb "%s"' % solarized_Base02,
-        "enhanced font 'Bitstream Vera,9'" ].join(' ')
+        "enhanced font 'sans,9'" ].join(' ')
 
       # NOTE: This outputs 'decimal_sign in locale is .' text on the console...
       #       no idea why.
@@ -240,6 +257,8 @@ module RRA
       # TODO: Probably should just move this into the .new... and then make these private methods
       #       or, maybe, change the syntax in the yml to not have a type. And let each series be a type.
       self.new title, dataset do |gnuplot|
+        gnuplot << Array(opts[:additional_lines]) if opts.key? :additional_lines
+
         case type
           when :area
             # Both:
@@ -320,30 +339,46 @@ module RRA
             # NOTE: when merging above , this couples with the !is_clustered
             gnuplot.set "style", "histogram rowstacked"
 
-            # TODO: Move these into the yaml
-            gnuplot.set "boxwidth 0.75 relative"
-            gnuplot.set "style fill solid"
-            gnuplot.set "key title 'Incomes'"
-
             # Palette
+            # TODO:  I think we can probably nix this function, and remove this line
             palette.apply_series_colors! gnuplot, fractional: true
 
-            # smooth Line palette
-            gnuplot.set "style line 103 lc rgb '%s' lt 1 lw 2" % [palette.green]
-            gnuplot.set "style line 104 lc rgb '%s' lt 1 lw 2" % [palette.orange]
+            # TODO: Let's maybe redo the syntax on this function, probably it should default to starting nil
+            # TODO: Maybe it should take a block, for our elements
+            gnuplot.plot starting: nil, elements: (1.upto(num_cols-1).map do |i|
+              title = dataset[0][i]
+              series_type = :column
 
-            gnuplot.set "xtics", "scale 0 rotate by 45 offset -2.8,-1.4"
+              # TODO: This code is a little ugly looking..
+              if opts.key?(:series_types) and opts[:series_types].key? title&.to_sym
+                series_type = opts[:series_types][title.to_sym].downcase.to_sym
+              end
 
-            # Data related:
+              with = case series_type
+                when :column
+                  # TODO: Can we just specify the color here, and not use the frac?
+                  # TODO: don't calculate this maybe, grab it from the palette as a precompute
+                  # TODO: Use a modulus here
+                  "histograms linetype rgb '%s'" % [palette.series_colors[i-1]]
+                when :line # Line
+                  "lines smooth unique lc rgb '%s' lt 1 lw 2" % [palette.series_colors[i-1]]
+                else
+                  raise StandardError, "Unsupported series_type %s" % series_type.inspect
+              end
+
+              { using: [i+1, 'xtic(1)'], title: "'%s'" % title, with: with }
+            end)
+=begin
             gnuplot.plot starting: 2, ending: num_cols-2, elements: [
               { using: ['i', 'xtic(1)'],
                 with: 'histograms linetype palette frac ((i-2) %% %d)/%.1f' % ([
                   palette.series_colors.length]*2)
               },
               # These are the rolling average and annual average lines:
-              { using: 5, title: 'columnheader(5)', with: 'lines smooth unique linestyle 103' },
-              { using: 6, title: 'columnheader(6)', with: 'lines smooth unique linestyle 104' }
+              { using: 5, title: 'columnheader(5)', with: "lines smooth unique lc rgb '%s' lt 1 lw 2" % [palette.green] },
+              { using: 6, title: 'columnheader(6)', with: "lines smooth unique lc rgb '%s' lt 1 lw 2" % [palette.orange] },
             ]
+=end
         end
 
       end
