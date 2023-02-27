@@ -1,4 +1,4 @@
-require 'rra/plot'
+require_relative '../plot'
 
 class RRA::Commands::Plot < RRA::CommandBase
   accepts_options OPTION_ALL, OPTION_LIST, [:stdout, :s], [:interactive, :i]

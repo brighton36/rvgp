@@ -131,6 +131,8 @@ module RRA
     # TODO: We may want/need to change these defaults... lets see what happens
     # with columns_and_lines. We may want to also break this into separate
     # plot_for, plot_elements,  etc methods
+    # TODO: Let's maybe redo the syntax on this function, probably it should default to starting nil
+    # TODO: Maybe it should take a block, for our elements
     def plot(starting: 1, ending: nil, increment: nil, iterator: 'i', elements: [])
       plot_for ='for [%s]' % [
         iterator ? '%s=%d' % [iterator, starting || 1] : starting, ending || @dataset[0].length, increment
@@ -259,130 +261,89 @@ module RRA
       self.new title, dataset do |gnuplot|
         gnuplot << Array(opts[:additional_lines]) if opts.key? :additional_lines
 
-        case type
-          when :area
-            # Both:
+        if type == :area
+          # Both:
 
-            # X-axis:
-            gnuplot.set 'xdata time'
-            # TODO: You'll note that there are cases where these angles are different, below.
-            # That should be a param..
-            gnuplot.set "xtics", "scale 0 rotate by 45 offset -1.4,-1.4"
+          # X-axis:
+          gnuplot.set 'xdata time'
+          # TODO: You'll note that there are cases where these angles are different, below.
+          # That should be a param..
+          gnuplot.set "xtics", "scale 0 rotate by 45 offset -1.4,-1.4"
 
-            if opts[:is_stacked]
-              # TODO: Cashflow: probably needs an is_stacked
-              # gnuplot.set 'bmargin at screen 0.5'
-              # gnuplot.set "key title 'Expenses'"
-              # TODO: Invert the legend order... why is hotels on bottom right, instead of top left
-              #
-              # TODO: Move this into the above palette section. Probably this needds to be in the yml
-              palette.apply_series_colors! gnuplot
+          if opts[:is_stacked]
+            # TODO: Cashflow: probably needs an is_stacked
+            # gnuplot.set 'bmargin at screen 0.5'
+            # gnuplot.set "key title 'Expenses'"
+            # TODO: Invert the legend order... why is hotels on bottom right, instead of top left
+            #
+            # TODO: Move this into the above palette section. Probably this needds to be in the yml
+            palette.apply_series_colors! gnuplot
 
-              # TODO: I don't think this should be part of is_stacked.. move it into the yaml. Maybe as
-              # an additional_lines...
-              gnuplot.set 'tics front' # TODO: What's this do?
-              gnuplot.set 'xtics 60*60*24*30' # TODO: Is this needed
-              gnuplot.set 'xtics out' # TODO: IS this needed?
-
-              # Data related:
-              gnuplot.plot starting: num_cols, ending: 2, increment: -1, elements: [
-                { using: [1,'(sum [col=2:i] (valid(col) ? column(col) : 0.0))',
-                          '((i-2) %% %d)' % [palette.series_colors.length]],
-                  with: 'filledcurves x1 fillstyle solid linecolor palette' }
-              ]
-            else
-              # gnuplot.set 'bmargin at screen 0.4'
-              # gnuplot.set "key title 'Legend'"
-              # TODO: Clean this up, probably put it in the yaml
-              Palette.new(
-                series_colors: Palette.series_colors_from_themes('Retro Metro')
-                ).apply_series_colors! gnuplot
-              # gnuplot.ytics "add ('' 0) scale 0"
-              # Data:
-              gnuplot.plot starting: 2, elements: [
-                { using: [1,'((valid(i) ? column(i) : 0.0))','i'],
-                  # NOTE: the reason we're not getting borders, is because of the x1
-                  # todo: this would be nice 'with filledcurves x1 fillstyle pattern 10 fillcolor palette',
-                  with: 'filledcurves x1 fillstyle fillcolor palette' }
-              ]
-            end
-          when :column
-            gnuplot.set "style fill solid"
-
-            # Palette
-            palette.apply_series_colors! gnuplot, fractional: true
-
-            using_columns = if opts[:is_clustered]
-              # Seems like this sets the style of all histograms
-              gnuplot.set "style histogram clustered"
-
-              # NOTE: Here, we're setting nil to 0, with the ternary syntax. That
-              # should maybe be an option...
-              ['(valid(i) ? column(i) : 0.0)','xticlabels(1)']
-            else
-              gnuplot.set "style", "histogram rowstacked"
-              # TODO: Move these into the yaml
-              gnuplot.set "boxwidth 0.75 relative"
-              gnuplot.set "key title 'Expenses'" # TODO: hmm
-              gnuplot.set "xtics", "scale 0 rotate by 45 offset -2.8,-1.4"
-
-              ["i","xtic(1)"]
-            end
-
+            # Data related:
+            gnuplot.plot starting: num_cols, ending: 2, increment: -1, elements: [
+              { using: [1,'(sum [col=2:i] (valid(col) ? column(col) : 0.0))',
+                        '((i-2) %% %d)' % [palette.series_colors.length]],
+                with: 'filledcurves x1 fillstyle solid linecolor palette' }
+            ]
+          else
+            # gnuplot.set 'bmargin at screen 0.4'
+            # gnuplot.set "key title 'Legend'"
+            # TODO: Clean this up, probably put it in the yaml
+            Palette.new(
+              series_colors: Palette.series_colors_from_themes('Retro Metro')
+              ).apply_series_colors! gnuplot
+            # gnuplot.ytics "add ('' 0) scale 0"
+            # Data:
             gnuplot.plot starting: 2, elements: [
-              { using: using_columns,
-                with: "histogram linetype palette frac ((i-2) %% %d)/%.1f" % ([
-                  palette.series_colors.length]*2)
-              }
+              { using: [1,'((valid(i) ? column(i) : 0.0))','i'],
+                # NOTE: the reason we're not getting borders, is because of the x1
+                # todo: this would be nice 'with filledcurves x1 fillstyle pattern 10 fillcolor palette',
+                with: 'filledcurves x1 fillstyle fillcolor palette' }
             ]
-          when :column_and_lines
-            # NOTE: when merging above , this couples with the !is_clustered
-            gnuplot.set "style", "histogram rowstacked"
+          end
+        elsif type == :column
+          gnuplot.set "style fill solid"
+          gnuplot.set "style histogram %s" % [opts[:is_clustered] ? "clustered" : "rowstacked"]
 
-            # Palette
-            # TODO:  I think we can probably nix this function, and remove this line
-            palette.apply_series_colors! gnuplot, fractional: true
+          # TODO: I actually think this xrange needs to go into the colmun_and_lines...
+          # TODO: Why is 'date there at the origin'
+          gnuplot.set "xrange", "[0:]"
 
-            # TODO: Let's maybe redo the syntax on this function, probably it should default to starting nil
-            # TODO: Maybe it should take a block, for our elements
-            gnuplot.plot starting: nil, elements: (1.upto(num_cols-1).map do |i|
-              title = dataset[0][i]
-              series_type = :column
+          gnuplot.plot starting: nil, elements: (1.upto(num_cols-1).map do |i|
+            title = dataset[0][i]
+            with = "histograms linetype rgb '%s'" % [palette.series_colors[i-1]]
+            using = opts[:is_clustered] ? '(valid(%d) ? column(%d) : 0.0)' % ([i+1]*2) : i+1
 
-              # TODO: This code is a little ugly looking..
-              if opts.key?(:series_types) and opts[:series_types].key? title&.to_sym
-                series_type = opts[:series_types][title.to_sym].downcase.to_sym
-              end
+            { using: [using, 'xtic(1)'], title: "'%s'" % title, with: with }
+          end)
 
-              with = case series_type
-                when :column
-                  # TODO: Can we just specify the color here, and not use the frac?
-                  # TODO: don't calculate this maybe, grab it from the palette as a precompute
-                  # TODO: Use a modulus here
-                  "histograms linetype rgb '%s'" % [palette.series_colors[i-1]]
-                when :line # Line
-                  "lines smooth unique lc rgb '%s' lt 1 lw 2" % [palette.series_colors[i-1]]
-                else
-                  raise StandardError, "Unsupported series_type %s" % series_type.inspect
-              end
+        elsif type == :column_and_lines
+          # NOTE: when merging above , this couples with the !is_clustered
+          gnuplot.set "style", "histogram rowstacked"
 
-              { using: [i+1, 'xtic(1)'], title: "'%s'" % title, with: with }
-            end)
-=begin
-            gnuplot.plot starting: 2, ending: num_cols-2, elements: [
-              { using: ['i', 'xtic(1)'],
-                with: 'histograms linetype palette frac ((i-2) %% %d)/%.1f' % ([
-                  palette.series_colors.length]*2)
-              },
-              # These are the rolling average and annual average lines:
-              { using: 5, title: 'columnheader(5)', with: "lines smooth unique lc rgb '%s' lt 1 lw 2" % [palette.green] },
-              { using: 6, title: 'columnheader(6)', with: "lines smooth unique lc rgb '%s' lt 1 lw 2" % [palette.orange] },
-            ]
-=end
+          gnuplot.plot starting: nil, elements: (1.upto(num_cols-1).map do |i|
+            title = dataset[0][i]
+            series_type = :column
+
+            # TODO: This code is a little ugly looking..
+            if opts.key?(:series_types) and opts[:series_types].key? title&.to_sym
+              series_type = opts[:series_types][title.to_sym].downcase.to_sym
+            end
+
+            with = case series_type
+              when :column
+                # TODO: Use a modulus here for the color
+                "histograms linetype rgb '%s'" % [palette.series_colors[i-1]]
+              when :line # Line
+                "lines smooth unique lc rgb '%s' lt 1 lw 2" % [palette.series_colors[i-1]]
+              else
+                raise StandardError, "Unsupported series_type %s" % series_type.inspect
+            end
+
+            { using: [i+1, 'xtic(1)'], title: "'%s'" % title, with: with }
+          end)
         end
-
       end
     end
-
   end
 end

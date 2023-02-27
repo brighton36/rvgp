@@ -1,7 +1,7 @@
-require 'rra/plot'
-require 'rra/google-drive/sheet'
-require 'rra/google-drive/output_google_sheets'
-require 'rra/google-drive/output_csv'
+require_relative '../plot'
+require_relative '../google-drive/sheet'
+require_relative '../google-drive/output_google_sheets'
+require_relative '../google-drive/output_csv'
 
 class RRA::Commands::PublishGsheets < RRA::CommandBase
   DEFAULT_SLEEP_BETWEEN_SHEETS = 5
