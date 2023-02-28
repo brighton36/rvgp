@@ -46,7 +46,7 @@ module RRA
                         "#ffa300", "#dc0ab4", "#b3d4ff", "#00bfa0"],
         'River Nights' => ["#b30000", "#7c1158", "#4421af", "#1a53ff", "#0d88e6",
                             "#00b7c7", "#5ad45a", "#8be04e", "#ebdc78"],
-        'Spring Pastels' => ["#fd7f6f", "#7eb0d5", "#b2e061", "#bd7ebe", "#ffb55a",
+        'Spring Pastels' => ["#7eb0d5", "#fd7f6f", "#b2e061", "#bd7ebe", "#ffb55a",
                             "#ffee65", "#beb9db", "#fdcce5", "#8bd3c7"],
         # Sequential
         'Blue to Yellow' => ["#115f9a", "#1984c5", "#22a7f0", "#48b5c4", "#76c68f",
@@ -54,7 +54,7 @@ module RRA
         # TODO: Add more sequential from https://www.heavy.ai/blog/12-color-palettes-for-telling-better-stories-with-your-data
       }
 
-      attr_reader :base_colors, :series_colors
+      attr_reader :base_colors
 
       def initialize(opts = {})
         @series_colors = (opts.has_key? :series_colors) ? opts[:series_colors] :
@@ -62,22 +62,14 @@ module RRA
             'Dutch Field', 'River Nights' )
         @base_colors = (opts.has_key? :base_colors) ? opts[:base_colors] :
           BASE_THEMES[:solarized_light]
+        @last_series_color = -1
+      end
+
+      def series_color_next!
+        @series_colors[(@last_series_color += 1) % @series_colors.length]
       end
 
       # TODO: I think we don't need this
-      def apply_series_colors!(gnuplot, opts = {})
-        gnuplot.set 'palette', 'maxcolors %d' % series_colors.length unless opts[:fractional]
-
-        gnuplot.set "palette", "defined ( %s )" % [
-          series_colors.collect.with_index{ |color, i|
-            # NOTE: Some charts (histogram) don't support indexed palettes, and
-            # instead support color spectrums
-            index = opts[:fractional] ? ("%.6f" % [i.to_f/(series_colors.length)]) : ("%d" % i)
-            "%s '%s'" % [index, color]
-          }.join(', ')  ]
-        nil
-      end
-
       def self.series_colors_from_themes(*args)
         args.collect{|arg| SERIES_THEMES[arg]}.flatten
       end
@@ -107,7 +99,6 @@ module RRA
       @settings, @plot_command = [], 'plot'
       @additional_lines = []
 
-      # TODO: This should be a series_themes, and base_themes
       @palette = Palette.new
 
       header!
@@ -129,12 +120,8 @@ module RRA
       CSV.generate{ |csv| @dataset.each{|row| csv << row} }
     end
 
-    # TODO: We may want/need to change these defaults... lets see what happens
-    # with columns_and_lines. We may want to also break this into separate
-    # plot_for, plot_elements,  etc methods
-    # TODO: Let's maybe redo the syntax on this function, probably it should default to starting nil
     # TODO: Maybe it should take a block, for our elements
-    def plot(starting: 1, ending: nil, increment: nil, iterator: 'i', elements: [])
+    def plot(starting: nil, ending: nil, increment: nil, iterator: 'i', elements: [])
       plot_for ='for [%s]' % [
         iterator ? '%s=%d' % [iterator, starting || 1] : starting, ending || @dataset[0].length, increment
       ].compact.join(':') if starting
@@ -151,7 +138,6 @@ module RRA
               'using',
               Array(element[:using]).map(&:to_s).join(':')
             ].compact.join(' ') : nil,
-            # TODO: Default this to column(i)
             '    title %s' % [element[:title] || 'columnheader(i)'],
             element.key?(:with)  ? '    with %s' % element[:with] : nil
           ].compact.join(" \\\n")
@@ -257,50 +243,46 @@ module RRA
       num_cols = dataset[0].length
       palette = RRA::Gnuplot::Palette.new
 
-      # TODO: Probably should just move this into the .new... and then make these private methods
+      # TODO: Probably should just unroll this into the .new... and then make these private methods
       #       or, maybe, change the syntax in the yml to not have a type. And let each series be a type.
       self.new title, dataset do |gnuplot|
+        # TODO: Move these additional lines to the bottom just before the plot
         gnuplot << Array(opts[:additional_lines]) if opts.key? :additional_lines
 
-        if type == :area
-          # Both:
+        # TODO: Probably we want classes for area and ColumnsAndLines
+        reverse_series_range = false
 
+        series_formatter = if type == :area
           # X-axis:
           gnuplot.set 'xdata', 'time'
+
           # TODO: You'll note that there are cases where these angles are different, below.
-          # That should be a param..
+          # That should be an additional_lines line
           gnuplot.set "xtics", "scale 0 rotate by 45 offset -1.4,-1.4"
 
-          if opts[:is_stacked]
-            # TODO: Cashflow: probably needs an is_stacked
-            # gnuplot.set 'bmargin at screen 0.5'
-            # gnuplot.set "key title 'Expenses'"
-            # TODO: Invert the legend order... why is hotels on bottom right, instead of top left
-            #
-            # TODO: Move this into the above palette section. Probably this needds to be in the yml
-            palette.apply_series_colors! gnuplot
+          # TODO: Does this belong in the cashflow additional lines?
+          # gnuplot.set 'bmargin at screen 0.5'
+          # gnuplot.set "key title 'Expenses'"
+          # TODO: For cashflow, Invert the legend order... why is hotels on bottom right, instead of top left
+          # /TODO: Cashflow
 
-            # Data related:
-            gnuplot.plot starting: num_cols, ending: 2, increment: -1, elements: [
-              { using: [1,'(sum [col=2:i] (valid(col) ? column(col) : 0.0))',
-                        '((i-2) %% %d)' % [palette.series_colors.length]],
-                with: 'filledcurves x1 fillstyle solid linecolor palette' }
-            ]
+          # TODO: Does this belong in wealth growth additional_lines?
+          # gnuplot.set 'bmargin at screen 0.4'
+          # gnuplot.set "key title 'Legend'"
+          # gnuplot.ytics "add ('' 0) scale 0"
+          # /TODO: wealth growth
+
+          if opts[:is_stacked]
+            # NOTE: This is the cash flow path:
+            reverse_series_range= true
+            using_data = '(sum [col=2:%<num>.d] (valid(col) ? column(col) : 0.0))'
           else
-            # gnuplot.set 'bmargin at screen 0.4'
-            # gnuplot.set "key title 'Legend'"
-            # TODO: Clean this up, probably put it in the yaml
-            Palette.new(
-              series_colors: Palette.series_colors_from_themes('Retro Metro')
-              ).apply_series_colors! gnuplot
-            # gnuplot.ytics "add ('' 0) scale 0"
-            # Data:
-            gnuplot.plot starting: 2, elements: [
-              { using: [1,'((valid(i) ? column(i) : 0.0))','i'],
-                # NOTE: the reason we're not getting borders, is because of the x1
-                # todo: this would be nice 'with filledcurves x1 fillstyle pattern 10 fillcolor palette',
-                with: 'filledcurves x1 fillstyle fillcolor palette' }
-            ]
+            using_data = '(valid(%<num>.d) ? column(%<num>.d) : 0.0)'
+          end
+
+          lambda do |i, title|
+            { using: [1, using_data % {num: i+1}],
+              with: "filledcurves x1 fillstyle solid 1.0 fillcolor '%s'" % [palette.series_color_next!] }
           end
         else
           gnuplot.set "style", "histogram %s" % [opts[:is_clustered] ? "clustered" : "rowstacked"]
@@ -310,13 +292,12 @@ module RRA
           # TODO: Some reports (income-and-expense-by-intention) need 0 and others need 1
           gnuplot.set "xrange", "[0:]"
 
-          gnuplot.plot starting: nil, elements: (1.upto(num_cols-1).map do |i|
-            title = dataset[0][i]
+          lambda do |i, title|
             series_type = :column
             using = (series_type == :column && opts[:is_clustered]) ?
               '(valid(%d) ? column(%d) : 0.0)' % ([i+1]*2) : i+1
 
-            # TODO: This code is a little ugly looking..
+            # TODO: This code is a little ugly looking.. and do we really need to_sym?
             if opts.key?(:series_types) and opts[:series_types].key? title&.to_sym
               series_type = opts[:series_types][title.to_sym].downcase.to_sym
             end
@@ -324,16 +305,23 @@ module RRA
             with = case series_type
               when :column
                 # TODO: Use a modulus here for the color
-                "histograms linetype rgb '%s'" % [palette.series_colors[i-1]]
+                "histograms linetype rgb '%s'" % [palette.series_color_next!]
               when :line # Line
-                "lines smooth unique lc rgb '%s' lt 1 lw 2" % [palette.series_colors[i-1]]
+                "lines smooth unique lc rgb '%s' lt 1 lw 2" % [palette.series_color_next!]
               else
                 raise StandardError, "Unsupported series_type %s" % series_type.inspect
             end
 
-            { using: [using, 'xtic(1)'], title: "'%s'" % title, with: with }
-          end)
+            { using: [using, 'xtic(1)'], with: with }
+          end
         end
+
+        series_range = reverse_series_range ? (num_cols-1).downto(1) : 1.upto(num_cols-1)
+
+        gnuplot.plot elements: (series_range.map do |i|
+          title = dataset[0][i]
+          {title:  "'%s'" % title}.merge series_formatter.call(i, title)
+        end)
       end
     end
   end
