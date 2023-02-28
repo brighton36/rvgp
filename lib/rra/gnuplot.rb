@@ -64,6 +64,7 @@ module RRA
           BASE_THEMES[:solarized_light]
       end
 
+      # TODO: I think we don't need this
       def apply_series_colors!(gnuplot, opts = {})
         gnuplot.set 'palette', 'maxcolors %d' % series_colors.length unless opts[:fractional]
 
@@ -265,7 +266,7 @@ module RRA
           # Both:
 
           # X-axis:
-          gnuplot.set 'xdata time'
+          gnuplot.set 'xdata', 'time'
           # TODO: You'll note that there are cases where these angles are different, below.
           # That should be a param..
           gnuplot.set "xtics", "scale 0 rotate by 45 offset -1.4,-1.4"
@@ -301,29 +302,19 @@ module RRA
                 with: 'filledcurves x1 fillstyle fillcolor palette' }
             ]
           end
-        elsif type == :column
-          gnuplot.set "style fill solid"
-          gnuplot.set "style histogram %s" % [opts[:is_clustered] ? "clustered" : "rowstacked"]
+        else
+          gnuplot.set "style", "histogram %s" % [opts[:is_clustered] ? "clustered" : "rowstacked"]
+          gnuplot.set "style", "fill solid"
 
-          # TODO: I actually think this xrange needs to go into the colmun_and_lines...
           # TODO: Why is 'date there at the origin'
+          # TODO: Some reports (income-and-expense-by-intention) need 0 and others need 1
           gnuplot.set "xrange", "[0:]"
 
           gnuplot.plot starting: nil, elements: (1.upto(num_cols-1).map do |i|
             title = dataset[0][i]
-            with = "histograms linetype rgb '%s'" % [palette.series_colors[i-1]]
-            using = opts[:is_clustered] ? '(valid(%d) ? column(%d) : 0.0)' % ([i+1]*2) : i+1
-
-            { using: [using, 'xtic(1)'], title: "'%s'" % title, with: with }
-          end)
-
-        elsif type == :column_and_lines
-          # NOTE: when merging above , this couples with the !is_clustered
-          gnuplot.set "style", "histogram rowstacked"
-
-          gnuplot.plot starting: nil, elements: (1.upto(num_cols-1).map do |i|
-            title = dataset[0][i]
             series_type = :column
+            using = (series_type == :column && opts[:is_clustered]) ?
+              '(valid(%d) ? column(%d) : 0.0)' % ([i+1]*2) : i+1
 
             # TODO: This code is a little ugly looking..
             if opts.key?(:series_types) and opts[:series_types].key? title&.to_sym
@@ -340,7 +331,7 @@ module RRA
                 raise StandardError, "Unsupported series_type %s" % series_type.inspect
             end
 
-            { using: [i+1, 'xtic(1)'], title: "'%s'" % title, with: with }
+            { using: [using, 'xtic(1)'], title: "'%s'" % title, with: with }
           end)
         end
       end
