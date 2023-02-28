@@ -1,7 +1,5 @@
 require 'open3'
 
-require 'pry'
-
 module RRA
   class Gnuplot
     class Palette
@@ -274,7 +272,7 @@ module RRA
 
           if opts[:is_stacked]
             # NOTE: This is the cash flow path:
-            reverse_series_range= true
+            reverse_series_range = true
             using_data = '(sum [col=2:%<num>.d] (valid(col) ? column(col) : 0.0))'
           else
             using_data = '(valid(%<num>.d) ? column(%<num>.d) : 0.0)'
@@ -304,7 +302,6 @@ module RRA
 
             with = case series_type
               when :column
-                # TODO: Use a modulus here for the color
                 "histograms linetype rgb '%s'" % [palette.series_color_next!]
               when :line # Line
                 "lines smooth unique lc rgb '%s' lt 1 lw 2" % [palette.series_color_next!]
