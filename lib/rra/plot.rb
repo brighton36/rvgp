@@ -102,7 +102,7 @@ class RRA::Plot
 
   def gnuplot(name)
     @gnuplots ||= Hash.new
-    @gnuplots[name] ||= RRA::Gnuplot.chart grid(name), title(name), gnuplot_options
+    @gnuplots[name] ||= RRA::Gnuplot::Plot.chart grid(name), title(name), gnuplot_options
   end
 
   def script(name)
