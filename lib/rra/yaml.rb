@@ -1,8 +1,8 @@
 require 'psych'
 require 'pathname'
 
-Psych::add_builtin_type('proc') {|_, val| RRA::Yaml::PsychProc.new val }
-Psych::add_builtin_type('include') {|_, val| RRA::Yaml::PsychInclude.new val }
+Psych::add_builtin_type('proc') { |_, val| RRA::Yaml::PsychProc.new val }
+Psych::add_builtin_type('include') { |_, val| RRA::Yaml::PsychInclude.new val }
 
 module RRA
   # We added this class because the Psych.add_builtin_type wasn't able to 
@@ -18,10 +18,20 @@ module RRA
         @path = path
       end
 
-      def contents(basedir)
-        Psych.safe_load_file(
-          (Pathname.new(path).absolute?) ? path : [basedir,path].join('/'),
-          symbolize_names: true, permitted_classes: [Date])
+      def contents(include_paths)
+        content_path = if Pathname.new(path).absolute?
+          path
+        else
+          include_paths.map { |p| [p.chomp('/'), path].join('/') }.find do |p|
+            File.readable? p
+          end
+        end
+
+        raise StandardError, "Unable to find %s in any of the provided paths: %s" % [
+          path.inspect, include_paths.inspect ] unless content_path
+
+        Psych.safe_load_file content_path, symbolize_names: true, 
+          permitted_classes: [Date, Symbol]
       end
     end
 
@@ -43,7 +53,7 @@ module RRA
       end
     end
 
-    attr_reader :path, :basedir, :dependencies
+    attr_reader :path, :include_paths, :dependencies
 
     def [](attr); @yaml[attr]; end
     def has_key?(attr); @yaml.has_key? attr; end
@@ -60,15 +70,15 @@ module RRA
       end
     end
 
-    def initialize(path, basedir = nil)
-      @path, @dependencies, @basedir = path, [], 
-        basedir || File.expand_path(File.dirname(path))
-
+    def initialize(path, include_paths = nil)
+      @path, @dependencies, @include_paths = path, [], 
+        Array(include_paths || File.expand_path(File.dirname(path)))
+      
       @yaml = replace_each_in_yaml( 
-        Psych.safe_load_file(path, symbolize_names: true, permitted_classes: [Date]),
-        PsychInclude ){|psych_inc|
+        Psych.safe_load_file(path, symbolize_names: true, permitted_classes: [Date, Symbol]),
+        PsychInclude ) {|psych_inc|
           @dependencies << psych_inc.path
-          psych_inc.contents basedir
+          psych_inc.contents @include_paths
         }
     end
   end

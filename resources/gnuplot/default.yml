@@ -1,0 +1,102 @@
+colors:
+  base:
+    # Solarized Light:
+    base03:  '#002b36'
+    base02:  '#073642'
+    base01:  '#586e75'
+    base00:  '#657b83'
+    base0:   '#839496'
+    base1:   '#93a1a1'
+    base2:   '#eee8d5'
+    base3:   '#fdf6e3'
+    yellow:  '#b58900'
+    orange:  '#cb4b16'
+    red:     '#dc322f'
+    magenta: '#d33682'
+    violet:  '#6c71c4'
+    blue:    '#268bd2'
+    cyan:    '#2aa198'
+    green:   '#859900'
+    font:       :base03
+    title:      :font
+    grid:       :base02
+    axis:       :base02
+    key_text:   :font
+    background: :base3
+  series:
+    # https://www.heavy.ai/blog/12-color-palettes-for-telling-better-stories-with-your-data
+    # Spring Pastels
+    - "#7eb0d5"
+    - "#fd7f6f"
+    - "#b2e061"
+    - "#bd7ebe"
+    - "#ffb55a"
+    - "#ffee65"
+    - "#beb9db"
+    - "#fdcce5"
+    - "#8bd3c7"
+    # Retro Metro
+    - "#ea5545"
+    - "#f46a9b"
+    - "#ef9b20"
+    - "#edbf33"
+    - "#ede15b"
+    - "#bdcf32"
+    - "#87bc45"
+    - "#27aeef"
+    - "#b33dc6"
+    # Dutch Field
+    - "#e60049"
+    - "#0bb4ff"
+    - "#50e991"
+    - "#e6d800"
+    - "#9b19f5"
+    - "#ffa300"
+    - "#dc0ab4"
+    - "#b3d4ff"
+    - "#00bfa0"
+    # River Nights
+    - "#b30000"
+    - "#7c1158"
+    - "#4421af"
+    - "#1a53ff"
+    - "#0d88e6"
+    - "#00b7c7"
+    - "#5ad45a"
+    - "#8be04e"
+    - "#ebdc78"
+    # Blue to Yellow
+    - "#115f9a"
+    - "#1984c5"
+    - "#22a7f0"
+    - "#48b5c4"
+    - "#76c68f"
+    - "#a6d75b"
+    - "#c9e52f"
+    - "#d0ee11"
+    - "#d0f400"
+    # http://www.gnuplotting.org/data/dark2.pal
+    - '#1B9E77'
+    - '#D95F02'
+    - '#7570B3'
+    - '#E7298A'
+    - '#66A61E'
+    - '#E6AB02'
+    - '#A6761D'
+    - '#666666'
+header: |+
+  set datafile separator ","
+  set title "%{title}" font "sans,11" textcolor rgb "%{title_rgb}" enhanced
+  set terminal wxt size 1200,400 persist enhanced font 'sans,10' background rgb '%{background_rgb}'
+  set style line 102 lc rgb '%{grid_rgb}' lt 0 lw 1
+  set grid back ls 102
+  set style line 101 lc rgb '%{axis_rgb}' lt 1 lw 1
+  set border 3 front ls 101
+  set xtics font ",9"
+  set ytics font ",11"
+  set timefmt "%%m-%%y"
+  set format x "%%b-%%y"
+  set format y "$ %%'.0f"
+  unset colorbox
+  set key on under center textcolor rgb "%{key_text_rgb}" enhanced font 'sans,9'
+  set decimal locale

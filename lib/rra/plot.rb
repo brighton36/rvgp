@@ -12,7 +12,9 @@ class RRA::Plot
 
   def initialize(path)
     @path = path
-    yaml = RRA::Yaml.new path, RRA.app.config.project_path
+
+    yaml = RRA::Yaml.new path, [ RRA.app.config.project_path, 
+                                 [RRA::Gem.root.to_s, '/resources/gnuplot'].join]
 
     raise StandardError, "Missing one or more required fields in %s: %s" % [
       yaml.path, REQUIRED_FIELDS] unless REQUIRED_FIELDS.all?{|f| yaml.has_key? f}
@@ -102,11 +104,10 @@ class RRA::Plot
 
   def gnuplot(name)
     @gnuplots ||= Hash.new
-    @gnuplots[name] ||= RRA::Gnuplot::Plot.chart grid(name), title(name), gnuplot_options
+    @gnuplots[name] ||= RRA::Gnuplot::Plot.new title(name), grid(name), gnuplot_options
   end
 
   def script(name)
-     # TODO: Maybe we should just have a gnuplot(name).script
     gnuplot(name).script
   end
 
