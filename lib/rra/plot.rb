@@ -7,14 +7,14 @@ class RRA::Plot
     :truncate_rows, :switch_rows_columns
 
   REQUIRED_FIELDS = [:glob, :title]
+  GNUPLOT_RESOURCES_PATH = [RRA::Gem.root.to_s, '/resources/gnuplot'].join
 
   attr_reader :path
 
   def initialize(path)
     @path = path
 
-    yaml = RRA::Yaml.new path, [ RRA.app.config.project_path, 
-                                 [RRA::Gem.root.to_s, '/resources/gnuplot'].join]
+    yaml = RRA::Yaml.new path, [ RRA.app.config.project_path,  GNUPLOT_RESOURCES_PATH]
 
     raise StandardError, "Missing one or more required fields in %s: %s" % [
       yaml.path, REQUIRED_FIELDS] unless REQUIRED_FIELDS.all?{|f| yaml.has_key? f}
@@ -35,6 +35,7 @@ class RRA::Plot
     @grid_hacks = (yaml.has_key? :grid_hacks) ? yaml[:grid_hacks] : {}
     @google_options = yaml[:google] if yaml.has_key? :google
     @gnuplot_options = yaml[:gnuplot] if yaml.has_key? :gnuplot
+    @gnuplot_options[:template] ||= RRA::Yaml.new('%s/default.yml' % GNUPLOT_RESOURCES_PATH)
   end
 
   def variants(name = nil)
