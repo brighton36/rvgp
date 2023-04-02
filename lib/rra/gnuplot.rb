@@ -145,19 +145,17 @@ module RRA
       # These are the gnuplot elements, that we currently support:
       ELEMENTS = [AreaChart, ColumnAndLineChart].freeze
       SET_QUOTED = %w[title output xlabel x2label ylabel y2label clabel cblabel zlabel].freeze
+      PLOT_COMMAND_LINE = ['%<using>s', 'title %<title>s', 'with %<with>s'].compact.join(" \\\n    ").freeze
 
       attr_accessor :additional_lines
-      attr_reader :palette, :settings, :plot_command, :num_cols, :template, :element, :dataset
+      attr_reader :settings, :template, :element, :dataset
 
       def initialize(title, dataset, opts = {})
         @title = title
         @dataset = dataset
         @settings = []
-        @plot_command = 'plot' # TODO: wtf is this
         @additional_lines = Array(opts[:additional_lines])
-        @num_cols = dataset[0].length # TODO: put this in an accessor
         @template = opts[:template]
-        @palette = Palette.new @template[:colors] # TODO: I think we can put this in an accessor
 
         element_klass = ELEMENTS.find { |element| element.types.any? opts[:chart_type] }
         raise StandardError, format('Unsupported chart_type %s', opts[:chart_type]) unless element_klass
@@ -168,19 +166,18 @@ module RRA
       def script
         # TODO: We should probably just pull a @palette.to_h thing, where all the palette colors
         # are added, including those we're not using atm
-        vars = { title: @title, title_rgb: @palette.title, background_rgb: @palette.background,
-                 grid_rgb: @palette.grid, axis_rgb: @palette.axis, key_text_rgb: @palette.key_text }
+        vars = { title: @title, title_rgb: palette.title, background_rgb: palette.background,
+                 grid_rgb: palette.grid, axis_rgb: palette.axis, key_text_rgb: palette.key_text }
 
         [format("$DATA << EOD\n%sEOD\n", to_csv),
          format(template[:header], vars),
          @settings.map { |setting| setting.map(&:to_s).join(' ') << "\n" },
-         @additional_lines.join("\n") % vars,
+         format(@additional_lines.join("\n"), vars),
          plot_command, "\n"].flatten.join
       end
 
-      def execute!(persist = true)
-        output, errors, status = Open3.capture3 Gnuplot.gnuplot(persist),
-          stdin_data: script
+      def execute!(persist: true)
+        output, errors, status = Open3.capture3 Gnuplot.gnuplot(persist), stdin_data: script
 
         # For reasons unknown, this is sent to stderr, in response to the
         # 'set decimal locale' instruction. Which we need to set.
@@ -206,38 +203,33 @@ module RRA
 
       private
 
+      def num_cols
+        dataset[0].length
+      end
+
+      def palette
+        @palette ||= Palette.new @template[:colors]
+      end
+
       def to_csv
-        CSV.generate { |csv| dataset.each{ |row| csv << row } }
+        CSV.generate { |csv| dataset.each { |row| csv << row } }
       end
 
       def plot_command
-        # TODO: Move this into the loop below
-        elements = element.series_range(num_cols).map do |i|
-          title = dataset[0][i]
-          series = element.series title
+        plot_command_lines = element.series_range(num_cols).map.with_index do |n, i|
+          title = dataset[0][n]
 
-          {title:  "'%s'" % title, num: i+1 }.merge(series)
+          # Note that the gnuplot calls these series 'elements', but, we're keeping
+          # with series
+          series = { title: "'#{title}'" }.merge(element.series(title))
+          series[:using] = format(' %<prefix>s using %<usings>s',
+                                  prefix: i.zero? ? nil : ' \'\'',
+                                  usings: Array(series[:using]).map(&:to_s).join(':'))
+
+          format(format(PLOT_COMMAND_LINE, series), { rgb: palette.series_next!, num: n + 1 })
         end
 
-        [
-          ['plot', '$DATA'].compact.join(' '),
-          " \\\n",
-          # These elements might as well be 'series' in the way we use them. But,
-          # gnuplot's documentation calles them elements. So, I kept that here:
-          elements.map.with_index { |element, i|
-            vars = { rgb: palette.series_next!, num: element[:num] }
-
-            [element.key?(:using) ? [
-                ' ',
-                (i.zero?) ? nil : '\'\'',
-                'using',
-                Array(element[:using]).map(&:to_s).join(':')
-              ].compact.join(' ') : nil,
-              '    title %s' % [element[:title] || 'columnheader(i)'],
-              element.key?(:with)  ? '    with %s' % element[:with] : nil
-            ].compact.join(" \\\n") % vars
-          }.join(", \\\n")
-        ].join
+        ["plot $DATA \\\n", plot_command_lines.join(", \\\n")].join
       end
 
       def quote_value(value)
