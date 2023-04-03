@@ -28,6 +28,12 @@ module RRA
         @base_colors.key?(name) ? base_color(name) : super(name)
       end
 
+      def base_to_h
+        # We'll probably want to expand this more at some point...
+        { title_rgb: title, background_rgb: background, font_rgb: font,
+          grid_rgb: grid, axis_rgb: axis, key_text_rgb: key_text }
+      end
+
       private
 
       def base_color(name)
@@ -95,9 +101,8 @@ module RRA
         gnuplot.set 'style', format('histogram %s', clustered? ? 'clustered' : 'rowstacked')
         gnuplot.set 'style', 'fill solid'
 
-        # TODO: Why is 'date there at the origin'
-        # TODO: Some reports (income-and-expense-by-intention) need 0 and others need 1
-        gnuplot.set 'xrange', '[0:]'
+        gnuplot.set 'xrange', format('[%<xrange_start>s:]',
+                                     xrange_start: opts[:xrange_start] || 0)
       end
 
       def clustered?
@@ -164,10 +169,7 @@ module RRA
       end
 
       def script
-        # TODO: We should probably just pull a @palette.to_h thing, where all the palette colors
-        # are added, including those we're not using atm
-        vars = { title: @title, title_rgb: palette.title, background_rgb: palette.background,
-                 grid_rgb: palette.grid, axis_rgb: palette.axis, key_text_rgb: palette.key_text }
+        vars = { title: @title }.merge palette.base_to_h
 
         [format("$DATA << EOD\n%sEOD\n", to_csv),
          format(template[:header], vars),
@@ -229,7 +231,7 @@ module RRA
           format(format(PLOT_COMMAND_LINE, series), { rgb: palette.series_next!, num: n + 1 })
         end
 
-        ["plot $DATA \\\n", plot_command_lines.join(", \\\n")].join
+        format("plot $DATA \\\n%<lines>s", lines: plot_command_lines.join(", \\\n"))
       end
 
       def quote_value(value)
