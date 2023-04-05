@@ -110,11 +110,8 @@ module RRA
       end
 
       def series(title)
-        series_type = if @series_types.key? title
-                        @series_types[title].downcase.to_sym
-                      else
-                        :column
-                      end
+        series_type = @series_types[title].downcase.to_sym if @series_types.key? title
+        series_type ||= :column
 
         { using: [using(series_type), 'xtic(1)'], with: with(series_type) }
       end

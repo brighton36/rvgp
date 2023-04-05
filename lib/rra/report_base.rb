@@ -75,7 +75,6 @@ class RRA::ReportBase
       sum[date] += posting.send(posting_method, in_code)
       sum
     end
-
   end
 
   # This method keeps our reports DRY. It accrues a sum for each posting, on a
@@ -99,7 +98,9 @@ class RRA::ReportBase
     initial = opts[:initial] || Hash.new
 
     RRA::Ledger.register(*args, ledger_opts).transactions.inject(initial) do |ret, tx| 
-      tx.postings.reduce(ret){|sum, posting| block.call sum, tx.date, posting }
+      tx.postings.reduce(ret) do |sum, posting|
+        block.call sum, tx.date, posting
+      end
     end
   end
 
