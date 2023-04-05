@@ -1,2 +1,4 @@
 Metrics/AbcSize:
   Enabled: false
+Metrics/ClassLength:
+  Enabled: false

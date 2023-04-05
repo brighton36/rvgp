@@ -57,6 +57,7 @@ module RRA
 
     def [](attr); @yaml[attr]; end
     def has_key?(attr); @yaml.has_key? attr; end
+    alias :key? :has_key?
 
     # This is kind of a goofy function, but, it works
     def replace_each_in_yaml(obj, of_class,  &blk)

@@ -166,6 +166,7 @@ module RRA
       end
 
       def script
+        # TODO: We want to support starting_at / ending_at vars for use with xrange
         vars = { title: @title }.merge palette.base_to_h
 
         [format("$DATA << EOD\n%sEOD\n", to_csv),
