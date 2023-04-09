@@ -13,19 +13,13 @@ module RRA
       def initialize(opts = {})
         @series_colors = opts[:series]
         @base_colors = opts[:base]
-        # TODO: let's maybe change this to a series_color_i and a series_color_direction (1 or -1)...
         @last_series_color = -1
+        @last_series_direction = 1
       end
 
       def series_next!
-        # TODO: refactor this
-        i = if @reverse_series_colors
-          @reverse_series_colors -= 1
-        else
-          @last_series_color += 1
-        end
-
-        @series_colors[i % @series_colors.length]
+        @last_series_color += @last_series_direction
+        @series_colors[@last_series_color % @series_colors.length]
       end
 
       def respond_to_missing?(name, *)
@@ -46,8 +40,8 @@ module RRA
       # order of series. The from_origin parameter, is the new origin, by which
       # we'll begin to assign colors, in reverse order
       def reverse_series_colors!(from_origin)
-        # TODO: Let's not use this variable
-        @reverse_series_colors = from_origin
+        @last_series_color = from_origin
+        @last_series_direction = -1
       end
 
       private
