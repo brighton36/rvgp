@@ -13,11 +13,19 @@ module RRA
       def initialize(opts = {})
         @series_colors = opts[:series]
         @base_colors = opts[:base]
+        # TODO: let's maybe change this to a series_color_i and a series_color_direction (1 or -1)...
         @last_series_color = -1
       end
 
       def series_next!
-        @series_colors[(@last_series_color += 1) % @series_colors.length]
+        # TODO: refactor this
+        i = if @reverse_series_colors
+          @reverse_series_colors -= 1
+        else
+          @last_series_color += 1
+        end
+
+        @series_colors[i % @series_colors.length]
       end
 
       def respond_to_missing?(name, *)
@@ -34,6 +42,14 @@ module RRA
           grid_rgb: grid, axis_rgb: axis, key_text_rgb: key_text }
       end
 
+      # This is used by some charts, due to gnuplot requiring us to inverse the
+      # order of series. The from_origin parameter, is the new origin, by which
+      # we'll begin to assign colors, in reverse order
+      def reverse_series_colors!(from_origin)
+        # TODO: Let's not use this variable
+        @reverse_series_colors = from_origin
+      end
+
       private
 
       def base_color(name)
@@ -43,8 +59,41 @@ module RRA
       end
     end
 
-    # This module offers some helpers, used by our Element classes to keep things DRY.
-    module ChartBuilder
+    # This base class offers some helpers, used by our Element classes to handle
+    # common options, and keep things DRY.
+    class ChartBuilder
+      ONE_MONTH_IN_SECONDS = 2_592_000 # 30 days
+
+      def initialize(opts, gnuplot)
+        if opts[:domain]
+          case opts[:domain].to_sym
+          when :monthly
+            # This is mostly needed, because gnuplot doesn't always do the best
+            # job of automatically detecting the domain bounds...
+            gnuplot.set 'xdata', 'time'
+            gnuplot.set 'xtics', ONE_MONTH_IN_SECONDS
+
+            dates = gnuplot.column(0).map { |xtic| Date.strptime xtic, '%m-%y' }.sort
+            is_multiyear = dates.first.year != dates.last.year
+
+            if !dates.empty?
+              opts[:xrange_start] ||= is_multiyear ? dates.first : Date.new(dates.first.year, 1, 1)
+              opts[:xrange_end] ||= is_multiyear ? dates.last : Date.new(dates.last.year, 12, 31)
+            end
+
+            %i[xrange_start xrange_end].each do |attr|
+              opts[attr] = opts[attr].strftime('%m-%y') if opts[attr].respond_to? :strftime
+            end
+          else
+            raise StandardError, format('Unsupported domain %s', opts[:domain].inspect)
+          end
+        end
+
+        gnuplot.set 'xrange', format_xrange(opts) if xrange? opts
+        gnuplot.set 'xlabel', opts[:axis][:bottom] if opts[:axis] && opts[:axis][:bottom]
+        gnuplot.set 'ylabel', opts[:axis][:left] if opts[:axis] && opts[:axis][:left]
+      end
+
       def reverse_series_range?
         @reverse_series_range || false
       end
@@ -52,18 +101,33 @@ module RRA
       def series_range(num_cols)
         reverse_series_range? ? (num_cols - 1).downto(1) : 1.upto(num_cols - 1)
       end
+
+      def format_xrange(opts)
+        format '[%<xrange_start>s:%<xrange_end>s]',
+               xrange_start: if opts[:xrange_start].is_a? String
+                               format('"%s"', opts[:xrange_start])
+                             else
+                               opts[:xrange_start].to_s
+                             end,
+               xrange_end: if opts[:xrange_end].is_a? String
+                             format('"%s"', opts[:xrange_end])
+                           else
+                             opts[:xrange_end].to_s
+                           end
+      end
+
+      def xrange?(opts)
+        %i[xrange_start xrange_end].any? { |attr| opts[attr] }
+      end
     end
 
     # This Chart element contains the logic necessary to render Integrals
     # (shaded areas, under a line), onto the plot canvas.
-    class AreaChart
-      include ChartBuilder
-
+    class AreaChart < ChartBuilder
       def initialize(opts, gnuplot)
-        # NOTE: This is a bit assumptive... but, I think it holds true for just
-        # about every report we're going to produce
-        gnuplot.set 'xdata', 'time'
         @reverse_series_range = opts[:is_stacked]
+        gnuplot.palette.reverse_series_colors! gnuplot.num_cols - 1 if reverse_series_range?
+        super opts, gnuplot
       end
 
       def using_data
@@ -86,23 +150,17 @@ module RRA
 
     # This Chart element contains the logic used to render bars, and/or lines,
     # onto the plot canvas
-    class ColumnAndLineChart
-      include ChartBuilder
-
+    class ColumnAndLineChart < ChartBuilder
       def initialize(opts, gnuplot)
         @is_clustered = opts[:is_clustered]
 
-        @series_types = if opts[:series_types]
-                          opts[:series_types].transform_keys(&:to_s)
-                        else
-                          {}
-                        end
+        @series_types = {}
+        @series_types = opts[:series_types].transform_keys(&:to_s) if opts[:series_types]
 
         gnuplot.set 'style', format('histogram %s', clustered? ? 'clustered' : 'rowstacked')
         gnuplot.set 'style', 'fill solid'
 
-        gnuplot.set 'xrange', format('[%<xrange_start>s:]',
-                                     xrange_start: opts[:xrange_start] || 0)
+        super opts, gnuplot
       end
 
       def clustered?
@@ -110,8 +168,8 @@ module RRA
       end
 
       def series(title)
+        series_type = :column
         series_type = @series_types[title].downcase.to_sym if @series_types.key? title
-        series_type ||= :column
 
         { using: [using(series_type), 'xtic(1)'], with: with(series_type) }
       end
@@ -143,6 +201,9 @@ module RRA
     end
 
     # This class generates a gnuplot file. Either to string, or, the filesystem
+    #
+    # NOTE: We assume that the first row in the dataset, is a header row. And,
+    #       that the first column, is the series label
     class Plot
       # These are the gnuplot elements, that we currently support:
       ELEMENTS = [AreaChart, ColumnAndLineChart].freeze
@@ -166,7 +227,6 @@ module RRA
       end
 
       def script
-        # TODO: We want to support starting_at / ending_at vars for use with xrange
         vars = { title: @title }.merge palette.base_to_h
 
         [format("$DATA << EOD\n%sEOD\n", to_csv),
@@ -201,15 +261,27 @@ module RRA
         @settings << [:unset, key]
       end
 
-      private
+      # Returns column n of dataset, not including the header row
+      def column(num)
+        dataset[1...].map { |row| row[num] }
+      end
 
+      # Returns the number of rows in the dataset, not including the header
+      def num_rows
+        dataset.length - 1
+      end
+
+      # Returns the number of columns in the dataset, including the series_label
       def num_cols
         dataset[0].length
       end
 
+      # The current palette that we're operating off of
       def palette
         @palette ||= Palette.new @template[:colors]
       end
+
+      private
 
       def to_csv
         CSV.generate { |csv| dataset.each { |row| csv << row } }
