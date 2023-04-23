@@ -59,8 +59,11 @@ module RRA
       ONE_MONTH_IN_SECONDS = 2_592_000 # 30 days
 
       def initialize(opts, gnuplot)
+        @gnuplot = gnuplot
+
         if opts[:domain]
-          case opts[:domain].to_sym
+          @domain = opts[:domain].to_sym
+          case @domain
           when :monthly
             # This is mostly needed, because gnuplot doesn't always do the best
             # job of automatically detecting the domain bounds...
@@ -79,13 +82,17 @@ module RRA
               opts[attr] = opts[attr].strftime('%m-%y') if opts[attr].respond_to? :strftime
             end
           else
-            raise StandardError, format('Unsupported domain %s', opts[:domain].inspect)
+            raise StandardError, format('Unsupported domain %s', @domain.inspect)
           end
         end
 
         gnuplot.set 'xrange', format_xrange(opts) if xrange? opts
         gnuplot.set 'xlabel', opts[:axis][:bottom] if opts[:axis] && opts[:axis][:bottom]
         gnuplot.set 'ylabel', opts[:axis][:left] if opts[:axis] && opts[:axis][:left]
+      end
+
+      def format_num(num)
+        num+1
       end
 
       def reverse_series_range?
@@ -126,9 +133,9 @@ module RRA
 
       def using_data
         if reverse_series_range?
-          '(sum [col=2:%<num>d] (valid(col) ? column(col) : 0.0))'
+          '(sum [col=2:%<num>s] (valid(col) ? column(col) : 0.0))'
         else
-          '(valid(%<num>d) ? column(%<num>d) : 0.0)'
+          '(valid(%<num>s) ? column(%<num>s) : 0.0)'
         end
       end
 
@@ -146,46 +153,91 @@ module RRA
     # onto the plot canvas
     class ColumnAndLineChart < ChartBuilder
       def initialize(opts, gnuplot)
+        super opts, gnuplot
         @is_clustered = opts[:is_clustered]
+        @columns_rendered_as = opts[:columns_rendered_as]
+        @columns_rendered_as ||= @domain == :monthly ? :boxes : :histograms
 
         @series_types = {}
         @series_types = opts[:series_types].transform_keys(&:to_s) if opts[:series_types]
 
-        gnuplot.set 'style', format('histogram %s', clustered? ? 'clustered' : 'rowstacked')
-        gnuplot.set 'style', 'fill solid'
-
-        super opts, gnuplot
+        # There are two methods that can be used to render columns (:histograms & :boxes)
+        # The :boxes method supports time-format domains. While :histograms supports
+        # non-reversed series ranges.
+        case @columns_rendered_as
+        when :histograms
+          gnuplot.set 'style', format('histogram %s', clustered? ? 'clustered' : 'rowstacked')
+          gnuplot.set 'style', 'fill solid'
+        when :boxes
+          @reverse_series_range = true
+          gnuplot.set 'style', 'fill solid border -1'
+          # TODO: Do we actually want this here? Maybe we need to check if domain is :monthly first...
+          # TODO: we may want to expand the width of the xrange a bit, as it seems to chop us on the right,
+          # by half the box with
+          # TODO: Definately adjust this boxwith number a bit better, based on calculation.
+          # TODO: Starting at 1 on the xrange doesn't work in boxes the way it does in area
+          # 1 week = 604,800 seconds.
+          # Make the box 50% of its slot.
+          gnuplot.set 'boxwidth', '302400 absolute'
+        else
+          raise StandardError, format('Unsupported columns_rendered_as %s', @columns_rendered_as.inspect)
+        end
       end
 
       def clustered?
         @is_clustered
       end
 
-      def series(title)
-        series_type = :column
-        series_type = @series_types[title].downcase.to_sym if @series_types.key? title
+      def series(num)
+        type = series_type num
+        using = [using(type)]
 
-        { using: [using(series_type), 'xtic(1)'], with: with(series_type) }
+        using.send(*@columns_rendered_as == :histograms ? [:push, 'xtic(1)'] : [:unshift, '1'])
+
+        { using: using, with: with(type) }
       end
 
       def self.types
         %w[COMBO column_and_lines column lines]
       end
 
+      def series_type(num)
+        title = @gnuplot.series_name(num)
+        @series_types.key?(title) ? @series_types[title].downcase.to_sym : :column
+      end
+
+      def format_num(num)
+        if reverse_series_range? && series_type(num) == :column
+          columns_for_sum = num.downto(1).map do |n|
+            # We need to handle empty numbers, in order to fix that weird double-wide column bug
+            format '(valid(%<num>s) ? $%<num>s : 0.0)', num: n + 1 if series_type(n) == :column
+          end
+          format '(%s)', columns_for_sum.compact.join('+')
+        else
+          super(num)
+        end
+      end
+
+      def series_range(num_cols)
+        ret = super num_cols
+        return ret unless @columns_rendered_as == :boxes
+
+        # We want the lines to draw over the columns. This achieves that.
+        # It's possible that you want lines behind the columns. If so, add
+        # an option to the class and submit a pr..
+        ret.sort_by { |n| series_type(n) == :column ? 0 : 1 }
+      end
+
       private
 
       def using(type)
-        if type == :column && clustered?
-          '(valid(%<num>d) ? column(%<num>d) : 0.0)'
-        else
-          '%<num>d'
-        end
+        type == :column && clustered? ? '(valid(%<num>s) ? column(%<num>s) : 0.0)' : '%<num>s'
       end
 
       def with(type)
         case type
         when :column
-          "histograms linetype rgb '%<rgb>s'"
+          "#{@columns_rendered_as} linetype rgb '%<rgb>s'"
         when :line
           "lines smooth unique lc rgb '%<rgb>s' lt 1 lw 2"
         else
@@ -260,6 +312,11 @@ module RRA
         dataset[1...].map { |row| row[num] }
       end
 
+      # Returns the header row, at position num
+      def series_name(num)
+        dataset[0][num]
+      end
+
       # Returns the number of rows in the dataset, not including the header
       def num_rows
         dataset.length - 1
@@ -282,17 +339,18 @@ module RRA
       end
 
       def plot_command
+        # NOTE: n == 0 is the keystone.
         plot_command_lines = element.series_range(num_cols).map.with_index do |n, i|
-          title = dataset[0][n]
+          title = series_name n
 
           # Note that the gnuplot calls these series 'elements', but, we're keeping
           # with series
-          series = { title: "'#{title}'" }.merge(element.series(title))
+          series = { title: "'#{title}'" }.merge(element.series(n))
           series[:using] = format(' %<prefix>s using %<usings>s',
                                   prefix: i.zero? ? nil : ' \'\'',
                                   usings: Array(series[:using]).map(&:to_s).join(':'))
 
-          format(format(PLOT_COMMAND_LINE, series), { rgb: palette.series_next!, num: n + 1 })
+          format(format(PLOT_COMMAND_LINE, series), { rgb: palette.series_next!, num: element.format_num(n) })
         end
 
         format("plot $DATA \\\n%<lines>s", lines: plot_command_lines.join(", \\\n"))
