@@ -81,10 +81,6 @@ module RRA
               opts[:xrange_start] ||= is_multiyear ? dates.first : Date.new(dates.first.year, 1, 1)
               opts[:xrange_end] ||= is_multiyear ? dates.last : Date.new(dates.last.year, 12, 31)
             end
-
-            %i[xrange_start xrange_end].each do |attr|
-              opts[attr] = opts[attr].strftime('%m-%y') if opts[attr].respond_to? :strftime
-            end
           else
             raise StandardError, format('Unsupported domain %s', @domain.inspect)
           end
@@ -108,17 +104,12 @@ module RRA
       end
 
       def format_xrange(opts)
-        format '[%<xrange_start>s:%<xrange_end>s]',
-               xrange_start: if opts[:xrange_start].is_a? String
-                               format('"%s"', opts[:xrange_start])
-                             else
-                               opts[:xrange_start].to_s
-                             end,
-               xrange_end: if opts[:xrange_end].is_a? String
-                             format('"%s"', opts[:xrange_end])
-                           else
-                             opts[:xrange_end].to_s
-                           end
+        fmt_parts = %i[xrange_start xrange_end].each_with_object({}) do |attr, ret|
+                         value = opts[attr]
+                         value = value.strftime('%m-%y') if value.respond_to?(:strftime)
+                         ret.merge!(attr => value.is_a?(String) ? format('"%s"', value) : value.to_s)
+                       end
+        format '[%<xrange_start>s:%<xrange_end>s]', fmt_parts
       end
 
       def xrange?(opts)
@@ -174,14 +165,16 @@ module RRA
           gnuplot.set 'style', 'fill solid'
         when :boxes
           @reverse_series_range = true
+          # This puts a black line around the columns:
           gnuplot.set 'style', 'fill solid border -1'
-          # TODO: Do we actually want this here? Maybe we need to check if domain is :monthly first...
-          # TODO: we may want to expand the width of the xrange a bit, as it seems to chop us on the right,
-          # by half the box with
-          # TODO: Definately adjust this boxwith number a bit better, based on calculation.
-          # 1 week = 604,800 seconds.
-          # Make the box 50% of its slot.
-          gnuplot.set 'boxwidth', '302400 absolute'
+
+          # TODO The box width straddles the tic, which, causes the box widths to
+          # be half-width on the left and right sides of the plot. Roughly here,
+          # we want to expand that xrange start/end by maybe two weeks.
+          # This will require a bit more work than we want atm, because:
+          # 1. We'd have to change the timefmt, and the grids, to report days
+          # 2. We need to move the gnuplot.set in the initializer() into something
+          #    farther down the code path.
         else
           raise StandardError, format('Unsupported columns_rendered_as %s', @columns_rendered_as.inspect)
         end
