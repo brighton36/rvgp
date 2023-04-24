@@ -58,6 +58,10 @@ module RRA
     class ChartBuilder
       ONE_MONTH_IN_SECONDS = 2_592_000 # 30 days
 
+      # TODO: At some point, we probably want to support inverting the key order.
+      #       which, as best I can tell, will involve writing a 'fake' chart,
+      #       that's not displayed. But which will create a key, which is
+      #       displayed, in the order we want
       def initialize(opts, gnuplot)
         @gnuplot = gnuplot
 
@@ -175,7 +179,6 @@ module RRA
           # TODO: we may want to expand the width of the xrange a bit, as it seems to chop us on the right,
           # by half the box with
           # TODO: Definately adjust this boxwith number a bit better, based on calculation.
-          # TODO: Starting at 1 on the xrange doesn't work in boxes the way it does in area
           # 1 week = 604,800 seconds.
           # Make the box 50% of its slot.
           gnuplot.set 'boxwidth', '302400 absolute'
@@ -210,7 +213,7 @@ module RRA
         if reverse_series_range? && series_type(num) == :column
           columns_for_sum = num.downto(1).map do |n|
             # We need to handle empty numbers, in order to fix that weird double-wide column bug
-            format '(valid(%<num>s) ? $%<num>s : 0.0)', num: n + 1 if series_type(n) == :column
+            format '(valid(%<num>s) ? column(%<num>s) : 0.0)', num: n + 1 if series_type(n) == :column
           end
           format '(%s)', columns_for_sum.compact.join('+')
         else
@@ -315,11 +318,6 @@ module RRA
       # Returns the header row, at position num
       def series_name(num)
         dataset[0][num]
-      end
-
-      # Returns the number of rows in the dataset, not including the header
-      def num_rows
-        dataset.length - 1
       end
 
       # Returns the number of columns in the dataset, including the series_label
