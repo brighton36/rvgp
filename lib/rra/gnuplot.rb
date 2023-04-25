@@ -115,15 +115,21 @@ module RRA
       def xrange?(opts)
         %i[xrange_start xrange_end].any? { |attr| opts[attr] }
       end
+
+      private
+
+      def reverse_series_colors!
+        @gnuplot.palette.reverse_series_colors! @gnuplot.num_cols - 1
+      end
     end
 
     # This Chart element contains the logic necessary to render Integrals
     # (shaded areas, under a line), onto the plot canvas.
     class AreaChart < ChartBuilder
       def initialize(opts, gnuplot)
-        @reverse_series_range = opts[:is_stacked]
-        gnuplot.palette.reverse_series_colors! gnuplot.num_cols - 1 if reverse_series_range?
         super opts, gnuplot
+        @reverse_series_range = opts[:is_stacked]
+        reverse_series_colors! if reverse_series_range?
       end
 
       def using_data
@@ -167,6 +173,7 @@ module RRA
           @reverse_series_range = true
           # This puts a black line around the columns:
           gnuplot.set 'style', 'fill solid border -1'
+          reverse_series_colors!
 
           # TODO The box width straddles the tic, which, causes the box widths to
           # be half-width on the left and right sides of the plot. Roughly here,
