@@ -181,14 +181,14 @@ module RRA
       Dir.glob(format('%s/*.yml', plot_directory_path)).map { |path| new path }
     end
 
+    def google_options
+      @google_options = yaml[:google] if yaml.key? :google
+    end
+
     private
 
     def grid_hacks
       @grid_hacks = yaml.key?(:grid_hacks) ? yaml[:grid_hacks] : {}
-    end
-
-    def google_options
-      @google_options = yaml[:google] if yaml.key? :google
     end
 
     def gnuplot_options
