@@ -27,7 +27,7 @@ class RRA::Commands::ValidateJournal < RRA::CommandBase
       RRA.journal_validations.classes.each do |klass|
         unless disable_checks.include? klass.name.to_sym
           validation = klass.new @transformer
-          unless validation.is_valid?
+          unless validation.valid?
             warnings += validation.warnings
             errors += validation.errors
           end

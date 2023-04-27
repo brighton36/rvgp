@@ -1,19 +1,29 @@
+# frozen_string_literal: true
+
 require_relative 'descendant_registry'
 
 module RRA
+  # This module offers mixin functions, for use with your validations.
   module ValidationBaseHelpers
-    NAME_CAPTURE = /\A(.+)Validation\Z/
+    NAME_CAPTURE = /\A(.+)Validation\Z/.freeze
 
-    def is_valid?
-      @errors, @warnings = [], []
+    def valid?
+      @errors = []
+      @warnings = []
       validate
-      (@errors.length + @warnings.length) == 0
+      (@errors.length + @warnings.length).zero?
+    end
+
+    def self.included(base)
+      base.instance_eval do
+        attr_reader :errors, :warnings
+      end
     end
 
     private
 
     def format_error_or_warning(msg, citations = nil)
-      [msg, ((citations) ? citations : [])]
+      [msg, citations || []]
     end
 
     def error!(*args)
@@ -23,14 +33,10 @@ module RRA
     def warning!(*args)
       @warnings << format_error_or_warning(*args)
     end
-
-    def self.included(base)
-      base.instance_eval do
-        attr_reader :errors, :warnings
-      end
-    end
   end
 
+  # This base class is intended for use by inheritors, and contains most of the
+  # logic needed, to implement the validation of a journal file
   class JournalValidationBase
     include ValidationBaseHelpers
     include RRA::DescendantRegistry
@@ -45,31 +51,39 @@ module RRA
 
     # I suppose we'd want/need an hledger_opts parameter over time...
     def validate_no_transactions(with_error_msg, ledger_opts)
-      results = RRA::Ledger.register transformer.from, 
-        {file: transformer.output_file, sort: 'date'}.merge(ledger_opts)
+      results = RRA::Ledger.register transformer.from,
+                                     { file: transformer.output_file, sort: 'date' }.merge(ledger_opts)
 
-      error! with_error_msg, results.transactions.collect{ |posting| 
-        '%s: %s' % [ posting.date.to_s, posting.payee ]
-        } if results.transactions.length > 0
+      unless results.transactions.empty?
+        error! with_error_msg, results.transactions.map do |posting|
+          format '%<date>s: %<payee>s', date: posting.date.to_s, payee: posting.payee
+        end
+      end
     end
 
     def validate_no_balance(with_error_msg, account)
-      results = RRA::Ledger.balance account, file: transformer.output_file
+      results = RRA::HLedger.balance account, file: transformer.output_file
 
-      error! with_error_msg, results.accounts.collect{|account| 
-        account.amounts.collect{|commodity| 
-          [account.fullname, RRA.pastel.red('━'), commodity.to_s].join(' ') }
-      }.flatten if results.accounts.length > 0
+      unless results.accounts.empty?
+        error! with_error_msg, results.accounts.map do |ra|
+          ra.amounts.map do |commodity|
+            [ra.fullname, RRA.pastel.red('━'), commodity.to_s].join(' ')
+          end
+        end.flatten
+      end
     end
   end
 
+  # This base class is intended for use by inheritors, and contains most of the
+  # logic needed, to implement the validation of a system file
   class SystemValidationBase
     include ValidationBaseHelpers
     include RRA::DescendantRegistry
 
-    register_descendants RRA, :system_validations, name_capture: NAME_CAPTURE,
-      accessors: { task_names: lambda{|registry| 
-        registry.names.collect{|name| 'validate_system:%s' % name} } }
+    task_names = ->(registry) { registry.names.map { |name| format('validate_system:%s', name) } }
+    register_descendants RRA, :system_validations,
+                         name_capture: NAME_CAPTURE,
+                         accessors: { task_names: task_names }
 
     def mark_validated!
       FileUtils.touch self.class.build_validation_file_path
@@ -77,25 +91,21 @@ module RRA
 
     def self.validated?
       FileUtils.uptodate? build_validation_file_path, [
-        RRA.app.config.build_path('journals/*.journal'), 
+        RRA.app.config.build_path('journals/*.journal'),
         RRA.app.config.project_path('journals/*.journal')
-      ].collect{|glob| Dir.glob glob}.flatten
+      ].map { |glob| Dir.glob glob }.flatten
     end
 
     def self.status_label
-      self.const_get :STATUS_LABEL
-    end
-    
-    def self.description
-      self.const_get :DESCRIPTION
+      const_get :STATUS_LABEL
     end
 
-    private
+    def self.description
+      const_get :DESCRIPTION
+    end
 
     def self.build_validation_file_path
-      RRA.app.config.build_path('journals/system-validation-%s.valid' % [
-        self.name.to_s])
+      RRA.app.config.build_path(format('journals/system-validation-%s.valid', name.to_s))
     end
-
   end
 end

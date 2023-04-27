@@ -17,7 +17,7 @@ class RRA::Commands::ValidateSystem < RRA::CommandBase
 
     def execute(options)
       validation = @validation_klass.new
-      validation.mark_validated! if validation.is_valid?
+      validation.mark_validated! if validation.valid?
       [validation.warnings, validation.errors]
     end
 
