@@ -46,10 +46,10 @@ module RRA
       @glob = yaml[:glob] if yaml.key? :glob
       raise InvalidYamlGlob, yaml.path unless /%\{year\}/.match glob
 
-      reports_corpus = Dir[RRA.app.config.build_path('reports/*')]
+      grids_corpus = Dir[RRA.app.config.build_path('grids/*')]
 
-      @variants ||= self.class.glob_variants(glob, reports_corpus) +
-                    self.class.glob_variants(glob, reports_corpus, year: 'all')
+      @variants ||= self.class.glob_variants(glob, grids_corpus) +
+                    self.class.glob_variants(glob, grids_corpus, year: 'all')
 
       @title = yaml[:title] if yaml.key? :title
     end
@@ -73,12 +73,12 @@ module RRA
     def grid(variant_name)
       @grid ||= {}
       @grid[variant_name] ||= begin
-        # TODO: All of this probably needs to be wrapped into the ReportView.
+        # TODO: All of this probably needs to be wrapped into the GridReader.
 
         gopts = {}
         rvopts = {}
 
-        # Report Viewer Options:
+        # Grid Reader Options:
         rvopts[:series_label] = grid_hacks[:keystone] if grid_hacks.key? :keystone
 
         rvopts[:store_cell] = if grid_hacks.key?(:store_cell)
@@ -115,7 +115,7 @@ module RRA
         # TODO: gopts should probably switch to :truncate_columns, and then we can tighten these 3 lines up
         gopts[:truncate_cols] = grid_hacks[:truncate_columns].to_i if grid_hacks.key? :truncate_columns
 
-        RRA::ReportViewer.new(variant_files(variant_name), rvopts).to_grid(gopts)
+        RRA::GridReader.new(variant_files(variant_name), rvopts).to_grid(gopts)
       end
     end
 

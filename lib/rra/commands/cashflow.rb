@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../report_viewer'
+require_relative '../grid_reader'
 require_relative '../dashboard'
 
 module RRA
@@ -12,7 +12,7 @@ module RRA
       # This class handles the target argument, passed on the cli
       class Target < RRA::CommandBase::TargetBase
         def self.all
-          RRA::Commands::Cashflow.reports_by_targetname.keys.map { |s| new s }
+          RRA::Commands::Cashflow.grids_by_targetname.keys.map { |s| new s }
         end
       end
 
@@ -49,12 +49,12 @@ module RRA
         }.join("\n\n")
       end
 
-      def self.cashflow_report_files
-        Dir.glob RRA.app.config.build_path('reports/*-cashflow-*.csv')
+      def self.cashflow_grid_files
+        Dir.glob RRA.app.config.build_path('grids/*-cashflow-*.csv')
       end
 
-      def self.reports_by_targetname
-        @reports_by_targetname ||= cashflow_report_files.each_with_object({}) do |file, sum|
+      def self.grids_by_targetname
+        @grids_by_targetname ||= cashflow_grid_files.each_with_object({}) do |file, sum|
           unless /([^-]+)\.csv\Z/.match file
             raise StandardError, I18n.t('commands.cashflow.errors.unrecognized_path', file: file)
           end
@@ -74,8 +74,8 @@ module RRA
         @dashboards ||= targets.map do |target|
           RRA::Dashboard.new(
             target.name,
-            RRA::ReportViewer.new(
-              self.class.reports_by_targetname[target.name],
+            RRA::GridReader.new(
+              self.class.grids_by_targetname[target.name],
               store_cell: lambda { |cell|
                 cell ? RRA::Journal::Commodity.from_symbol_and_amount('$', cell) : cell
               },

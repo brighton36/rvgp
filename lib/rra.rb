@@ -4,7 +4,7 @@ require_relative 'rra/commands'
 require_relative 'rra/transformer_base'
 
 # NOTE: Transformers & modules may want to go into a registry system at
-# some point, akin to reports/validations.
+# some point, akin to grids/validations.
 require_relative 'rra/transformers/csv_transformer'
 require_relative 'rra/transformers/journal_transformer'
 require_relative 'rra/transformer_modules/mortgage'

@@ -35,11 +35,11 @@ en:
           all: 'Process all available transforms'
           list: 'List all available transforms'
           vsplit: 'Split the input and output panes vertically, instead of horizontally (the default)'
-      report:
-        description: "Generate Reports csv's in build/reports"
+      grid:
+        description: "Generate Grid csv's in build/grids"
         options: 
-          all: 'Process all available reports'
-          list: 'List all available reports'
+          all: 'Process all available grids'
+          list: 'List all available grids'
       transform:
         description: 'Create/Update the build/*.journal, based on ./transformers/*.yml'
         options: 
@@ -71,8 +71,8 @@ en:
       errors:
         missing_google_secrets: 'Missing a readable config/google-secrets.yml file in your project directory'
         unable_to_write_to_csvdir: 'Unable to write to path "%{csvdir}"'
-    report:
-      list_targets: 'The following reports are available:'
+    grid:
+      list_targets: 'The following grids are available:'
       target_description: '%{description} for %{year}'
     transform:
       list_targets: 'The following transforms are available:'
@@ -126,9 +126,9 @@ en:
         icon: 📚
         header: Inspecting System State
         prefix: Validating
-      report:
+      grid:
         icon: ▦
-        header: Generating Reports
+        header: Generating Grids
         prefix: Calculating
       plot:
         icon: 📈 

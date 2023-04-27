@@ -4,7 +4,7 @@ module RRA
   # NOTE: I'm not exactly sure what this class wants to be just yet...
   # Let's see if we end up using it for graphing... It might just be a 'Spreadsheet'
   # and we may want/need to move the summary columns into here
-  class ReportViewer
+  class GridReader
     attr_reader :headers, :data, :series_label
 
     def initialize(from_files, options = {})

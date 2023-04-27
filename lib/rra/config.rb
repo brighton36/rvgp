@@ -1,4 +1,3 @@
-
 module RRA
   class Config
     attr_reader :build_path, :prices_path
@@ -12,15 +11,15 @@ module RRA
 
       # I'm not crazy about this default.. Mabe we should raise an error if 
       # this value isn't set...
-      @report_starting_at = @yaml.has_key?(:report_starting_at) ?
-        @yaml[:report_starting_at] : (Date.today-365)
+      @grid_starting_at = @yaml.has_key?(:grid_starting_at) ?
+        @yaml[:grid_starting_at] : (Date.today-365)
 
       # NOTE: RRA::Ledger.newest_transaction.date.year works in lieu of Date.today, 
       #       but that query takes forever. (and it requires that we've already 
       #       performed a build step at the time it's called) so, we use 
       #       Date.today instead.
-      @report_ending_at = @yaml.has_key?(:report_ending_at) ?
-        @yaml[:report_ending_at] : Date.today.year
+      @grid_ending_at = @yaml.has_key?(:grid_ending_at) ?
+        @yaml[:grid_ending_at] : Date.today.year
 
       @prices_path = @yaml.has_key?(:prices_path) ? 
         @yaml[:prices_path] : project_path('journals/prices.db')
@@ -29,16 +28,16 @@ module RRA
     def [](attr); @yaml[attr]; end
     def has_key?(attr); @yaml.has_key? attr; end
 
-    def report_starting_at
-      call_or_return_date @report_starting_at
+    def grid_starting_at
+      call_or_return_date @grid_starting_at
     end
 
-    def report_ending_at
-      call_or_return_date @report_ending_at
+    def grid_ending_at
+      call_or_return_date @grid_ending_at
     end
 
-    def report_years
-      report_starting_at.year.upto(report_ending_at.year)
+    def grid_years
+      grid_starting_at.year.upto(grid_ending_at.year)
     end
 
     def project_path(subdirectory = nil)

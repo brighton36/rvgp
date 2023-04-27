@@ -12,7 +12,7 @@ class RRA::Commands::Plot < RRA::CommandBase
   end
 
   # TODO: This should get broken down, if possible. We should only use this
-  # path, if there are no available reports
+  # path, if there are no available grids
   def self.initialize_rake(rake_main)
     command_klass = self
 

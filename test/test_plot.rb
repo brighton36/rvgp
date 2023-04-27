@@ -21,16 +21,16 @@ class TestPlot < Minitest::Test
   ]
 
   YEAR_AND_INTENTION_CORPUS = [
-    'build/reports/2018-cashflow-burgershop.csv',
-    'build/reports/2018-cashflow-multiplex.csv',
-    'build/reports/2018-cashflow-ignored.csv',
-    'build/reports/2018-cashflow-personal.csv',
+    'build/grids/2018-cashflow-burgershop.csv',
+    'build/grids/2018-cashflow-multiplex.csv',
+    'build/grids/2018-cashflow-ignored.csv',
+    'build/grids/2018-cashflow-personal.csv',
     # NOTE: We sold the frozenbananastand in 2018, so, there's no 2019 grid
-    'build/reports/2018-cashflow-frozenbananastand.csv',
-    'build/reports/2019-cashflow-burgershop.csv',
-    'build/reports/2019-cashflow-multiplex.csv',
-    'build/reports/2019-cashflow-ignored.csv',
-    'build/reports/2019-cashflow-personal.csv',
+    'build/grids/2018-cashflow-frozenbananastand.csv',
+    'build/grids/2019-cashflow-burgershop.csv',
+    'build/grids/2019-cashflow-multiplex.csv',
+    'build/grids/2019-cashflow-ignored.csv',
+    'build/grids/2019-cashflow-personal.csv',
     # These are meant to be ignored:
     '/path/to/ledger/2018-profit-and-loss.csv', 
     '/path/to/ledger/2019-profit-and-loss.csv', 
@@ -57,39 +57,39 @@ class TestPlot < Minitest::Test
 
     assert_equal 9, matches.length
 
-    assert_equal ['build/reports/2018-cashflow-burgershop.csv'], matches[0][:files]
+    assert_equal ['build/grids/2018-cashflow-burgershop.csv'], matches[0][:files]
     assert_equal '2018-cashflow-burgershop', matches[0][:name]
     assert_equal( {year: '2018', intention: 'burgershop'}, matches[0][:pairs] )
     
-    assert_equal ['build/reports/2018-cashflow-multiplex.csv'], matches[1][:files]
+    assert_equal ['build/grids/2018-cashflow-multiplex.csv'], matches[1][:files]
     assert_equal '2018-cashflow-multiplex', matches[1][:name]
     assert_equal( {year: '2018', intention: 'multiplex'}, matches[1][:pairs] )
 
-    assert_equal ['build/reports/2018-cashflow-ignored.csv'], matches[2][:files]
+    assert_equal ['build/grids/2018-cashflow-ignored.csv'], matches[2][:files]
     assert_equal '2018-cashflow-ignored', matches[2][:name]
     assert_equal( {year: '2018', intention: 'ignored'}, matches[2][:pairs] )
 
-    assert_equal ['build/reports/2018-cashflow-personal.csv'], matches[3][:files]
+    assert_equal ['build/grids/2018-cashflow-personal.csv'], matches[3][:files]
     assert_equal '2018-cashflow-personal', matches[3][:name]
     assert_equal( {year: '2018', intention: 'personal'}, matches[3][:pairs] )
 
-    assert_equal ['build/reports/2018-cashflow-frozenbananastand.csv'], matches[4][:files]
+    assert_equal ['build/grids/2018-cashflow-frozenbananastand.csv'], matches[4][:files]
     assert_equal '2018-cashflow-frozenbananastand', matches[4][:name]
     assert_equal( {year: '2018', intention: 'frozenbananastand'}, matches[4][:pairs] )
 
-    assert_equal ['build/reports/2019-cashflow-burgershop.csv'], matches[5][:files]
+    assert_equal ['build/grids/2019-cashflow-burgershop.csv'], matches[5][:files]
     assert_equal '2019-cashflow-burgershop', matches[5][:name]
     assert_equal( {year: '2019', intention: 'burgershop'}, matches[5][:pairs] )
     
-    assert_equal ['build/reports/2019-cashflow-multiplex.csv'], matches[6][:files]
+    assert_equal ['build/grids/2019-cashflow-multiplex.csv'], matches[6][:files]
     assert_equal '2019-cashflow-multiplex', matches[6][:name]
     assert_equal( {year: '2019', intention: 'multiplex'}, matches[6][:pairs] )
 
-    assert_equal ['build/reports/2019-cashflow-ignored.csv'], matches[7][:files]
+    assert_equal ['build/grids/2019-cashflow-ignored.csv'], matches[7][:files]
     assert_equal '2019-cashflow-ignored', matches[7][:name]
     assert_equal( {year: '2019', intention: 'ignored'}, matches[7][:pairs] )
 
-    assert_equal ['build/reports/2019-cashflow-personal.csv'], matches[8][:files]
+    assert_equal ['build/grids/2019-cashflow-personal.csv'], matches[8][:files]
     assert_equal '2019-cashflow-personal', matches[8][:name]
     assert_equal( {year: '2019', intention: 'personal'}, matches[8][:pairs] )
   end
@@ -114,30 +114,30 @@ class TestPlot < Minitest::Test
     assert_equal 5, matches.length
 
     assert_equal(
-      %w(2018 2019).collect{|y| 'build/reports/%s-cashflow-burgershop.csv' % y}, 
+      %w(2018 2019).collect{|y| 'build/grids/%s-cashflow-burgershop.csv' % y},
       matches[0][:files] )
     assert_equal 'all-cashflow-burgershop', matches[0][:name]
     assert_equal( {year: 'all', intention: 'burgershop'}, matches[0][:pairs] )
 
     assert_equal(
-      %w(2018 2019).collect{|y| 'build/reports/%s-cashflow-multiplex.csv' % y}, 
+      %w(2018 2019).collect{|y| 'build/grids/%s-cashflow-multiplex.csv' % y},
       matches[1][:files])
     assert_equal 'all-cashflow-multiplex', matches[1][:name]
     assert_equal( {year: 'all', intention: 'multiplex'}, matches[1][:pairs] )
 
     assert_equal(
-      %w(2018 2019).collect{|y| 'build/reports/%s-cashflow-ignored.csv' % y}, 
+      %w(2018 2019).collect{|y| 'build/grids/%s-cashflow-ignored.csv' % y},
       matches[2][:files])
     assert_equal 'all-cashflow-ignored', matches[2][:name]
     assert_equal( {year: 'all', intention: 'ignored'}, matches[2][:pairs] )
 
     assert_equal(
-      %w(2018 2019).collect{|y| 'build/reports/%s-cashflow-personal.csv' % y}, 
+      %w(2018 2019).collect{|y| 'build/grids/%s-cashflow-personal.csv' % y},
       matches[3][:files])
     assert_equal 'all-cashflow-personal', matches[3][:name]
     assert_equal( {year: 'all', intention: 'personal'}, matches[3][:pairs] )
 
-    assert_equal ['build/reports/2018-cashflow-frozenbananastand.csv'], matches[4][:files]
+    assert_equal ['build/grids/2018-cashflow-frozenbananastand.csv'], matches[4][:files]
     assert_equal 'all-cashflow-frozenbananastand', matches[4][:name]
     assert_equal( {year: 'all', intention: 'frozenbananastand'}, matches[4][:pairs] )
   end

@@ -2,15 +2,15 @@ require 'csv'
 require_relative 'descendant_registry'
 require_relative 'utilities'
 
-class RRA::ReportBase
+class RRA::GridBase
   include RRA::DescendantRegistry
 
   include RRA::Utilities
 
-  register_descendants RRA, :reports, accessors: {
+  register_descendants RRA, :grids, accessors: {
     task_names: lambda{|registry| 
       registry.names.collect{|name| 
-        RRA.app.config.report_years.collect{|year| 'report:%d-%s' % [year,name.tr('_', '-')]}
+        RRA.app.config.grid_years.collect{|year| 'grid:%d-%s' % [year,name.tr('_', '-')]}
       }.flatten
     }
   }
@@ -77,7 +77,7 @@ class RRA::ReportBase
     end
   end
 
-  # This method keeps our reports DRY. It accrues a sum for each posting, on a
+  # This method keeps our grids DRY. It accrues a sum for each posting, on a
   # monthly query
   def reduce_postings_by_month(*args, &block)
     opts = args.last.kind_of?(Hash) ? args.pop : {}
@@ -119,7 +119,7 @@ class RRA::ReportBase
     attr_reader :name, :description
     attr_reader :output_path_template
 
-    def report(name, description, status_name_template, options = {})
+    def grid(name, description, status_name_template, options = {})
       @name, @description, @status_name_template = name, description, 
         status_name_template
       @output_path_template = options[:output_path_template]
@@ -136,7 +136,7 @@ class RRA::ReportBase
 
     def output_path(year)
       raise StandardError, "Missing output_path_template" unless output_path_template
-      "%s/%s.csv" % [RRA.app.config.build_path('reports'), output_path_template % year]
+      "%s/%s.csv" % [RRA.app.config.build_path('grids'), output_path_template % year]
     end
 
     def status_name(year)
@@ -145,7 +145,7 @@ class RRA::ReportBase
   end
 end
 
-module RRA::ReportBase::HasMultipleSheets
+module RRA::GridBase::HasMultipleSheets
 
   def to_table(sheet)
     [sheet_header(sheet)] + sheet_body(sheet)
@@ -181,7 +181,7 @@ module RRA::ReportBase::HasMultipleSheets
     end
 
     def output_path(year, sheet)
-      "%s/%s-%s-%s.csv" % [RRA.app.config.build_path('reports'), year, 
+      "%s/%s-%s-%s.csv" % [RRA.app.config.build_path('grids'), year,
         sheet_output_prefix, sheet.to_s.downcase]
     end
 
