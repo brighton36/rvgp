@@ -68,7 +68,9 @@ module RRA
         ra.amounts.map { |commodity| [ra.fullname, RRA.pastel.red('━'), commodity.to_s].join(' ') }
       end
 
-      error! with_error_msg, results.accounts.flatten unless error_citations.empty?
+      error_citations.flatten!
+
+      error! with_error_msg, error_citations unless error_citations.empty?
     end
   end
 
