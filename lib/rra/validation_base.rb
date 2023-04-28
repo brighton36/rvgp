@@ -64,13 +64,11 @@ module RRA
     def validate_no_balance(with_error_msg, account)
       results = RRA::HLedger.balance account, file: transformer.output_file
 
-      unless results.accounts.empty?
-        error! with_error_msg, results.accounts.map do |ra|
-          ra.amounts.map do |commodity|
-            [ra.fullname, RRA.pastel.red('━'), commodity.to_s].join(' ')
-          end
-        end.flatten
+      error_citations = results.accounts.map do |ra|
+        ra.amounts.map { |commodity| [ra.fullname, RRA.pastel.red('━'), commodity.to_s].join(' ') }
       end
+
+      error! with_error_msg, results.accounts.flatten unless error_citations.empty?
     end
   end
 
