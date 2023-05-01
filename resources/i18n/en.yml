@@ -21,6 +21,12 @@ en:
           all: 'Output a dashboard for every intention in the system'
           list: 'List all available intention-tag values'
           date: 'Specify a date to use, when calculatingg the "recent months" to display. Defaults to "today".'
+      plot:
+        description: 'Build one or more gnuplots, based on a grid variant.'
+        options:
+          all: 'Build all available plots'
+          list: 'List all available plots'
+          stdout: 'Output build to STDOUT instead of output_file'
       publish_gsheets:
         description: 'Publish plots, both as a spreadsheet, as well as a graph, into a google sheets workbook.'
         options: 

@@ -24,7 +24,7 @@ class RRA::Commands::Transform < RRA::CommandBase
         input_file: @transformer.input_file
     end
 
-    def uptodate?; 
+    def uptodate?
       @transformer.uptodate?
     end
 

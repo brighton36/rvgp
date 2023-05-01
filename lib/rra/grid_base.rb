@@ -125,13 +125,16 @@ class RRA::GridBase
       @output_path_template = options[:output_path_template]
     end
 
-    def dependency_paths(year)
-      Dir.glob [RRA.app.config.build_path('journals/%s-*' % year), 
-        RRA.app.config.project_path('journals/*')]
+    def dependency_paths
+      # NOTE: This is only used right now, in the plot task. So, the cache is fine.
+      # But, if we start using this before the journals are built, we're going to
+      # need to clear this cache, thereafter. So, maybe we want to take a parameter
+      # here, or figure something out then, to prevent problems.
+      @dependency_paths ||= RRA::HLedger.files
     end
 
     def uptodate?(year)
-      FileUtils.uptodate? output_path(year), dependency_paths(year)
+      FileUtils.uptodate? output_path(year), dependency_paths
     end
 
     def output_path(year)
@@ -187,7 +190,7 @@ module RRA::GridBase::HasMultipleSheets
 
     def uptodate?(year)
       sheets(year).all? do |sheet|
-        FileUtils.uptodate? output_path(year, sheet), dependency_paths(year)
+        FileUtils.uptodate? output_path(year, sheet), dependency_paths
       end
     end
   end

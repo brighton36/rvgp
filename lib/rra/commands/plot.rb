@@ -1,7 +1,7 @@
 require_relative '../plot'
 
 class RRA::Commands::Plot < RRA::CommandBase
-  accepts_options OPTION_ALL, OPTION_LIST, [:stdout, :s], [:interactive, :i]
+  accepts_options OPTION_ALL, OPTION_LIST, [:stdout, :s]
 
   include RakeTask
   rake_tasks :plot
@@ -17,6 +17,7 @@ class RRA::Commands::Plot < RRA::CommandBase
     command_klass = self
 
     # TODO: This was copy pasta'd from RakeTask
+    # TODO: This should show each plot individually, if the grids exist...
     rake_main.instance_eval do
       desc "Generate all Plots"
       task "plot" do |task, task_args|
@@ -37,12 +38,7 @@ class RRA::Commands::Plot < RRA::CommandBase
         plot.write!(name)
       end
 
-      if options[:interactive]
-        # TODO: Display a window
-      end
-
       return nil
     end
   end
-
 end

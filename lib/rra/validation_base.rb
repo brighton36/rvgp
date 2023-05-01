@@ -54,11 +54,11 @@ module RRA
       results = RRA::Ledger.register transformer.from,
                                      { file: transformer.output_file, sort: 'date' }.merge(ledger_opts)
 
-      unless results.transactions.empty?
-        error! with_error_msg, results.transactions.map do |posting|
-          format '%<date>s: %<payee>s', date: posting.date.to_s, payee: posting.payee
-        end
+      error_citations = results.transactions.map do |posting|
+        format '%<date>s: %<payee>s', date: posting.date.to_s, payee: posting.payee
       end
+
+      error! with_error_msg, error_citations unless error_citations.empty?
     end
 
     def validate_no_balance(with_error_msg, account)

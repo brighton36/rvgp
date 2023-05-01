@@ -49,7 +49,7 @@ class RRA::CommandBase
     end
   end
 
-  class RRA::CommandBase::PlotTarget < RRA::CommandBase::TargetBase
+  class PlotTarget < RRA::CommandBase::TargetBase
     attr_reader :name, :plot
 
     def initialize(name, plot)
@@ -57,8 +57,13 @@ class RRA::CommandBase
     end
     
     def uptodate?
-       # TODO
-      false
+      # I'm not crazy about listing the extension here. Possibly that should come
+      # from the plot object. It's conceivable in the future, that we'll use
+      # more than one extension here...
+      FileUtils.uptodate?(
+        @plot.output_file(@name, 'gpi'),
+        [@plot.path] + @plot.variant_files(@name)
+      )
     end
 
     def self.all

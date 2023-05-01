@@ -57,6 +57,10 @@ module RRA::HLedger
     end
   end
 
+  def self.files
+    command('files').split("\n")
+  end
+
   # hledger bal -O json Personal:Assets:Cash --end 2021-09-01
   def self.balance(account, opts = {})
     RRA::HLedger::Output::Balance.new command(*opts_to_args(opts)+[
