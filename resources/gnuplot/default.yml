@@ -44,27 +44,14 @@ colors:
     - "#bdcf32"
     - "#87bc45"
     - "#27aeef"
-    - "#b33dc6"
-    # Dutch Field
-    - "#e60049"
-    - "#0bb4ff"
-    - "#50e991"
-    - "#e6d800"
-    - "#9b19f5"
-    - "#ffa300"
-    - "#dc0ab4"
-    - "#b3d4ff"
-    - "#00bfa0"
-    # River Nights
-    - "#b30000"
-    - "#7c1158"
-    - "#4421af"
-    - "#1a53ff"
-    - "#0d88e6"
-    - "#00b7c7"
-    - "#5ad45a"
-    - "#8be04e"
-    - "#ebdc78"
+    # http://www.gnuplotting.org/data/dark2.pal
+    - '#1B9E77'
+    - '#D95F02'
+    - '#7570B3'
+    - '#E7298A'
+    - '#66A61E'
+    - '#E6AB02'
+    - '#A6761D'
     # Blue to Yellow
     - "#115f9a"
     - "#1984c5"
@@ -75,15 +62,6 @@ colors:
     - "#c9e52f"
     - "#d0ee11"
     - "#d0f400"
-    # http://www.gnuplotting.org/data/dark2.pal
-    - '#1B9E77'
-    - '#D95F02'
-    - '#7570B3'
-    - '#E7298A'
-    - '#66A61E'
-    - '#E6AB02'
-    - '#A6761D'
-    - '#666666'
 header: |+
   set datafile separator ","
   set title "%{title}" font "sans,11" textcolor rgb "%{title_rgb}" enhanced
