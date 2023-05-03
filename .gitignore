@@ -3,4 +3,6 @@
 *.swm
 *.swn
 *.gem
-TODO.txt
+.yardoc/*
+doc/*
+rubocop.html

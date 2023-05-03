@@ -1,42 +1,64 @@
+# frozen_string_literal: true
+
+require 'faker'
+
 require_relative 'journal'
 require_relative 'journal/commodity'
 
-# NOTE: I'm not sure this class makes sense yet. It might be smarter to have a
-# FakeJournal.new(...).basic(...), returning a Journal, instead of what we're 
-# doing now. (Or, faker.new.basic_journal(...))
-class FakeJournal
-  def basic_cash(from, to, adds_up_to, num_postings)
-    raise StandardError unless [from.kind_of?(Date), to.kind_of?(Date), 
-      adds_up_to.kind_of?(RRA::Journal::Commodity), 
-      num_postings.kind_of?(Numeric)].all?
+module Faker
+  # Contains faker implementations that produce pta journals
+  class FakeJournal < Faker::Base
+    class << self
+      # Generates a basic journal, that credits/debits from a Cash account
+      #
+      # @param from [Date] The date to start generated postings from
+      # @param to [Date] The date to end generated postings
+      # @param sum [RRA::Journal::Commodity]
+      #        The amount that all postings in the generated journal, will add up to
+      # @param post_count [Numeric] The number of postings to generate, in this journal
+      # @return [RRA::Journal] A fake journal, conforming to the provided params
+      def basic_cash(from: ::Date.today, to: from + 9, sum: '$ 100.00'.to_commodity, post_count: 10)
+        RRA::Journal.new(
+          map_uniformly_distributed_amounts(from, to, sum, post_count) do |date, amount, _|
+            simple_posting date, amount
+          end
+        )
+      end
 
-    day_increment = (((to-from).to_f.abs+1)/(num_postings-1)).floor
+      private
 
-    # If we have more postings than days, I guess, raise Unsupported
-    raise StandardError if day_increment <= 0
+      def map_uniformly_distributed_amounts(from, to, sum, count, &block)
+        raise StandardError unless [from.is_a?(::Date),
+                                    to.is_a?(::Date),
+                                    sum.is_a?(RRA::Journal::Commodity),
+                                    count.is_a?(Numeric)].all?
 
-    amount_increment = (adds_up_to / num_postings).floor adds_up_to.precision
-    running_sum = nil
+        day_increment = (((to - from).to_f.abs + 1) / (count - 1)).floor
 
-    RRA::Journal.new 1.upto(num_postings).to_a.collect{ |n|
-      post_amount = (n == num_postings) ? (adds_up_to - running_sum) : amount_increment
-      post_date = (n == num_postings) ? to : from+(day_increment*(n-1))
+        # If we have more postings than days, I guess, raise Unsupported
+        raise StandardError if day_increment <= 0
 
-      running_sum = (running_sum.nil?) ? post_amount : (running_sum + post_amount)
+        amount_increment = (sum / count).floor sum.precision
+        running_sum = nil
 
-			simple_posting post_date, post_amount 
-    }
+        1.upto(count).map do |n|
+          post_amount = n == count ? (sum - running_sum) : amount_increment
+          post_date = n == count ? to : from + (day_increment * (n - 1))
+
+          running_sum = running_sum.nil? ? post_amount : (running_sum + post_amount)
+
+          block.call post_date, post_amount, running_sum
+        end
+      end
+
+      def simple_posting(date, amount)
+        transfers = [to_transfer('Expense', commodity: amount), to_transfer('Cash')]
+        RRA::Journal::Posting.new date, Faker::Company.name, transfers: transfers
+      end
+
+      def to_transfer(*args)
+        RRA::Journal::Posting::Transfer.new(*args)
+      end
+    end
   end
-
-	private
-
-	def simple_posting(date, amount)
-    RRA::Journal::Posting.new date, 'Simple Payee', transfers: [ 
-      to_transfer('Expense', commodity: amount), to_transfer('Cash') ]
-	end
-
-  def to_transfer(*args)
-    RRA::Journal::Posting::Transfer.new(*args)
-  end
-
 end
