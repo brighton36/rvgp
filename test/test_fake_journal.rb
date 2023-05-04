@@ -4,12 +4,12 @@
 require 'minitest/autorun'
 
 require_relative '../lib/rra'
-require_relative '../lib/rra/fake_journal'
+require_relative '../lib/rra/fakers/fake_journal'
 
-# Minitest class, used to test Faker::FakeJournal
-class TestCashBalanceValidation < Minitest::Test
+# Minitest class, used to test RRA::Fakers::FakeJournal
+class TestFakeJournal < Minitest::Test
   def test_basic_cash
-    journal = Faker::FakeJournal.basic_cash from: Date.new(2020, 1, 1), to: Date.new(2020, 1, 10)
+    journal = RRA::Fakers::FakeJournal.basic_cash from: Date.new(2020, 1, 1), to: Date.new(2020, 1, 10)
 
     assert_kind_of RRA::Journal, journal
     assert_equal journal.postings.length, 10
@@ -36,7 +36,7 @@ class TestCashBalanceValidation < Minitest::Test
     10.times.map { rand(1..10_000_000) }.each do |i|
       amount = format('$ %.2f', i.to_f / 100).to_commodity
 
-      journal = Faker::FakeJournal.basic_cash from: Date.new(2020, 1, 1), sum: amount
+      journal = RRA::Fakers::FakeJournal.basic_cash from: Date.new(2020, 1, 1), sum: amount
 
       assert_kind_of RRA::Journal, journal
       assert_equal(journal.postings.length, 10)
@@ -52,13 +52,13 @@ class TestCashBalanceValidation < Minitest::Test
 
   def test_basic_cash_dates
     assert_equal %w[2020-01-01 2020-01-03 2020-01-05 2020-01-07 2020-01-09
-                    2020-01-11 2020-01-13 2020-01-15 2020-01-17 2020-01-20],
-                 Faker::FakeJournal.basic_cash(from: Date.new(2020, 1, 1), to: Date.new(2020, 1, 20))
-                                   .postings.map(&:date).map(&:to_s)
+                    2020-01-12 2020-01-14 2020-01-16 2020-01-18 2020-01-20],
+                 RRA::Fakers::FakeJournal.basic_cash(from: Date.new(2020, 1, 1), to: Date.new(2020, 1, 20))
+                                         .postings.map(&:date).map(&:to_s)
 
-    assert_equal %w[2020-01-01 2020-02-09 2020-03-19 2020-04-27 2020-06-05
-                    2020-07-14 2020-08-22 2020-09-30 2020-11-08 2020-12-20],
-                 Faker::FakeJournal.basic_cash(from: Date.new(2020, 1, 1), to: Date.new(2020, 12, 20))
-                                   .postings.map(&:date).map(&:to_s)
+    assert_equal %w[2020-01-01 2020-02-09 2020-03-19 2020-04-28 2020-06-06
+                    2020-07-16 2020-08-24 2020-10-03 2020-11-11 2020-12-20],
+                 RRA::Fakers::FakeJournal.basic_cash(from: Date.new(2020, 1, 1), to: Date.new(2020, 12, 20))
+                                         .postings.map(&:date).map(&:to_s)
   end
 end
