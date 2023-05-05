@@ -21,6 +21,8 @@ en:
           all: 'Output a dashboard for every intention in the system'
           list: 'List all available intention-tag values'
           date: 'Specify a date to use, when calculatingg the "recent months" to display. Defaults to "today".'
+      new_project:
+        description: 'Create a new plain text accounting project, populated with random data, in the path specified by --dir.'
       plot:
         description: 'Build one or more gnuplots, based on a grid variant.'
         options:

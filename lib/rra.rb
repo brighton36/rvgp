@@ -17,6 +17,8 @@ require_relative 'rra/journal'
 require_relative 'rra/ledger/ledger'
 require_relative 'rra/hledger/hledger'
 
+require_relative 'rra/grid_base'
+
 # Gem Paths / Resources:
 require_relative 'rra/gem'
 I18n.load_path << Dir[RRA::Gem.root.resources.i18n('*.yml')]

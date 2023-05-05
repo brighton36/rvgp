@@ -145,8 +145,7 @@ class RRA::CommandBase
     # We'll cast the arguments to one of these, instead of storing strings
     target_klass = self.class.const_get('Target')
 
-    @options, remainders = Option.remove_options_from_args self.class.options,
-      args
+    @options, remainders = Option.remove_options_from_args self.class.options, args
 
     missing_targets = []
     remainders.each do |remainder|

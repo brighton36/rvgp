@@ -21,6 +21,8 @@ module RRA
           [:help, :h], [:dir, :d, {has_value: true}]
           ].collect{|args| RRA::CommandBase::Option.new(*args) }, args
 
+        command_name = command_args.shift
+
         # Process global options:
         app_dir = if options[:dir]
           options[:dir]
@@ -28,18 +30,23 @@ module RRA
           app_dir = File.dirname(ENV['LEDGER_FILE'])
         end
 
-        # To solve the chicken and the egg problem, that's caused by
-        # user-defined commands adding to our help. We have two ways of 
-        # displaying help. Here, we display the help, if there's no app_dir:
+        # I'm not crazy about this implementation, but, it's a special case. So,
+        # we dispatch the new_project command in this way:
+        if command_name == 'new_project'
+          require_files!
+          dispatch_klass RRA::Commands::NewProject, app_dir
+          exit
+        end
+
         unless app_dir and File.directory?(app_dir)
+          # To solve the chicken and the egg problem, that's caused by
+          # user-defined commands adding to our help. We have two ways of
+          # handling the help. Here, we display the help, even if there's no app_dir:
           if options[:help]
             # This will only show the help for built-in commands, as we were
             # not able to load the project_dir's commands
-            #
-            # Load up the built-in commands:
             require_files!
-
-            RRA::Commands.help! 
+            RRA::Commands.help!
           else
             error! 'error.no_application_dir', dir: app_dir 
           end
@@ -47,7 +54,7 @@ module RRA
 
         # Initialize the provided app:
         begin
-          RRA.initialize_app app_dir
+          RRA.initialize_app app_dir unless command_name == 'new_project'
         rescue RRA::Application::InvalidProjectDir
           error! 'error.invalid_application_dir', directory: app_dir
         end
@@ -58,28 +65,7 @@ module RRA
         RRA::Commands.help! if options[:help]
 
         # Dispatch the command:
-        command_name = command_args.shift
-        command_klass = RRA.commands.find{ |klass| klass.name == command_name }
-
-        error! 'error.unexpected_argument', arg: command_klass unless command_klass
-
-        if command_klass.nil?
-          error! 'error.missing_command'
-        elsif command_klass
-          command = command_klass.new *command_args
-          if command.valid?
-            command.execute!
-          else
-            puts RRA.pastel.bold(
-              I18n.t("error.command_errors", command: command_klass.name))
-            command.errors.each do |error|
-              puts RRA.pastel.red(I18n.t('error.command_error', error: error))
-            end
-            exit 1
-          end
-        else 
-          error! 'error.command_unrecognized', command: command_klass.name
-        end
+        dispatch_klass RRA.commands.find { |klass| klass.name == command_name }, command_args
       end
 
       def help!
@@ -113,10 +99,34 @@ module RRA
         exit
       end
 
+      private
+
       def error!(i18n_key, **options)
         puts [RRA.pastel.red(I18n.t('error.error')), 
           I18n.t(i18n_key, **options)].join(': ')
         exit 1
+      end
+
+      def dispatch_klass(command_klass, command_args)
+        error! 'error.unexpected_argument', arg: command_klass unless command_klass
+
+        if command_klass.nil?
+          error! 'error.missing_command'
+        elsif command_klass
+          command = command_klass.new *command_args
+          if command.valid?
+            command.execute!
+          else
+            puts RRA.pastel.bold(
+              I18n.t("error.command_errors", command: command_klass.name))
+            command.errors.each do |error|
+              puts RRA.pastel.red(I18n.t('error.command_error', error: error))
+            end
+            exit 1
+          end
+        else
+          error! 'error.command_unrecognized', command: command_klass.name
+        end
       end
     end
   end
