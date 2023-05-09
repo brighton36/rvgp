@@ -13,6 +13,7 @@ module RRA
         #
         # @param from [Date] The date to start generated feed from
         # @param to [Date] The date to end generated feed
+        # @param companies [Array] An array containing the pool of available company names, for use in random selection
         # @param deposit_average [RRA::Journal::Commodity] The average deposit amount
         # @param deposit_stddev [Float] The stand deviation, on random deposits
         # @param withdrawal_average [RRA::Journal::Commodity] The average withdrawal amount
@@ -24,6 +25,7 @@ module RRA
         # @return [String] A CSV, containing the generated transactions
         def basic_checking(from: ::Date.today,
                            to: from + (365 / 4),
+                           companies: nil,
                            deposit_average: '$ 2000.00'.to_commodity,
                            deposit_stddev: 500.0,
                            withdrawal_average: '$ 100.00'.to_commodity,
@@ -41,16 +43,17 @@ module RRA
             entries_over_date_range(post_count, from, to).each do |date|
               is_deposit = Faker::Boolean.boolean true_ratio: deposit_ratio
 
+              company_name = companies ? companies.sample : Faker::Company.name.upcase
               if is_deposit
                 accumulate_by = :+
                 amount_args = { mean: deposit_average.to_f, standard_deviation: deposit_stddev }
                 type = 'ACH'
-                description = format '%s DIRECT DEP', Faker::Company.name.upcase
+                description = format '%s DIRECT DEP', company_name
               else
                 accumulate_by = :-
                 amount_args = { mean: withdrawal_average.to_f, standard_deviation: withdrawal_stddev }
                 type = 'VISA'
-                description = Faker::Company.name.upcase
+                description = company_name
               end
 
               amount = RRA::Journal::Commodity.from_symbol_and_amount(currency.symbol,

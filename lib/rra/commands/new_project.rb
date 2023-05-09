@@ -1,9 +1,12 @@
 # frozen_string_literal: true
+require_relative '../fakers/fake_feed'
 
 module RRA
   module Commands
     # This class handles the request to create a new RRA project.
     class NewProject < RRA::CommandBase
+      RANDOM_COMPANY_POOL_SIZE = 50
+
       attr_reader :errors, :app_dir, :project_name
 
       def initialize(*args) # rubocop:disable Lint/MissingSuper
@@ -76,7 +79,18 @@ module RRA
       end
 
       def initialize_bank_feeds
-        # TODO: Let's create some companies
+        today = Date.today
+        today.year.downto(today.year-5).each do |year|
+          feed = RRA::Fakers::FakeFeed.basic_checking from: Date.new(year, 1, 1),
+                                                      to: Date.new(year, 12, 31),
+                                                      companies: companies,
+                                                      post_count: 300
+
+          journal_path = format('%<app_dir>s/feeds/%<year>d-personal-basic-checking.csv',
+                                app_dir: app_dir, year: year)
+          File.write journal_path, feed
+        end
+
         { warnings: [], errors: [] }
       end
 
@@ -90,6 +104,10 @@ module RRA
 
       def initialize_config
         { warnings: [], errors: [] }
+      end
+
+      def companies
+        @companies ||= 1.upto(RANDOM_COMPANY_POOL_SIZE).map { Faker::Company.name }
       end
 
       def project_journal_path

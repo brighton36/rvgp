@@ -39,4 +39,17 @@ class TestFakeFeed < Minitest::Test
       assert_match(/\$ -?\d+\.\d{2}/, row['RunningBalance'])
     end
   end
+
+  def test_companies_param
+    companies = %w(Walmart Amazon Apple CVS Exxon Berkshire Google Microsoft Costco)
+    feed = RRA::Fakers::FakeFeed.basic_checking post_count: 50, companies: companies
+
+    csv = CSV.parse feed, headers: true
+    assert_equal 50, csv.length
+    csv.each do |row|
+      company = row['Description']
+      company = ::Regexp.last_match 1 if /\A(.+) DIRECT DEP\Z/.match company
+      assert_includes companies, company
+    end
+  end
 end
