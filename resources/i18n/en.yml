@@ -75,6 +75,22 @@ en:
       errors:
         screen_too_small: 'Screen width "%{screen_width}" is too small. Minimum width is %{minimum_width}.'
         unrecognized_path: 'Unrecognized path: %{file}'
+    new_project:
+      directory_exists_prompt: "The directory \"%{dir}\" already exists. Continuing will overwrite some of its contents. Are you sure you wish to continue creating a new project in this directory? (Type \"Yes\" to continue) : "
+      project_name_prompt: "Who's project is this? A person's full name or a company name will work: "
+      project_name_confirmation: "You entered \"%{project_name}\". Is that correct? (Type \"Yes\" to continue) : "
+      confirm_operation: "Yes"
+      operation_aborted: "\"new_project\" project operation aborted"
+      completed_banner: "\nThe new project has been generated successfully.\nThough you may want to add the following line to your ~/.bashrc:\n  export LEDGER_FILE=\"%{journal_path}\"\n\nOtherwise, you're ready to begin working on this project."
+      initialize:
+        project_directory: "Project directory"
+        bank_feeds: 'Randomized bank feeds'
+        transformers: 'Randomized transformers'
+        app: 'Default app directory'
+        config: 'Default config'
+      errors:
+        missing_app_dir: "An application directory was not provided, and is required. Set this parameter via --dir argument, or via the LEDGER_FILE environment variable"
+        directory_exists: "The directory \"%{dir}\" could not be created because it already exists."
     publish_gsheets:
       errors:
         missing_google_secrets: 'Missing a readable config/google-secrets.yml file in your project directory'
@@ -146,3 +162,7 @@ en:
         icon: 📑 
         header: Publishing to Google Sheets
         prefix: Sheeting
+      new_project:
+        icon: 📖
+        header: New Project
+        prefix: Initializing
