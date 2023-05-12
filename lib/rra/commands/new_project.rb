@@ -1,11 +1,14 @@
 # frozen_string_literal: true
+
 require_relative '../fakers/fake_feed'
+require_relative '../fakers/fake_transformer'
 
 module RRA
   module Commands
     # This class handles the request to create a new RRA project.
     class NewProject < RRA::CommandBase
-      RANDOM_COMPANY_POOL_SIZE = 50
+      EXPENSE_DESCRIPTION_POOL_SIZE = 50
+      INCOME_DESCRIPTION_POOL_SIZE = 2
 
       attr_reader :errors, :app_dir, :project_name
 
@@ -46,8 +49,7 @@ module RRA
           end
         end
 
-        puts I18n.t('commands.new_project.completed_banner',
-                    journal_path: project_journal_path)
+        puts I18n.t('commands.new_project.completed_banner', journal_path: project_journal_path)
       end
 
       private
@@ -62,7 +64,7 @@ module RRA
         end
 
         # Create the sub directories:
-        %w(build feeds journals).each do |dir|
+        %w[build feeds journals transformers].each do |dir|
           full_dir = [app_dir, dir].join('/')
           if Dir.exist? full_dir
             @warnings << [I18n.t('commands.new_project.errors.directory_exists', dir: full_dir)]
@@ -71,30 +73,38 @@ module RRA
           end
         end
 
+        # TODO: Maybe we should cp_r the skel, in full, and move project-name.journal to a constant...
         FileUtils.cp RRA::Gem.root.resources('skel/Rakefile').to_s, app_dir
-        FileUtils.cp RRA::Gem.root.resources('skel/project-name.journal').to_s,
-                     project_journal_path
+        FileUtils.cp RRA::Gem.root.resources('skel/project-name.journal').to_s, project_journal_path
 
         { warnings: @warnings, errors: [] }
       end
 
       def initialize_bank_feeds
-        today = Date.today
-        today.year.downto(today.year-5).each do |year|
-          feed = RRA::Fakers::FakeFeed.basic_checking from: Date.new(year, 1, 1),
-                                                      to: Date.new(year, 12, 31),
-                                                      companies: companies,
-                                                      post_count: 300
-
-          journal_path = format('%<app_dir>s/feeds/%<year>d-personal-basic-checking.csv',
-                                app_dir: app_dir, year: year)
-          File.write journal_path, feed
+        this_year.downto(this_year - 5).each do |year|
+          File.write destination_path('%<app_dir>s/feeds/%<year>d-personal-basic-checking.csv', year: year),
+                     RRA::Fakers::FakeFeed.basic_checking(from: Date.new(year, 1, 1),
+                                                          to: Date.new(year, 12, 31),
+                                                          expense_descriptions: expense_descriptions,
+                                                          income_descriptions: income_descriptions,
+                                                          post_count: 300)
         end
 
         { warnings: [], errors: [] }
       end
 
       def initialize_transformers
+        this_year.downto(this_year - 5).each do |year|
+
+          File.write destination_path('%<app_dir>s/transformers/%<year>d-personal-basic-checking.yml',
+                                      year: year),
+                     RRA::Fakers::FakeTransformer.basic_checking(
+                       label: format('Personal AcmeBank:Checking (%<year>s)', year: year),
+                       input_path: format('%<year>d-personal-basic-checking.csv', year: year),
+                       output_path: format('%<year>d-personal-basic-checking.journal', year: year)
+                     )
+        end
+
         { warnings: [], errors: [] }
       end
 
@@ -106,14 +116,26 @@ module RRA
         { warnings: [], errors: [] }
       end
 
-      def companies
-        @companies ||= 1.upto(RANDOM_COMPANY_POOL_SIZE).map { Faker::Company.name }
+      def expense_descriptions
+        @expense_descriptions ||= 1.upto(EXPENSE_DESCRIPTION_POOL_SIZE).map { Faker::Company.name }
+      end
+
+      def income_descriptions
+        @expense_descriptions ||= 1.upto(INCOME_DESCRIPTION_POOL_SIZE).map { Faker::Company.name }
+      end
+
+      def this_year
+        @this_year ||= Date.today.year
+      end
+
+      def destination_path(path, params = {})
+        params[:app_dir] ||= app_dir
+        format path, params
       end
 
       def project_journal_path
-        format '%<app_dir>s/%<project_name>s.journal',
-               app_dir: app_dir,
-               project_name: project_name.downcase.tr(' ', '-')
+        destination_path '%<app_dir>s/%<project_name>s.journal',
+                         project_name: project_name.downcase.tr(' ', '-')
       end
     end
   end

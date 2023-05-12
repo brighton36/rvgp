@@ -13,7 +13,8 @@ module RRA
         #
         # @param from [Date] The date to start generated feed from
         # @param to [Date] The date to end generated feed
-        # @param companies [Array] An array containing the pool of available company names, for use in random selection
+        # @param income_descriptions [Array] Strings containing the pool of available income descriptions, for use in random selection
+        # @param expense_descriptions [Array] Strings containing the pool of available expense descriptions, for use in random selection
         # @param deposit_average [RRA::Journal::Commodity] The average deposit amount
         # @param deposit_stddev [Float] The stand deviation, on random deposits
         # @param withdrawal_average [RRA::Journal::Commodity] The average withdrawal amount
@@ -25,7 +26,8 @@ module RRA
         # @return [String] A CSV, containing the generated transactions
         def basic_checking(from: ::Date.today,
                            to: from + (365 / 4),
-                           companies: nil,
+                           expense_descriptions: nil,
+                           income_descriptions: nil,
                            deposit_average: '$ 2000.00'.to_commodity,
                            deposit_stddev: 500.0,
                            withdrawal_average: '$ 100.00'.to_commodity,
@@ -43,17 +45,17 @@ module RRA
             entries_over_date_range(post_count, from, to).each do |date|
               is_deposit = Faker::Boolean.boolean true_ratio: deposit_ratio
 
-              company_name = companies ? companies.sample : Faker::Company.name.upcase
               if is_deposit
                 accumulate_by = :+
                 amount_args = { mean: deposit_average.to_f, standard_deviation: deposit_stddev }
                 type = 'ACH'
-                description = format '%s DIRECT DEP', company_name
+                description = format '%s DIRECT DEP',
+                                     income_descriptions ? income_descriptions.sample : Faker::Company.name.upcase
               else
                 accumulate_by = :-
                 amount_args = { mean: withdrawal_average.to_f, standard_deviation: withdrawal_stddev }
                 type = 'VISA'
-                description = company_name
+                description = expense_descriptions ? expense_descriptions.sample : Faker::Company.name.upcase
               end
 
               amount = RRA::Journal::Commodity.from_symbol_and_amount(currency.symbol,
