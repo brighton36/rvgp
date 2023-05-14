@@ -31,7 +31,7 @@ class TestFakeFeed < Minitest::Test
       assert_kind_of String, row['Deposit (+)']
       assert_kind_of String, row['RunningBalance']
 
-      assert_match(%r[\A\d{2}/\d{2}/\d{4}\Z], row['Date'])
+      assert_match(%r{\A\d{2}/\d{2}/\d{4}\Z}, row['Date'])
       assert !row['Type'].empty?
       assert !row['Description'].empty?
       assert_match(/\$ \d+\.\d{2}/,

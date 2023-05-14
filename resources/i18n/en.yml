@@ -81,13 +81,11 @@ en:
       project_name_confirmation: "You entered \"%{project_name}\". Is that correct? (Type \"Yes\" to continue) : "
       confirm_operation: "Yes"
       operation_aborted: "\"new_project\" project operation aborted"
-      completed_banner: "\nThe new project has been generated successfully.\nThough you may want to add the following line to your ~/.bashrc:\n  export LEDGER_FILE=\"%{journal_path}\"\n\nOtherwise, you're ready to begin working on this project."
+      completed_banner: "\nThe new project has been generated successfully.\nThough you may want to add the following line to your ~/.bashrc:\n  export LEDGER_FILE=\"%{journal_path}\"\n\nYou're ready to begin working on this project. Try cd'ing into its directory, and running `rake`."
       initialize:
         project_directory: "Project directory"
         bank_feeds: 'Randomized bank feeds'
         transformers: 'Randomized transformers'
-        app: 'Default app directory'
-        config: 'Default config'
       errors:
         missing_app_dir: "An application directory was not provided, and is required. Set this parameter via --dir argument, or via the LEDGER_FILE environment variable"
         directory_exists: "The directory \"%{dir}\" could not be created because it already exists."

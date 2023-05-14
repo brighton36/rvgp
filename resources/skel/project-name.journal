@@ -1,7 +1,0 @@
-# vim:filetype=ledger
-
-# Manually managed journals:
-include journals/*.journal
-
-# Feed generated journals:
-include build/journals/*.journal

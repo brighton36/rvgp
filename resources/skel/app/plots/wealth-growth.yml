@@ -1,0 +1,19 @@
+title: "Wealth Growth (%{year})"
+glob: "%{year}-wealth-growth.csv"
+grid_hacks:
+  store_cell: !!proc >
+    (cell) ? cell.to_f.abs : nil
+google: 
+  chart_type: area
+  axis: 
+    left: "Amount"
+    bottom: "Date"
+gnuplot:
+  chart_type: area
+  domain: monthly
+  axis:
+    left: "Amount"
+    bottom: "Date"
+  additional_lines: |+
+    set xtics scale 0 rotate by 45 offset -1.4,-1.4
+    set key title ' '

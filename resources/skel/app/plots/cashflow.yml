@@ -1,0 +1,33 @@
+title: "%{intention} Expenses (%{year})"
+glob: "%{year}-cashflow-%{intention}.csv"
+grid_hacks:
+  # NOTE: "date"/cornerstone column is the 1 here
+  keystone: "Date"
+  select_rows: !!proc >
+    /\:Expenses\:/.match name
+  # TODO: Change this to keystone:
+  sort_rows_by: !!proc >
+    row[1...].compact.sum * -1
+  truncate_rows: 25 # Sheet::MAX_COLUMNS-1
+  # TODO: Hmmm, I guess Google may need this?
+  switch_rows_columns: true
+google:
+  chart_type: area
+  axis:
+    left: "Amount"
+    bottom: "Month"
+  stacked_type: "STACKED"
+  series_colors: {}
+gnuplot:
+  chart_type: area
+  domain: monthly
+  is_stacked: true
+  axis:
+    left: "Amount"
+    bottom: "Month"
+  # TODO: For cashflow, Invert the legend order... why is hotels on bottom right, instead of top left
+  additional_lines: |+
+    set xtics scale 0 rotate by 45 offset -1.4,-1.4
+    set xtics out
+    set tics front
+    set key title ' '

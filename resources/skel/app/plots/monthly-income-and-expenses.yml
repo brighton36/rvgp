@@ -1,0 +1,17 @@
+title: "Monthly Income & Expenses (%{year})"
+glob: "%{year}-monthly-income-and-expenses.csv"
+google:
+  chart_type: column
+  axis: 
+    left: "Amount"
+    bottom: "Month"
+gnuplot:
+  chart_type: column
+  is_clustered: true
+  xrange_start: 1
+  axis:
+    left: "Amount"
+    bottom: "Month"
+  additional_lines: |+
+    set xtics scale 0 rotate by 45 offset -1.4,-1.4
+    set key title ' '
