@@ -2,16 +2,18 @@
 
 require 'yard'
 require 'rubocop/rake_task'
+require 'bundler/gem_tasks'
+
 require_relative 'lib/rra'
 
 task default: 'all'
 
 desc 'All'
-task all: %i[test yard lint]
+task all: %i[test yard lint build]
 
 desc 'Run the minitests'
 task :test do
-  Dir[RRA::Gem.root.test('test*.rb')].sort.each { |f| require f }
+  Dir[RRA::Gem.root('test/test*.rb')].sort.each { |f| require f }
 end
 
 desc 'Check code notation'

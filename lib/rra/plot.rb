@@ -13,7 +13,7 @@ module RRA
                 :switch_rows_columns
 
     REQUIRED_FIELDS = %i[glob title].freeze
-    GNUPLOT_RESOURCES_PATH = [RRA::Gem.root.to_s, '/resources/gnuplot'].join
+    GNUPLOT_RESOURCES_PATH = [RRA::Gem.root, '/resources/gnuplot'].join
 
     # This exception is raised when a provided yaml file, is missing required
     # attributes.

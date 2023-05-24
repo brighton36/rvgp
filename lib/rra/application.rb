@@ -69,7 +69,7 @@ module RRA
 
     def require_validations!
       # Built-in validations:
-      Dir.glob(RRA::Gem.root.lib.rra.validations('*.rb').to_s).each do |file| 
+      Dir.glob(RRA::Gem.root('lib/rra/validations/*.rb')).each do |file|
         require file 
       end
       # App validations:

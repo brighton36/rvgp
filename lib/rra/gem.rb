@@ -1,48 +1,54 @@
 # frozen_string_literal: true
 
-require 'jewel'
-
 module RRA
   # This class contains information relating to our Gem configuration, and is
   # used by Jewel, to produce a gemspec.
-  class Gem < Jewel::Gem
+  class Gem
     GEM_DIR = File.expand_path format('%s/../..', File.dirname(__FILE__))
 
-    name! 'rra'
-    summary 'A workflow tool to: transform bank-downloaded csv\'s into ' \
-            'categorized pta journals. Run finance validations on those journals. ' \
-            'And generate reports and graphs on the output.'
-    version '0.3'
-    homepage 'https://github.com/brighton36/rra'
-    license 'LGPL-2.0'
+    class << self
+      def specification
+        ::Gem::Specification.new do |s|
+          s.name        = 'rra'
+          s.version     = '0.3'
+          s.licenses    = ['LGPL-2.0']
+          s.authors     = ['Chris DeRose']
+          s.email       = 'chris@chrisderose.com'
+          s.metadata    = { 'source_code_uri' => 'https://github.com/brighton36/rra' }
 
-    author 'Chris DeRose'
-    email 'chris@chrisderose.com'
+          s.summary = 'A workflow tool to: transform bank-downloaded csv\'s into ' \
+                      'categorized pta journals. Run finance validations on those ' \
+                      'journals. And generate reports and graphs on the output.'
+          s.homepage = 'https://github.com/brighton36/rra'
 
-    root GEM_DIR
-    require_paths = ['lib'] # rubocop:disable Lint/UselessAssignment
+          s.files = files
 
-    # This is an alternative to below. But, sometimes I test out builds that
-    # aren't git-committed:
-    # files `git ls-files`.split "\n"
-    ignores = ['.git/*'] + File.read(format('%s/.gitignore', GEM_DIR)).split("\n")
+          s.executables = ['rra']
 
-    files(`find ./ -type f -printf '%P\n'`
-              .split("\n")
-              .reject { |file| ignores.any? { |glob| File.fnmatch glob, file } })
+          s.add_development_dependency 'minitest', '~> 5.16.0'
+          s.add_development_dependency 'faker', '~> 3.2.0'
 
-    executables ['rra']
+          s.add_dependency 'finance', '~> 2.0.0'
+          s.add_dependency 'tty-table', '~> 0.12.0'
+          s.add_dependency 'shellwords', '~> 0.1.0'
+          s.add_dependency 'open3', '~> 0.1.1'
+          s.add_dependency 'google-apis-sheets_v4', '~> 0.22.0'
+        end
+      end
 
-    development do
-      depend_on 'minitest', '~> 5.16.0'
-      depend_on 'faker', '~> 3.2.0'
+      def files
+        # This is an alternative to below. But, sometimes I test out builds that
+        # aren't git-committed: `git ls-files`.split "\n"
+        ignores = ['.git/*'] + File.read(format('%s/.gitignore', GEM_DIR)).split("\n")
+
+        `find ./ -type f -printf '%P\n'`
+          .split("\n")
+          .reject { |file| ignores.any? { |glob| File.fnmatch glob, file } }
+      end
+
+      def root(sub_path = nil)
+        sub_path ? [GEM_DIR, sub_path].join('/') : GEM_DIR
+      end
     end
-
-    depend_on 'jewel', '~> 0.0.9'
-    depend_on 'finance', '~> 2.0.0'
-    depend_on 'tty-table', '~> 0.12.0'
-    depend_on 'shellwords', '~> 0.1.0'
-    depend_on 'open3', '~> 0.1.1'
-    depend_on 'google-apis-sheets_v4', '~> 0.22.0'
   end
 end

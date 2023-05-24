@@ -21,13 +21,15 @@ require_relative 'rra/grid_base'
 
 # Gem Paths / Resources:
 require_relative 'rra/gem'
-I18n.load_path << Dir[RRA::Gem.root.resources.i18n('*.yml')]
-RRA::Journal::Currency.currencies_config = \
-  RRA::Gem.root.resources('iso-4217-currencies.json')
 
+I18n.load_path << Dir[RRA::Gem.root('resources/i18n/*.yml')]
+RRA::Journal::Currency.currencies_config = RRA::Gem.root('resources/iso-4217-currencies.json')
+
+# The base module, under which all RRA code is filed
 module RRA
   def self.initialize_app(from_path)
-    raise StandardError, "Application is already initialized" if @app
+    raise StandardError, 'Application is already initialized' if @app
+
     @app = Application.new from_path
   end
 

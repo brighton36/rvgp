@@ -103,7 +103,7 @@ module RRA
           end
         end
 
-        Dir.glob(RRA::Gem.root.resources('skel/*').to_s) do |filename|
+        Dir.glob(RRA::Gem.root('resources/skel/*')) do |filename|
           FileUtils.cp_r filename, app_dir
         end
 
