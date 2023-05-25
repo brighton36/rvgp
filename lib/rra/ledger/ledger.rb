@@ -48,6 +48,7 @@ module RRA::Ledger
     output
   end
 
+  # TODO: I think we should pull this path from the config.primary_journal_path ...
   def self.path(relfile = nil)
     unless ENV.has_key? 'LEDGER_FILE'
       raise StandardError, "LEDGER_FILE environment variable is set incorrectly"
@@ -55,12 +56,12 @@ module RRA::Ledger
     [File.dirname(ENV['LEDGER_FILE']),relfile].compact.join('/')
   end
 
-  def self.newest_transaction(account = nil)
-    first_transaction account, sort: 'date', tail: 1
+  def self.newest_transaction(account = nil, opts = {})
+    first_transaction account, opts.merge(sort: 'date', tail: 1)
   end
 
-  def self.oldest_transaction(account = nil)
-    first_transaction account, sort: 'date', head: 1
+  def self.oldest_transaction(account = nil, opts = {})
+    first_transaction account, opts.merge(sort: 'date', head: 1)
   end
 
   private

@@ -16,6 +16,9 @@ module RRA
           input: %<input_path>s
           output: %<output_path>s
           balances:
+            # TODO: Transcribe some expected balances, based off bank statements,
+            # here, in the form :
+            # '2023-01-04': $ 1000.00
           income: %<income>s
           expense: %<expense>s
         FEED_TEMPLATE

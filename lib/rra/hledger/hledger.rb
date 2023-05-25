@@ -57,8 +57,8 @@ module RRA::HLedger
     end
   end
 
-  def self.files
-    command('files').split("\n")
+  def self.files(opts = {})
+    command(*opts_to_args(opts) + ['files']).split("\n")
   end
 
   # hledger bal -O json Personal:Assets:Cash --end 2021-09-01

@@ -21,7 +21,7 @@ module RRA::Utilities
     # NOTE: Though tempting, probably don't cache this value.
     # NOTE: Let's try not to pass options direct to command(), it's possible we 
     #       want to switch between ledger/hledger, and this will achieve that.
-    args = ['tags', '--values', for_tag]
+    args = ['--file', RRA.app.config.project_journal_path, 'tags', '--values', for_tag]
     args += ['--begin', options[:year], '--end', options[:year]+1] if options[:year]
     args += [options[:query]].flatten if options[:query]
     RRA::HLedger.command(*args).lines.collect{|l| l.chomp.to_sym}.sort

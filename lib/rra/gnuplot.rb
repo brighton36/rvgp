@@ -3,7 +3,7 @@
 require 'open3'
 
 module RRA
-  class Gnuplot
+  module Gnuplot
     # Palette's are loaded from a template, and contain logic related to coloring
     # base elements (fonts/background/line-colors/etc), as well as relating to
     # series/element colors in the plot.

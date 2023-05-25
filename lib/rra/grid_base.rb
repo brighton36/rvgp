@@ -82,7 +82,10 @@ class RRA::GridBase
   def reduce_postings_by_month(*args, &block)
     opts = args.last.kind_of?(Hash) ? args.pop : {}
 
-    ledger_opts = { sort: 'date', pricer: RRA.app.pricer, monthly: true }
+    ledger_opts = { sort: 'date',
+                    pricer: RRA.app.pricer,
+                    monthly: true,
+                    file: RRA.app.config.project_journal_path }
 
     ledger_opts[:collapse] = opts[:collapse] if opts[:collapse]
 
@@ -130,7 +133,7 @@ class RRA::GridBase
       # But, if we start using this before the journals are built, we're going to
       # need to clear this cache, thereafter. So, maybe we want to take a parameter
       # here, or figure something out then, to prevent problems.
-      @dependency_paths ||= RRA::HLedger.files
+      @dependency_paths ||= RRA::HLedger.files(file: RRA.app.config.project_journal_path)
     end
 
     def uptodate?(year)

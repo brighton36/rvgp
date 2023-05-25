@@ -3,7 +3,7 @@
 module RRA
   # This class provides the app configuration options accessors and parsing logic.
   class Config
-    attr_reader :prices_path
+    attr_reader :prices_path, :project_journal_path
 
     def initialize(project_path)
       @project_path = project_path
@@ -23,7 +23,24 @@ module RRA
       @grid_ending_at = @yaml.key?(:grid_ending_at) ? @yaml[:grid_ending_at] : Date.today
 
       @prices_path = @yaml.key?(:prices_path) ? @yaml[:prices_path] : project_path('journals/prices.db')
+
+      if @yaml.key?(:project_journal_path)
+        @project_journal_path = project_path @yaml[:project_journal_path]
+      else
+        journals_in_project_path = Dir.glob format('%s/*.journal', @project_path)
+        if journals_in_project_path.length != 1
+          raise StandardError,
+                format(
+                  'Unable to automatically determine the project journal. Probably you want one of these ' \
+                  'files: %<files>s. Set the project_journal_path parameter in ' \
+                  'your config file, to the relative pathname, of the project journal.',
+                  files: journals_in_project_path.join(', ')
+                )
+        end
+        @project_journal_path = journals_in_project_path.first
+      end
     end
+
 
     def [](attr)
       @yaml[attr]

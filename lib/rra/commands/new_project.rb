@@ -94,7 +94,7 @@ module RRA
         end
 
         # Create the sub directories:
-        %w[build feeds journals transformers].each do |dir|
+        %w[build feeds transformers].each do |dir|
           full_dir = [app_dir, dir].join('/')
           if Dir.exist? full_dir
             @warnings << [I18n.t('commands.new_project.errors.directory_exists', dir: full_dir)]
@@ -127,7 +127,7 @@ module RRA
 
       def initialize_transformers
         incomes = income_companies.map do |company|
-          { 'match' => format('/%s DIRECT DEP/', company.upcase),
+          { 'match' => format('/%s DIRECT DEP/', company),
             'to' => format('Personal:Income:%s', company.tr('^a-zA-Z0-9', '')) }
         end
 
@@ -156,7 +156,7 @@ module RRA
       end
 
       def income_companies
-        INCOME_COMPANY_SIZE.times.map { Faker::Company.name }
+        @income_companies ||= INCOME_COMPANY_SIZE.times.map { Faker::Company.name }
       end
 
       def expense_companies
