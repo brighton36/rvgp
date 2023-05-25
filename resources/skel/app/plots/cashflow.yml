@@ -1,5 +1,5 @@
-title: "%{intention} Expenses (%{year})"
-glob: "%{year}-cashflow-%{intention}.csv"
+title: "Cashflow Expenses (%{year})"
+glob: "%{year}-cashflow.csv"
 grid_hacks:
   # NOTE: "date"/cornerstone column is the 1 here
   keystone: "Date"
