@@ -14,7 +14,8 @@ module RRA
 
       # I'm not crazy about this default.. Mabe we should raise an error if
       # this value isn't set...
-      @grid_starting_at = @yaml.key?(:grid_starting_at) ? @yaml[:grid_starting_at] : (Date.today - 365)
+      @grid_starting_at = @yaml[:grid_starting_at] if @yaml.key? :grid_starting_at
+      @grid_starting_at ||= default_grid_starting_at
 
       # NOTE: RRA::Ledger.newest_transaction.date.year works in lieu of Date.today,
       #       but that query takes forever. (and it requires that we've already
@@ -40,7 +41,6 @@ module RRA
         @project_journal_path = journals_in_project_path.first
       end
     end
-
 
     def [](attr)
       @yaml[attr]
@@ -71,6 +71,14 @@ module RRA
     end
 
     private
+
+    def default_grid_starting_at
+      transformer_years = Dir.glob(project_path('transformers/*.yml')).map do |f|
+        ::Regexp.last_match(1).to_i if /\A(\d{4}).+/.match File.basename(f)
+      end.compact.uniq.sort
+
+      transformer_years.empty? ? (Date.today - 365) : Date.new(transformer_years.first, 1, 1)
+    end
 
     def call_or_return_date(value)
       ret = value.respond_to?(:call) ? value.call : value

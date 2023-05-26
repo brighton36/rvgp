@@ -7,6 +7,17 @@ module RRA
   module Commands
     # This class handles the request to create a new RRA project.
     class NewProject < RRA::CommandBase
+      PROJECT_FILE = <<~END_OF_PROJECT_FILE
+        # vim:filetype=ledger
+
+        # TODO: Insert full name here, merbe in emacs format?
+
+        # Unautomated journals:
+        include journals/*.journal
+
+        # Reconciled journals:
+        include build/journals/*.journal
+      END_OF_PROJECT_FILE
       EXPENSE_CATEGORIES = [
         'Personal:Expenses:Rent',
         'Personal:Expenses:Food:Restaurants',
@@ -16,8 +27,8 @@ module RRA
         'Personal:Expenses:Barber',
         'Personal:Expenses:Charity',
         'Personal:Expenses:Clothes',
-        'Personal:Expenses:CookingSupplies',
-        'Personal:Expenses:DepartmentStores',
+        'Personal:Expenses:Cooking Supplies',
+        'Personal:Expenses:Department Stores',
         'Personal:Expenses:Books',
         'Personal:Expenses:Entertainment',
         'Personal:Expenses:Dating',
@@ -30,15 +41,6 @@ module RRA
       ].freeze
       EXPENSE_COMPANY_SIZE = EXPENSE_CATEGORIES.length * 3
       INCOME_COMPANY_SIZE = 2
-      PROJECT_FILE = <<~END_OF_PROJECT_FILE
-        # vim:filetype=ledger
-
-        # Manually managed journals:
-        include journals/*.journal
-
-        # Feed generated journals:
-        include build/journals/*.journal
-      END_OF_PROJECT_FILE
 
       attr_reader :errors, :app_dir, :project_name
 

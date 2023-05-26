@@ -26,24 +26,22 @@ module RRA
           s.executables = ['rra']
 
           s.add_development_dependency 'minitest', '~> 5.16.0'
-          s.add_development_dependency 'faker', '~> 3.2.0'
 
+          s.add_dependency 'open3', '~> 0.1.1'
+          s.add_dependency 'shellwords', '~> 0.1.0'
+          s.add_dependency 'google-apis-sheets_v4', '~> 0.22.0'
+          s.add_dependency 'faker', '~> 3.2.0'
           s.add_dependency 'finance', '~> 2.0.0'
           s.add_dependency 'tty-table', '~> 0.12.0'
-          s.add_dependency 'shellwords', '~> 0.1.0'
-          s.add_dependency 'open3', '~> 0.1.1'
-          s.add_dependency 'google-apis-sheets_v4', '~> 0.22.0'
         end
       end
 
       def files
-        # This is an alternative to below. But, sometimes I test out builds that
-        # aren't git-committed: `git ls-files`.split "\n"
-        ignores = ['.git/*'] + File.read(format('%s/.gitignore', GEM_DIR)).split("\n")
-
-        `find ./ -type f -printf '%P\n'`
-          .split("\n")
-          .reject { |file| ignores.any? { |glob| File.fnmatch glob, file } }
+        # This is a git-less alternative to : `git ls-files`.split "\n"
+        `find ./ -type f -printf '%P\n'`.split("\n").reject do |file|
+          ignores = ['.git/*'] + File.read(format('%s/.gitignore', GEM_DIR)).split("\n")
+          ignores.any? { |glob| File.fnmatch glob, file }
+        end
       end
 
       def root(sub_path = nil)
