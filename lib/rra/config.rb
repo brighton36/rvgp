@@ -12,17 +12,6 @@ module RRA
       config_path = project_path 'config/rra.yml'
       @yaml = RRA::Yaml.new config_path, project_path if File.exist? config_path
 
-      # I'm not crazy about this default.. Mabe we should raise an error if
-      # this value isn't set...
-      @grid_starting_at = @yaml[:grid_starting_at] if @yaml.key? :grid_starting_at
-      @grid_starting_at ||= default_grid_starting_at
-
-      # NOTE: RRA::Ledger.newest_transaction.date.year works in lieu of Date.today,
-      #       but that query takes forever. (and it requires that we've already
-      #       performed a build step at the time it's called) so, we use
-      #       Date.today instead.
-      @grid_ending_at = @yaml.key?(:grid_ending_at) ? @yaml[:grid_ending_at] : Date.today
-
       @prices_path = @yaml.key?(:prices_path) ? @yaml[:prices_path] : project_path('journals/prices.db')
 
       if @yaml.key?(:project_journal_path)
@@ -40,6 +29,18 @@ module RRA
         end
         @project_journal_path = journals_in_project_path.first
       end
+
+      # I'm not crazy about this default.. Mabe we should raise an error if
+      # this value isn't set...
+      @grid_starting_at = @yaml[:grid_starting_at] if @yaml.key? :grid_starting_at
+      @grid_starting_at ||= default_grid_starting_at
+
+      # NOTE: RRA::Ledger.newest_transaction.date.year works in lieu of Date.today,
+      #       but that query takes forever. (and it requires that we've already
+      #       performed a build step at the time it's called) so, we use
+      #       Date.today instead.
+      @grid_ending_at = @yaml[:grid_ending_at] if @yaml.key? :grid_ending_at
+      @grid_ending_at ||= default_grid_ending_at
     end
 
     def [](attr)
@@ -78,6 +79,34 @@ module RRA
       end.compact.uniq.sort
 
       transformer_years.empty? ? (Date.today - 365) : Date.new(transformer_years.first, 1, 1)
+    end
+
+    # We want/need grid tasks that are defined by (year)-gridname. However, we want
+    # an exact end date, that's based off the output of the build step.
+    #
+    # So, what we do, is check for the prescence of journal files, and if they're
+    # not there, we just return the end of the current year.
+    #
+    # If we find the journal files, we return the last 'full month' of data
+    #
+    # NOTE: we probably could/should cache the newest_transaction_date, but,
+    # that would be a PITA right now
+    def default_grid_ending_at
+      # It's important that we return a lambda, so that the call_or_return()
+      # re-runs this code after the grids are generated
+      lambda do
+        return Date.today unless Dir[build_path('journals/*.journal')].count.positive?
+
+        end_date = Ledger.newest_transaction(nil, file: project_journal_path).date
+
+        return end_date if end_date == Date.civil(end_date.year, end_date.month, -1)
+
+        if end_date.month == 1
+          Date.civil end_date.year - 1, 12, 31
+        else
+          Date.civil end_date.year, end_date.month - 1, -1
+        end
+      end
     end
 
     def call_or_return_date(value)
