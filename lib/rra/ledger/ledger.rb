@@ -18,9 +18,10 @@ module RRA::Ledger
     opts = (args.last.kind_of? Hash) ? args.pop : {}
     
     pricer = opts.delete :pricer
+    translate_meta_accounts = opts[:empty]
     
     RRA::Ledger::Output::Register.new command("xml", *args, opts), 
-      monthly: (opts[:monthly] == true), pricer: pricer
+      monthly: (opts[:monthly] == true), pricer: pricer, translate_meta_accounts: translate_meta_accounts
   end
 
   def self.command(*args)
@@ -38,7 +39,7 @@ module RRA::Ledger
     cmd = ([LEDGER]+args.collect{|a| Shellwords.escape a}).join(' ')
 
     # We should probably send this to a RRA.logger.trace...
-    #pretty_cmd = ([LEDGER]+args).join(' ')
+    pretty_cmd = ([LEDGER]+args).join(' ')
 
     output, error, status = Open3.capture3 cmd, open3_opts
 

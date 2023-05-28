@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+require 'pry'
 
 # This class writes the wealth growth grid, by month
 class WealthGrowthGrid < RRA::GridBase
@@ -18,8 +19,18 @@ class WealthGrowthGrid < RRA::GridBase
       monthly_totals acct, accrue_before_begin: true
     end
 
-    months_through_dates(assets.keys, liabilities.keys).collect do |month|
-      [month.strftime('%m-%y'), assets[month], liabilities[month]]
+    months = months_through_dates starting_at, ending_at
+
+    months.collect.with_index do |month, i|
+      # NOTE: The reason we use this last_month hack, is because ledger tends to
+      # omit column values, if there's no 'activity' in a category, at the end
+      # of the display range. hledger doesn't do that, and we can probably nix
+      # this if/when we switch the register command over to hledger...
+      last_month = months[i - 1] if i.positive?
+
+      [month.strftime('%m-%y'),
+       assets[month] || assets[last_month],
+       liabilities[month] || liabilities[last_month]]
     end
   end
 end

@@ -50,12 +50,12 @@ class RRA::Journal::Commodity
     [characteristic, quantity.abs.to_i - characteristic*10**precision]
   end
 
-
   def to_s(options = {})
     ret = [quantity_as_s(options)]
-    ret.send( (code.length == 1) ? :unshift : :push, 
-      (code.count(' ') > 0) ? ['"', code, '"'].join : code
-    ) unless options[:no_code]
+    if code && !options[:no_code]
+      operand = code.count(' ').positive? ? ['"', code, '"'].join : code
+      code.length == 1 ? ret.unshift(operand) : ret.push(operand)
+    end
     ret.join(' ')
   end
 
@@ -253,7 +253,7 @@ class RRA::Journal::Commodity
   end
 
   def assert_commodity(commodity)
-    our_codes = [alphabetic_code, code] 
+    our_codes = [alphabetic_code, code]
 
     raise ConversionError, "Provided commodity %s does not match %s" % [
       commodity.inspect, our_codes.inspect

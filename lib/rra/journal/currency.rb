@@ -31,7 +31,7 @@ class RRA::Journal::Currency
         self.currencies_config and File.readable? self.currencies_config )
       JSON.load(File.open(self.currencies_config)).collect{|c| self.new c}
     end
-    @currencies.find{|c| c.alphabetic_code == s or c.symbol == s }
+    @currencies.find {|c| (c.alphabetic_code && c.alphabetic_code == s) || (c.symbol && c.symbol == s) }
   end
 
   def self.currencies_config=(str)

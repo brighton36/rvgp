@@ -243,6 +243,25 @@ class TestCommodity < Minitest::Test
     assert_equal '1 "test \\" ing"', reverse_pesky_code.to_s
   end
 
+  # This code path appeared, when parsing the results of "--empty" in register
+  # queries. Here's what's in the xml:
+  #  <post-amount>
+  #    <amount>
+  #    <quantity>0</quantity>
+  #    </amount>
+  #  </post-amount>
+  # For some months, when 'nothing' happens, a commodity of type '0'
+  # appears. I don't know what the 'best' thing to do is here. But, atm, I think
+  # this output suffices....
+  def test_commodity_from_string_of_zero
+    zero = RRA::Journal::Commodity.from_symbol_and_amount(nil, '0')
+
+    assert_equal 0, zero.quantity
+    assert_nil zero.alphabetic_code
+    assert_nil zero.code
+    assert_equal '0', zero.to_s
+  end
+
   private
 
   def commodity(str)

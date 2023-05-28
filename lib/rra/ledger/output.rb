@@ -108,10 +108,15 @@ module RRA::Ledger
           # There's a whole section on default valuation behavior here : 
           # https://hledger.org/hledger.html#valuation
           date = options[:price_date] || Date.today
-          commodities.collect{|a| 
+          converted = commodities.collect{|a|
             begin
-            (a.alphabetic_code != currency.alphabetic_code) ?
-              pricer.convert(date.to_time, a, code) : a 
+              # There are some outputs, which have no .code. And which only have
+              # a quantity. We don't want to raise an exception for these, if
+              # their quantity is zero, because that's still accumulateable.
+              next if a.quantity == 0
+
+              (a.alphabetic_code != currency.alphabetic_code) ?
+                pricer.convert(date.to_time, a, code) : a
             rescue RRA::Pricer::NoPriceError
               if ignore_unknown_codes
                 # This seems to be what ledger does...
@@ -121,7 +126,11 @@ module RRA::Ledger
                 raise RRA::Pricer::NoPriceError
               end
             end
-          }.compact.sum
+          }.compact
+
+          # The case of [].sum will return an integer 0, which, isn't quite what
+          # we want...
+          converted.empty? ? RRA::Journal::Commodity.from_symbol_and_amount(code, 0) : converted.sum
         end
       end
 
@@ -139,10 +148,22 @@ module RRA::Ledger
               amounts, totals = *['post-amount', 'total'].collect{|attr|
                 xp.at(attr).search('amount').collect{|xa| 
                   RRA::Journal::Commodity.from_symbol_and_amount(
-                    xa.at('commodity/symbol').content,
+                    xa.at('commodity/symbol')&.content,
                     xa.at('quantity').content) }
                 }
-              Posting.new xp.at('account/name').content, amounts, totals,
+
+              account = xp.at('account/name').content
+
+              # This phenomenon of '<None>' and '<total>', seems to only happen
+              # when the :empty parameter is passed.
+              if options[:translate_meta_accounts]
+                case account
+                when '<None>' then account = nil
+                when '<Total>' then account = :total
+                end
+              end
+
+              Posting.new account, amounts, totals,
                 Hash[xp.search('metadata/value').collect{|xvalue| 
                   [xvalue['key'], xvalue.content]}],
                 pricer: pricer, price_date: (options[:monthly]) ? 

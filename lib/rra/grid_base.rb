@@ -57,6 +57,8 @@ class RRA::GridBase
     in_code = opts[:in_code] || '$'
 
     reduce_postings_by_month(*args, opts) do |sum, date, posting|
+      next sum if posting.account.nil? || posting.account.is_a?(Symbol)
+
       sum[posting.account] ||= {}
       sum[posting.account][date] ||= RRA::Journal::Commodity.from_symbol_and_amount in_code, 0
       sum[posting.account][date] += posting.send(posting_method, in_code) 
@@ -85,22 +87,26 @@ class RRA::GridBase
     ledger_opts = { sort: 'date',
                     pricer: RRA.app.pricer,
                     monthly: true,
+                    empty: true,
                     file: RRA.app.config.project_journal_path }
 
     ledger_opts[:collapse] = opts[:collapse] if opts[:collapse]
 
     if opts[:accrue_before_begin]
-      ledger_opts[:display] = 'date>=[%s]' % starting_at.strftime('%Y-%m-%d')
+      ledger_opts[:display] = format('date>=[%<starting_at>s] and date <=[%<ending_at>s]',
+                                     starting_at: starting_at.strftime('%Y-%m-%d'),
+                                     ending_at: ending_at.strftime('%Y-%m-%d'))
     else
-      ledger_opts[:begin] = (opts[:begin] ? opts[:begin] : 
+      # NOTE: I'm not entirely sure we want this path. It may be that we should always use the
+      # display option....
+      ledger_opts[:begin] = (opts[:begin] ? opts[:begin] :
         starting_at).strftime('%Y-%m-%d')
+      ledger_opts[:end] = ending_at.strftime('%Y-%m-%d')
     end
-
-    ledger_opts[:end] = ending_at.strftime('%Y-%m-%d')
 
     initial = opts[:initial] || Hash.new
 
-    RRA::Ledger.register(*args, ledger_opts).transactions.inject(initial) do |ret, tx| 
+    RRA::Ledger.register(*args, ledger_opts).transactions.inject(initial) do |ret, tx|
       tx.postings.reduce(ret) do |sum, posting|
         block.call sum, tx.date, posting
       end

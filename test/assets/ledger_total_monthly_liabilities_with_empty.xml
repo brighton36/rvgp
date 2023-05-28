@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ledger version="197378">
+  <commodities>
+    <commodity flags="P">
+      <symbol/>
+    </commodity>
+    <commodity flags="PS">
+      <symbol>$</symbol>
+    </commodity>
+  </commodities>
+  <accounts>
+    <account id="0000564d3f0f0c80">
+      <name/>
+      <fullname/>
+      <account-total>
+        <amount>
+          <commodity flags="PS">
+            <symbol>$</symbol>
+          </commodity>
+          <quantity>3072.29</quantity>
+        </amount>
+      </account-total>
+      <account id="0000564d3f101390">
+        <name>Personal</name>
+        <fullname>Personal</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="PS">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>3072.29</quantity>
+          </amount>
+        </account-total>
+        <account/>
+        <account/>
+        <account/>
+        <account/>
+        <account id="0000564d3f101770">
+          <name>Liabilities</name>
+          <fullname>Personal:Liabilities</fullname>
+          <account-total>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>3072.29</quantity>
+            </amount>
+          </account-total>
+          <account id="0000564d3f101b50">
+            <name>AmericanExpress</name>
+            <fullname>Personal:Liabilities:AmericanExpress</fullname>
+            <account-amount>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>3072.29</quantity>
+              </amount>
+            </account-amount>
+            <account-total>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>3072.29</quantity>
+              </amount>
+            </account-total>
+          </account>
+        </account>
+      </account>
+    </account>
+  </accounts>
+  <transactions>
+    <transaction>
+      <date>2020/01/01</date>
+      <payee>- 20-Jan-31</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="0000564d3f0fee20">
+            <name>&lt;None&gt;</name>
+          </account>
+          <post-amount>
+            <amount>
+              <quantity>0</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-10675.18</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2020/02/01</date>
+      <payee>- 20-Feb-29</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="0000564d3f101b50">
+            <name>Personal:Liabilities:AmericanExpress</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>303.72</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-10371.46</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2020/03/01</date>
+      <payee>- 20-Mar-31</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="0000564d3f0fee20">
+            <name>&lt;None&gt;</name>
+          </account>
+          <post-amount>
+            <amount>
+              <quantity>0</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-10371.46</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2020/04/01</date>
+      <payee>- 20-Apr-30</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="0000564d3f101b50">
+            <name>Personal:Liabilities:AmericanExpress</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>661.01</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-9710.45</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2020/05/01</date>
+      <payee>- 20-May-31</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="0000564d3f101b50">
+            <name>Personal:Liabilities:AmericanExpress</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>912.36</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-8798.09</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2020/06/01</date>
+      <payee>- 20-Jun-30</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="0000564d3f101b50">
+            <name>Personal:Liabilities:AmericanExpress</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>322.98</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-8475.11</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2020/07/01</date>
+      <payee>- 20-Jul-31</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="0000564d3f101b50">
+            <name>Personal:Liabilities:AmericanExpress</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>279.26</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-8195.85</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2020/08/01</date>
+      <payee>- 20-Aug-31</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="0000564d3f0fee20">
+            <name>&lt;None&gt;</name>
+          </account>
+          <post-amount>
+            <amount>
+              <quantity>0</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-8195.85</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2020/09/01</date>
+      <payee>- 20-Sep-30</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="0000564d3f101b50">
+            <name>Personal:Liabilities:AmericanExpress</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>330.54</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-7865.31</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2020/10/01</date>
+      <payee>- 20-Oct-31</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="0000564d3f0fee20">
+            <name>&lt;None&gt;</name>
+          </account>
+          <post-amount>
+            <amount>
+              <quantity>0</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-7865.31</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2020/11/01</date>
+      <payee>- 20-Nov-30</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="0000564d3f101b50">
+            <name>Personal:Liabilities:AmericanExpress</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>262.42</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-7602.89</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+  </transactions>
+</ledger>
+

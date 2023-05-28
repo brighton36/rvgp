@@ -10,14 +10,17 @@ module RRA
       PROJECT_FILE = <<~END_OF_PROJECT_FILE
         # vim:filetype=ledger
 
-        # TODO: Insert full name here, merbe in emacs format?
-
         # Unautomated journals:
         include journals/*.journal
 
         # Reconciled journals:
         include build/journals/*.journal
+
+        # Local Variables:
+        # project_name: "%<project_name>s"
+        # End:
       END_OF_PROJECT_FILE
+
       EXPENSE_CATEGORIES = [
         'Personal:Expenses:Rent',
         'Personal:Expenses:Food:Restaurants',
@@ -37,7 +40,9 @@ module RRA
         'Personal:Expenses:Health:Dental',
         'Personal:Expenses:Health:Doctor',
         'Personal:Expenses:Health:Medications',
-        'Personal:Expenses:Home:Improvement'
+        'Personal:Expenses:Home:Improvement',
+        # This one is a little different...
+        'Personal:Liabilities:AmericanExpress'
       ].freeze
       EXPENSE_COMPANY_SIZE = EXPENSE_CATEGORIES.length * 3
       INCOME_COMPANY_SIZE = 2
@@ -109,7 +114,8 @@ module RRA
           FileUtils.cp_r filename, app_dir
         end
 
-        File.write project_journal_path, PROJECT_FILE
+        File.write project_journal_path,
+                   format(PROJECT_FILE, project_name: @project_name.gsub('"', '\\"'))
 
         { warnings: @warnings, errors: [] }
       end

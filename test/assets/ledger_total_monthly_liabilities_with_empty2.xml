@@ -1,0 +1,428 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ledger version="197378">
+  <commodities>
+    <commodity flags="P">
+      <symbol/>
+    </commodity>
+    <commodity flags="PS">
+      <symbol>$</symbol>
+    </commodity>
+  </commodities>
+  <accounts>
+    <account id="000055807ebc1c80">
+      <name/>
+      <fullname/>
+      <account-total>
+        <amount>
+          <commodity flags="PS">
+            <symbol>$</symbol>
+          </commodity>
+          <quantity>-46935.86</quantity>
+        </amount>
+      </account-total>
+      <account id="000055807ebd2390">
+        <name>Personal</name>
+        <fullname>Personal</fullname>
+        <account-total>
+          <amount>
+            <commodity flags="PS">
+              <symbol>$</symbol>
+            </commodity>
+            <quantity>-46935.86</quantity>
+          </amount>
+        </account-total>
+        <account/>
+        <account/>
+        <account/>
+        <account id="000055807ebe9af0">
+          <name>Income</name>
+          <fullname>Personal:Income</fullname>
+          <account-total>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-46935.86</quantity>
+            </amount>
+          </account-total>
+          <account id="000055807ebe9f20">
+            <name>ThompsonHegmann</name>
+            <fullname>Personal:Income:ThompsonHegmann</fullname>
+            <account-amount>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-35794.97</quantity>
+              </amount>
+            </account-amount>
+            <account-total>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-35794.97</quantity>
+              </amount>
+            </account-total>
+          </account>
+          <account id="000055807ebeff90">
+            <name>VonRuedenMosciski</name>
+            <fullname>Personal:Income:VonRuedenMosciski</fullname>
+            <account-amount>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-11140.89</quantity>
+              </amount>
+            </account-amount>
+            <account-total>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-11140.89</quantity>
+              </amount>
+            </account-total>
+          </account>
+        </account>
+        <account/>
+      </account>
+    </account>
+  </accounts>
+  <transactions>
+    <transaction>
+      <date>2023/01/01</date>
+      <payee>- 23-Jan-31</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="000055807ebe9f20">
+            <name>Personal:Income:ThompsonHegmann</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-5565.74</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-5565.74</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2023/02/01</date>
+      <payee>- 23-Feb-28</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="000055807ebcfa20">
+            <name>&lt;Total&gt;</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-18028.51</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-23594.25</quantity>
+            </amount>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2023/03/01</date>
+      <payee>- 23-Mar-31</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="000055807ebd0120">
+            <name>&lt;None&gt;</name>
+          </account>
+          <post-amount>
+            <amount>
+              <quantity>0</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-23594.25</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2023/04/01</date>
+      <payee>- 23-Apr-30</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="000055807ebeff90">
+            <name>Personal:Income:VonRuedenMosciski</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-5356.77</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-28951.02</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2023/05/01</date>
+      <payee>- 23-May-31</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="000055807ebe9f20">
+            <name>Personal:Income:ThompsonHegmann</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-12371.24</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-41322.26</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2023/06/01</date>
+      <payee>- 23-Jun-30</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="000055807ebe9f20">
+            <name>Personal:Income:ThompsonHegmann</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-6075.64</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-47397.9</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2023/07/01</date>
+      <payee>- 23-Jul-31</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="000055807ebd0120">
+            <name>&lt;None&gt;</name>
+          </account>
+          <post-amount>
+            <amount>
+              <quantity>0</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-47397.9</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2023/08/01</date>
+      <payee>- 23-Aug-31</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="000055807ebeff90">
+            <name>Personal:Income:VonRuedenMosciski</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-5784.12</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-53182.02</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2023/09/01</date>
+      <payee>- 23-Sep-30</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="000055807ebd0120">
+            <name>&lt;None&gt;</name>
+          </account>
+          <post-amount>
+            <amount>
+              <quantity>0</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-53182.02</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2023/10/01</date>
+      <payee>- 23-Oct-31</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="000055807ebd0120">
+            <name>&lt;None&gt;</name>
+          </account>
+          <post-amount>
+            <amount>
+              <quantity>0</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-53182.02</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2023/11/01</date>
+      <payee>- 23-Nov-30</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="000055807ebe9f20">
+            <name>Personal:Income:ThompsonHegmann</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-5485.09</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-58667.11</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+    <transaction>
+      <date>2023/12/01</date>
+      <payee>- 23-Dec-31</payee>
+      <postings>
+        <posting generated="true">
+          <account ref="000055807ebe9f20">
+            <name>Personal:Income:ThompsonHegmann</name>
+          </account>
+          <post-amount>
+            <amount>
+              <commodity flags="PS">
+                <symbol>$</symbol>
+              </commodity>
+              <quantity>-6297.26</quantity>
+            </amount>
+          </post-amount>
+          <total>
+            <balance>
+              <amount>
+                <commodity flags="PS">
+                  <symbol>$</symbol>
+                </commodity>
+                <quantity>-64964.37</quantity>
+              </amount>
+            </balance>
+          </total>
+        </posting>
+      </postings>
+    </transaction>
+  </transactions>
+</ledger>
+
