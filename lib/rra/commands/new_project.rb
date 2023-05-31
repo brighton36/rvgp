@@ -21,6 +21,16 @@ module RRA
         # End:
       END_OF_PROJECT_FILE
 
+      OPENING_BALANCES_FILE = <<~END_OF_BALANCES_FILE
+        2017/12/31 Opening Balances
+          Personal:Liabilities:AmericanExpress              $-15000.00
+          Personal:Equity:Opening Balances:AmericanExpress
+
+        2017/12/31 Opening Balances
+          Personal:Assets:AcmeBank:Checking                 $5000.00
+          Personal:Equity:Opening Balances:AcmeBank
+      END_OF_BALANCES_FILE
+
       EXPENSE_CATEGORIES = [
         'Personal:Expenses:Rent',
         'Personal:Expenses:Food:Restaurants',
@@ -114,8 +124,13 @@ module RRA
           FileUtils.cp_r filename, app_dir
         end
 
+        # Main project journal:
         File.write project_journal_path,
                    format(PROJECT_FILE, project_name: @project_name.gsub('"', '\\"'))
+
+        # Opening Balances journal:
+        File.write destination_path('%<app_dir>s/journals/opening-balances.journal'),
+                   OPENING_BALANCES_FILE
 
         { warnings: @warnings, errors: [] }
       end

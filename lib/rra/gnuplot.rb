@@ -142,7 +142,7 @@ module RRA
 
       def series(_)
         { using: [1, using_data],
-          with: "filledcurves x1 fillstyle solid 1.0 fillcolor '%<rgb>s'" }
+          with: "filledcurves x1 fillcolor '%<rgb>s'" }
       end
 
       def self.types

@@ -17,3 +17,4 @@ gnuplot:
   additional_lines: |+
     set xtics scale 0 rotate by 45 offset -1.4,-1.4
     set key title ' '
+    set style fill transparent solid 0.7 border
