@@ -56,8 +56,15 @@ module RRA
       missing_fields = REQUIRED_FIELDS.find_all{|attr| !yaml.has_key? attr}
       raise MissingFields.new(*missing_fields) if missing_fields.length > 0
 
-      @output_file = RRA.app.config.build_path 'journals/%s' % yaml[:output]
-      @input_file = RRA.app.config.project_path 'feeds/%s' % yaml[:input]
+      if RRA.app
+        @output_file = RRA.app.config.build_path 'journals/%s' % yaml[:output]
+        @input_file = RRA.app.config.project_path 'feeds/%s' % yaml[:input]
+      else
+        # ATM this path is found in the test environment... possibly we should
+        # decouple RRA.app from this class....
+        @output_file = yaml[:output]
+        @input_file = yaml[:input]
+      end
 
       @from = yaml[:from]
       @income_rules = yaml[:income]

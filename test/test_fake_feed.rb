@@ -5,6 +5,7 @@ require 'minitest/autorun'
 
 require_relative '../lib/rra'
 require_relative '../lib/rra/fakers/fake_feed'
+require_relative '../lib/rra/fakers/fake_transformer'
 
 # Minitest class, used to test RRA::Fakers::FakeJournal
 class TestFakeFeed < Minitest::Test
@@ -56,6 +57,141 @@ class TestFakeFeed < Minitest::Test
       else
         assert_includes expense_descriptions, row['Description']
       end
+    end
+  end
+
+  def test_entries_param
+    # There isn't an easy way to sort this, atm... so, we just test that these lines are appended
+    additional_entries = [
+      { 'Date' => Date.new(2019, 12, 31),
+        'Type' => 'VISA',
+        'Description' => 'Posting from Dec 2019',
+        'Withdrawal (-)' => '$ 9.00'.to_commodity },
+      { 'Date' => Date.new(2020, 1, 31),
+        'Type' => 'VISA',
+        'Description' => 'Posting from Jan 2020',
+        'Withdrawal (-)' => '$ 12.00'.to_commodity },
+      { 'Date' => Date.new(2020, 4, 1),
+        'Type' => 'ACH',
+        'Description' => 'Posting from Apr 2020',
+        'Deposit (+)' => '$ 8.00'.to_commodity }
+    ]
+
+    starting_balance = '$ 10000.00'.to_commodity
+
+    feed = RRA::Fakers::FakeFeed.basic_checking from: Date.new(2020, 1, 1),
+                                                to: Date.new(2020, 3, 31),
+                                                post_count: 300,
+                                                starting_balance: starting_balance,
+                                                entries: additional_entries
+    csv = CSV.parse feed, headers: true
+
+    # First:
+    assert_equal csv[0].to_h.values,
+                 ['12/31/2019', 'VISA', 'Posting from Dec 2019', '$ 9.00', '',
+                  (starting_balance - '$ 9.00'.to_commodity).to_s]
+
+    # Middle (This just happened to consistently be element 100)
+    assert_equal csv[100].to_h.values,
+                 ['01/31/2020', 'VISA', 'Posting from Jan 2020', '$ 12.00', '',
+                  (csv[99]['RunningBalance'].to_commodity - '$ 12.00'.to_commodity).to_s]
+
+    # Last:
+    assert_equal csv[-1].to_h.values,
+                 ['04/01/2020', 'ACH', 'Posting from Apr 2020', '', '$ 8.00',
+                  (csv[-2]['RunningBalance'].to_commodity + '$ 8.00'.to_commodity).to_s]
+  end
+
+  def test_personal_checking_feed
+    duration_in_months = 12
+    from = Date.new 2020, 1, 1
+    expense_sources = [Faker::Company.name.tr('^a-zA-Z0-9 ', '')]
+    income_sources = [Faker::Company.name.tr('^a-zA-Z0-9 ', '')]
+    liability_sources = [Faker::Company.name.tr('^a-zA-Z0-9 ', '')]
+    liabilities, assets = 2.times.map do |_|
+      duration_in_months.times.map do
+        RRA::Journal::Commodity.from_symbol_and_amount '$', Faker::Number.between(from: 0, to: 2_000_000)
+      end
+    end
+
+    feed = RRA::Fakers::FakeFeed.personal_checking from: from,
+                                                   to: from >> (duration_in_months - 1),
+                                                   expense_sources: expense_sources,
+                                                   income_sources: income_sources,
+                                                   liability_sources: liability_sources,
+                                                   liabilities_by_month: liabilities,
+                                                   assets_by_month: assets
+
+    # Ensure the running balance is making sense:
+    running_balance = nil
+    CSV.parse(feed, headers: true).each_with_index do |row, i|
+      if i.zero?
+        running_balance = row['RunningBalance'].to_commodity
+        next
+      end
+
+      running_balance -= row['Withdrawal (-)'].to_commodity unless row['Withdrawal (-)'].empty?
+      running_balance += row['Deposit (+)'].to_commodity unless row['Deposit (+)'].empty?
+
+      assert_equal running_balance.to_s, row['RunningBalance']
+    end
+
+    to_yaml_match = lambda do |names, to_fmt|
+      names.map { |name| { match: format('/%s/', name), to: format(to_fmt, name.tr(' ', '')) } }
+    end
+
+    # Now let's ensure the Assets/Liability balances:
+    liabilities_match = to_yaml_match.call(liability_sources, 'Personal:Liabilities:%s')
+    incomes_match = to_yaml_match.call(income_sources, 'Personal:Income:%s')
+    expenses_match = to_yaml_match.call(expense_sources, 'Personal:Expenses:%s')
+    journal = reconcile_journal feed,
+                                income: incomes_match + liabilities_match,
+                                expense: expenses_match + liabilities_match
+
+    # This was kinda copy pasta'd from the ReportBase
+    result_assets, result_liabilities = %w[Assets Liabilities].collect do |acct|
+      register = RRA::Ledger.register acct,
+                                      collapse: true,
+                                      sort: 'date',
+                                      monthly: true,
+                                      empty: true,
+                                      from_s: journal
+
+      assert_equal duration_in_months, register.transactions.length
+      register.transactions.map.with_index do |tx, i|
+        assert_equal 1, tx.postings.length
+        tx.postings[0].total_in('$')
+      end
+    end
+
+    assert_equal liabilities, result_liabilities.map(&:invert!)
+    assert_equal assets, result_assets
+  end
+
+  private
+
+  def reconcile_journal(feed, transformer_opts)
+    journal_file = Tempfile.open %w[rra_test .journal]
+
+    feed_file = Tempfile.open %w[rra_test .csv]
+    feed_file.write feed
+    feed_file.close
+
+    yaml_file = Tempfile.open %w[rra_test .yaml]
+
+    yaml_file.write RRA::Fakers::FakeTransformer.basic_checking(
+      **{ label: 'Personal AcmeBank:Checking',
+          input_path: feed_file.path,
+          output_path: journal_file.path }.merge(transformer_opts)
+    )
+
+    yaml_file.close
+
+    RRA::Transformers::CsvTransformer.new(RRA::Yaml.new(yaml_file.path)).to_ledger
+  ensure
+    [feed_file, yaml_file, journal_file].each do |f|
+      f.close
+      f.unlink
     end
   end
 end

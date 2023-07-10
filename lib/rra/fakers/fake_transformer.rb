@@ -9,10 +9,22 @@ module RRA
       class << self
         include FakerHelpers
 
+        DEFAULT_FORMAT = <<~FORMAT_TEMPLATE
+          csv_headers: true
+          reverse_order: true
+          default_currency: $
+          fields:
+            date: !!proc Date.strptime(row['Date'], '%m/%d/%Y')
+            amount: !!proc >
+              withdrawal, deposit = row[3..4].collect {|a| a.to_commodity unless a.empty?};
+              ( deposit ? deposit.invert! : withdrawal ).quantity_as_s
+            description: !!proc row['Description']
+        FORMAT_TEMPLATE
+
         BASIC_CHECKING_FEED = <<~FEED_TEMPLATE
           from: "%<from>s"
           label: "%<label>s"
-          format: !!include %<format_path>s
+          format: %<format>s
           input: %<input_path>s
           output: %<output_path>s
           balances:
@@ -34,18 +46,21 @@ module RRA
         # @return [String] A YAML file, containing the generated transformer
         def basic_checking(from: 'Personal:Assets:AcmeBank:Checking',
                            label: nil,
-                           format_path: 'config/csv-format-acme-checking.yml',
+                           format_path: nil,
                            input_path: nil,
                            output_path: nil,
                            income: nil,
                            expense: nil)
 
-          raise StandardError if [from, label, format_path, input_path, output_path].any?(&:nil?)
+          raise StandardError if [from, label, input_path, output_path].any?(&:nil?)
+
+          format = "!!include #{format_path}" if format_path
+          format ||= format("\n%s", DEFAULT_FORMAT.gsub(/^/, '  ').chomp)
 
           format BASIC_CHECKING_FEED,
                  from: from,
                  label: label,
-                 format_path: format_path,
+                 format: format,
                  input_path: input_path,
                  output_path: output_path,
                  income: hashes_to_yaml_array(

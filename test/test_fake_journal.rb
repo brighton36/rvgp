@@ -12,7 +12,7 @@ class TestFakeJournal < Minitest::Test
     journal = RRA::Fakers::FakeJournal.basic_cash from: Date.new(2020, 1, 1), to: Date.new(2020, 1, 10)
 
     assert_kind_of RRA::Journal, journal
-    assert_equal journal.postings.length, 10
+    assert_equal 10, journal.postings.length
     assert_equal %w[2020-01-01 2020-01-02 2020-01-03 2020-01-04 2020-01-05
                     2020-01-06 2020-01-07 2020-01-08 2020-01-09 2020-01-10],
                  journal.postings.map(&:date).map(&:to_s)
@@ -39,7 +39,7 @@ class TestFakeJournal < Minitest::Test
       journal = RRA::Fakers::FakeJournal.basic_cash from: Date.new(2020, 1, 1), sum: amount
 
       assert_kind_of RRA::Journal, journal
-      assert_equal(journal.postings.length, 10)
+      assert_equal(10, journal.postings.length)
 
       balance = RRA::Ledger.balance 'Expense', from_s: journal.to_s
 
@@ -60,5 +60,39 @@ class TestFakeJournal < Minitest::Test
                     2020-07-16 2020-08-24 2020-10-03 2020-11-11 2020-12-20],
                  RRA::Fakers::FakeJournal.basic_cash(from: Date.new(2020, 1, 1), to: Date.new(2020, 12, 20))
                                          .postings.map(&:date).map(&:to_s)
+  end
+
+  def test_basic_cash_postings
+    postings = [
+      RRA::Journal::Posting.new(
+        Date.new(2019, 12, 31), 'Posting from Dec 2019',
+        transfers: [
+        RRA::Journal::Posting::Transfer.new('Personal:Expenses:Testing', commodity: '$ 9.00'.to_commodity),
+        RRA::Journal::Posting::Transfer.new('Cash')
+        ]
+      ),
+      RRA::Journal::Posting.new(
+        Date.new(2020, 2, 1), 'Posting from Feb 2020',
+        transfers: [
+        RRA::Journal::Posting::Transfer.new('Personal:Expenses:Testing', commodity: '$ 8.00'.to_commodity),
+        RRA::Journal::Posting::Transfer.new('Cash')
+        ]
+      )
+    ]
+
+    journal = RRA::Fakers::FakeJournal.basic_cash from: Date.new(2020, 1, 1),
+                                                  to: Date.new(2020, 1, 10),
+                                                  postings: postings
+    # Just make sure these postings are part of the output, and in the expected alphabetical order
+    assert_equal 12, journal.postings.length
+
+    assert_equal ['2019-12-31 Posting from Dec 2019',
+                  '  Personal:Expenses:Testing    $ 9.00',
+                  '  Cash'].join("\n"),
+                 journal.postings.first.to_ledger
+    assert_equal ['2020-02-01 Posting from Feb 2020',
+                  '  Personal:Expenses:Testing    $ 8.00',
+                  '  Cash'].join("\n"),
+                 journal.postings.last.to_ledger
   end
 end

@@ -11,7 +11,7 @@ module RRA
       private
 
       # Uniformly distribute the transactions over a date range
-      def entries_over_date_range(count, from, to, &block)
+      def entries_over_date_range(from, to, count = nil, &block)
         raise StandardError unless [from.is_a?(::Date),
                                     to.is_a?(::Date),
                                     count.is_a?(Numeric)].all?
@@ -22,6 +22,7 @@ module RRA
           n == count ? to : from + (run_length * (n - 1))
         end
       end
+
     end
   end
 end
