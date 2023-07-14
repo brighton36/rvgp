@@ -114,10 +114,26 @@ class TestFakeFeed < Minitest::Test
       end
     end
 
+    categories = ['Personal:Expenses:Rent', 'Personal:Expenses:Food:Restaurants',
+                  'Personal:Expenses:Food:Groceries', 'Personal:Expenses:Drug Stores']
+
+    category_to_company = (categories.map { |category| [category, Faker::Company.name] }).to_h
+
+    monthly_expenses = (category_to_company.keys.map do |category|
+      [category_to_company[category],
+       12.times.map do |_|
+         RRA::Journal::Commodity.from_symbol_and_amount '$', Faker::Number.between(from: 10, to: 1000)
+       end]
+    end).to_h
+
+    # This one, we'll just try something different with:
+    monthly_expenses[category_to_company['Personal:Expenses:Rent']] = ['$ 1500.00'.to_commodity] * 12
+
     feed = RRA::Fakers::FakeFeed.personal_checking from: from,
                                                    to: from >> (duration_in_months - 1),
                                                    expense_sources: expense_sources,
                                                    income_sources: income_sources,
+                                                   monthly_expenses: monthly_expenses,
                                                    liability_sources: liability_sources,
                                                    liabilities_by_month: liabilities,
                                                    assets_by_month: assets
@@ -136,39 +152,57 @@ class TestFakeFeed < Minitest::Test
       assert_equal running_balance.to_s, row['RunningBalance']
     end
 
-    to_yaml_match = lambda do |names, to_fmt|
-      names.map { |name| { match: format('/%s/', name), to: format(to_fmt, name.tr(' ', '')) } }
-    end
-
-    # Now let's ensure the Assets/Liability balances:
-    liabilities_match = to_yaml_match.call(liability_sources, 'Personal:Liabilities:%s')
-    incomes_match = to_yaml_match.call(income_sources, 'Personal:Income:%s')
-    expenses_match = to_yaml_match.call(expense_sources, 'Personal:Expenses:%s')
-    journal = reconcile_journal feed,
-                                income: incomes_match + liabilities_match,
-                                expense: expenses_match + liabilities_match
-
-    # This was kinda copy pasta'd from the ReportBase
-    result_assets, result_liabilities = %w[Assets Liabilities].collect do |acct|
-      register = RRA::Ledger.register acct,
-                                      collapse: true,
-                                      sort: 'date',
-                                      monthly: true,
-                                      empty: true,
-                                      from_s: journal
-
-      assert_equal duration_in_months, register.transactions.length
-      register.transactions.map.with_index do |tx, i|
-        assert_equal 1, tx.postings.length
-        tx.postings[0].total_in('$')
+    # Now let's ensure the Monthly balances:
+    liabilities_match, incomes_match, expenses_match = *[
+      'Personal:Liabilities', liability_sources,
+      'Personal:Income', income_sources,
+      'Personal:Expenses', expense_sources
+    ].each_slice(2).map do |category, sources|
+      sources.map do |name|
+        { match: format('/%s/', name), to: format([category, ':%s'].join, name.tr(' ', '')) }
       end
     end
 
+    monthly_expenses_match = category_to_company.each_with_object([]) do |pair, sum|
+      sum << { match: format('/%s/', pair.last), to: pair.first }
+    end
+
+    journal = reconcile_journal feed,
+                                income: incomes_match + liabilities_match,
+                                expense: expenses_match + liabilities_match + monthly_expenses_match
+
+    # This was kinda copy pasta'd from the ReportBase
+    result_assets, result_liabilities = %w[Assets Liabilities].collect { |acct| account_by_month acct, journal }
+
+    assert_equal duration_in_months, result_liabilities.length
     assert_equal liabilities, result_liabilities.map(&:invert!)
+    assert_equal duration_in_months, result_assets.length
     assert_equal assets, result_assets
+
+    # Run the monthly for each of the monthly_expenses
+    categories.each do |category|
+      category_by_month = account_by_month category, journal, :amount_in
+
+      assert_equal duration_in_months, category_by_month.length
+      assert_equal monthly_expenses[category_to_company[category]], category_by_month
+    end
+
+    assert_equal [], account_by_month('Unknown', journal)
   end
 
   private
+
+  def account_by_month(acct, journal_s, accrue_by = :total_in)
+    RRA::Ledger.register(acct,
+                         collapse: true,
+                         sort: 'date',
+                         monthly: true,
+                         empty: true,
+                         from_s: journal_s).transactions.map do |tx|
+      assert_equal 1, tx.postings.length
+      tx.postings[0].send(accrue_by, '$')
+    end
+  end
 
   def reconcile_journal(feed, transformer_opts)
     journal_file = Tempfile.open %w[rra_test .journal]

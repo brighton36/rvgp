@@ -10,11 +10,18 @@ module RRA
       class << self
         include FakerHelpers
 
+        class ParameterLengthError < StandardError
+          MSG_FORMAT = 'Expected %<expected>s elements in %<parameter>s, but found %<found>s'
+
+          def initialize(parameter, expected, found)
+            super format(MSG_FORMAT, expected: expected, parameter: parameter, found: found)
+          end
+        end
+
         DEFAULT_LENGTH_IN_DAYS = 365 / 4
         DEFAULT_POST_COUNT = 300
         FEED_COLUMNS = ['Date', 'Type', 'Description', 'Withdrawal (-)', 'Deposit (+)', 'RunningBalance'].freeze
         DEFAULT_CURRENCY = RRA::Journal::Currency.from_code_or_symbol('$')
-        ERROR_PARAMETER_LENGTH = 'Expected %<expected>s elements in %<parameter>s, but found %<found>s'
 
         # Generates a basic csv feed string, that resembles thos
 
@@ -104,8 +111,8 @@ module RRA
         #
         # @param from [Date] The date to start generated feed from
         # @param to [Date] The date to end generated feed
-        # @param income_sources [Array] Strings containing the pool of income sources (aka 'companies')
-        # @param expense_sources [Array] Strings containing the pool of available expense sources (aka 'companies')
+        # @param income_sources [Array] Strings containing the pool of income companies, to use for growing our assets
+        # @param expense_sources [Array] Strings containing the pool of available expense companies, to use for shrinking our assets
         # @param opening_liability_balance [RRA::Journal::Commodity] The opening balance of the liability account, preceeding month zero
         # @param opening_asset_balance [RRA::Journal::Commodity] The opening balance of the asset account, preceeding month zero
         # @param liability_sources [Array] Strings containing the pool of available liability sources (aka 'companies')
@@ -118,6 +125,7 @@ module RRA
                               to: from + DEFAULT_LENGTH_IN_DAYS,
                               expense_sources: [Faker::Company.name.tr('^a-zA-Z0-9 ', '')],
                               income_sources: [Faker::Company.name.tr('^a-zA-Z0-9 ', '')],
+                              monthly_expenses: {},
                               opening_liability_balance: '$ 0.00'.to_commodity,
                               opening_asset_balance: '$ 0.00'.to_commodity,
                               liability_sources: [Faker::Company.name.tr('^a-zA-Z0-9 ', '')],
@@ -130,18 +138,16 @@ module RRA
 
           num_months_in_range = ((to.year * 12) + to.month) - ((from.year * 12) + from.month) + 1
 
-          unless num_months_in_range == liabilities_by_month.length
-            raise StandardError, format(ERROR_PARAMETER_LENGTH,
-                                        parameter: 'liabilities_by_month',
-                                        expected: num_months_in_range,
-                                        found: liabilities_by_month.length)
+          ['liabilities_by_month', liabilities_by_month.length,
+           'assets_by_month', assets_by_month.length].each_slice(2) do |attr, length|
+            raise ParameterLengthError.new(attr, num_months_in_range, length) unless num_months_in_range == length
           end
 
-          unless num_months_in_range == assets_by_month.length
-            raise StandardError, format(ERROR_PARAMETER_LENGTH,
-                                        parameter: 'assets_by_month',
-                                        expected: num_months_in_range,
-                                        found: assets_by_month.length)
+          monthly_expenses.each_pair do |company, expenses_by_month|
+            unless num_months_in_range == expenses_by_month.length
+              attr = format('monthly_expenses: %s', company)
+              raise ParameterLengthError.new(attr, num_months_in_range, expenses_by_month.length)
+            end
           end
 
           liability_balance = opening_liability_balance
@@ -150,8 +156,6 @@ module RRA
           # Newest to oldest:
           to_csv do |csv|
             months_in_range(from, to).each_with_index do |first_of_month, i|
-              # TODO: We need to pay random expenses for the cashflow
-
               expected_liability = liabilities_by_month[i]
 
               # Let's adjust the liability to suit
@@ -171,18 +175,23 @@ module RRA
 
               expected_assets = assets_by_month[i]
 
+              monthly_expenses.each_pair do |company, expenses_by_month|
+                asset_balance -= expenses_by_month[i]
+                csv << [first_of_month, 'VISA', company, expenses_by_month[i], nil, asset_balance]
+              end
+
               # Let's adjust the assets to suit
               if expected_assets > asset_balance
                 # We need a paycheck:
 
                 deposit = expected_assets - asset_balance
                 asset_balance += deposit
-                csv << [first_of_month + 1, 'ACH', income_sources.sample, nil, deposit, asset_balance]
+                csv << [first_of_month, 'ACH', income_sources.sample, nil, deposit, asset_balance]
               elsif expected_assets < asset_balance
                 # We need to generate some expenses:
                 payment = asset_balance - expected_assets
                 asset_balance -= payment
-                csv << [first_of_month + 1, 'VISA', expense_sources.sample, payment, nil, asset_balance]
+                csv << [first_of_month, 'VISA', expense_sources.sample, payment, nil, asset_balance]
               end
             end
           end

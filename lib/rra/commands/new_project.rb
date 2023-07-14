@@ -31,30 +31,6 @@ module RRA
           Personal:Equity:Opening Balances:AcmeBank
       END_OF_BALANCES_FILE
 
-      EXPENSE_CATEGORIES = [
-        'Personal:Expenses:Rent',
-        'Personal:Expenses:Food:Restaurants',
-        'Personal:Expenses:Food:Groceries',
-        'Personal:Expenses:Drug Stores',
-        'Personal:Expenses:Phone',
-        'Personal:Expenses:Barber',
-        'Personal:Expenses:Charity',
-        'Personal:Expenses:Clothes',
-        'Personal:Expenses:Cooking Supplies',
-        'Personal:Expenses:Department Stores',
-        'Personal:Expenses:Books',
-        'Personal:Expenses:Entertainment',
-        'Personal:Expenses:Dating',
-        'Personal:Expenses:Gym',
-        'Personal:Expenses:Hobbies',
-        'Personal:Expenses:Health:Dental',
-        'Personal:Expenses:Health:Doctor',
-        'Personal:Expenses:Health:Medications',
-        'Personal:Expenses:Home:Improvement'
-      ].freeze
-      EXPENSE_COMPANY_SIZE = EXPENSE_CATEGORIES.length * 3
-      INCOME_COMPANY_SIZE = 2
-
       YEARS_IN_NEW_PROJECT = 5
 
       attr_reader :errors, :app_dir, :project_name
@@ -151,25 +127,6 @@ module RRA
       end
 
       def initialize_transformers
-        incomes = income_companies.map do |company|
-          { 'match' => format('/%s/', company),
-            'to' => format('Personal:Income:%s', company.tr('^a-zA-Z0-9', '')) }
-        end
-
-        incomes << { match: '/\AAmerican Express/', to: 'Personal:Liabilities:AmericanExpress' }
-
-        run_length = EXPENSE_COMPANY_SIZE / EXPENSE_CATEGORIES.length
-
-        expenses = EXPENSE_CATEGORIES.each_with_index.map do |category, i|
-          start_i = i * run_length
-          end_i = ((i + 1) * run_length) - 1
-          match = format '/(?:%s)/', (start_i..end_i).map { |j| expense_companies[j] }.join('|')
-          { match: match, to: category }
-        end
-
-        # Add the liability payout to expenses:
-        expenses << { match: '/\AAmerican Express/', to: 'Personal:Liabilities:AmericanExpress' }
-
         each_year_in_project do |year|
           File.write destination_path('%<app_dir>s/transformers/%<year>d-personal-basic-checking.yml',
                                       year: year),
@@ -178,8 +135,19 @@ module RRA
                        input_path: format('%<year>d-personal-basic-checking.csv', year: year),
                        output_path: format('%<year>d-personal-basic-checking.journal', year: year),
                        format_path: 'config/csv-format-acme-checking.yml',
-                       income: incomes,
-                       expense: expenses
+                       income: [{ match: '/\AAmerican Express/', to: 'Personal:Liabilities:AmericanExpress' }] +
+                               income_companies.map do |company|
+                                 { 'match' => format('/%s/', company),
+                                   'to' => format('Personal:Income:%s', company.tr('^a-zA-Z0-9', '')) }
+                               end,
+                       expense: [{ match: '/\AAmerican Express/', to: 'Personal:Liabilities:AmericanExpress' }] +
+                                expense_companies.map do |company|
+                                  # I don't know how else to explain these asset mitigating events. lol
+                                  { match: format('/%s/', company), to: 'Personal:Expenses:Vices:Gambling' }
+                                end +
+                                monthly_expenses.keys.map do |category|
+                                  { match: format('/%s/', company_for(category)), to: category }
+                                end
                      )
         end
 
@@ -187,15 +155,72 @@ module RRA
       end
 
       def income_companies
-        @income_companies ||= INCOME_COMPANY_SIZE.times.map { Faker::Company.name }
+        @income_companies ||= [Faker::Company.name]
       end
 
       def expense_companies
-        @expense_companies ||= 1.upto(EXPENSE_COMPANY_SIZE).map { Faker::Company.name }
+        @expense_companies ||= [Faker::Company.name]
+      end
+
+      def company_for(category)
+        @company_for ||= {}
+        @company_for[category] ||= Faker::Company.name
+      end
+
+      def monthly_expenses
+        @monthly_expenses ||= {}.merge(
+          # Rents go up every year:
+          {
+            'Personal:Expenses:Rent' => (0...num_months_in_project).map do |i|
+              marginal_rent = RRA::Journal::Commodity.from_symbol_and_amount '$', (50 * (i / 12).floor)
+              '$ 1800.00'.to_commodity + marginal_rent
+            end
+          },
+          # Fixed monthly costs:
+          {
+            'Personal:Expenses:Gym': '$ 102.00',
+            'Personal:Expenses:Phone': '$ 86.00'
+          }.to_h do |cat, amnt|
+            [cat.to_s, [amnt.to_commodity] * num_months_in_project]
+          end,
+          # Random-ish monthly Costs:
+          {
+            'Personal:Expenses:Food:Restaurants': { mean: 450, standard_deviation: 100 },
+            'Personal:Expenses:Food:Groceries': { mean: 750, standard_deviation: 150 },
+            'Personal:Expenses:DrugStores': { mean: 70, standard_deviation: 30 },
+            'Personal:Expenses:Department Stores': { mean: 100, standard_deviation: 80 },
+            'Personal:Expenses:Entertainment': { mean: 150, standard_deviation: 30 },
+            'Personal:Expenses:Dating': { mean: 250, standard_deviation: 100 },
+            'Personal:Expenses:Hobbies': { mean: 400, standard_deviation: 150 }
+          }.to_h do |cat, num_opts|
+            [cat.to_s,
+             num_months_in_project.times.map do
+               RRA::Journal::Commodity.from_symbol_and_amount '$', Faker::Number.normal(**num_opts).abs
+             end]
+          end,
+          # 'Some months' Have these expenses.
+          {
+            'Personal:Expenses:Barber': { true_ratio: 0.75, mean: 50, standard_deviation: 10 },
+            'Personal:Expenses:Charity': { true_ratio: 0.5, mean: 200, standard_deviation: 100 },
+            'Personal:Expenses:Clothes': { true_ratio: 0.25, mean: 200, standard_deviation: 50 },
+            'Personal:Expenses:Cooking Supplies': { true_ratio: 0.25, mean: 100, standard_deviation: 50 },
+            'Personal:Expenses:Books': { true_ratio: 0.75, mean: 60, standard_deviation: 20 },
+            'Personal:Expenses:Health:Dental': { true_ratio: 0.125, mean: 300, standard_deviation: 50 },
+            'Personal:Expenses:Health:Doctor': { true_ratio: 0.0833, mean: 200, standard_deviation: 100 },
+            'Personal:Expenses:Health:Medications': { true_ratio: 0.0833, mean: 40, standard_deviation: 50 },
+            'Personal:Expenses:Home:Improvement': { true_ratio: 0.125, mean: 200, standard_deviation: 50 }
+          }.map do |cat, opts|
+            next unless Faker::Boolean.boolean true_ratio: opts.delete(:true_ratio)
+
+            [cat.to_s,
+             num_months_in_project.times.map do
+               RRA::Journal::Commodity.from_symbol_and_amount '$', Faker::Number.normal(**opts).abs
+             end]
+          end.compact.to_h
+        )
       end
 
       def bank_feed(year)
-        # TODO: we still need to specify expense categories in a better format...
         @bank_feed ||= CSV.parse RRA::Fakers::FakeFeed.personal_checking(
           from: project_starts_on,
           to: today,
@@ -203,6 +228,7 @@ module RRA
           income_sources: income_companies,
           opening_liability_balance: liabilities_at_month(-1),
           opening_asset_balance: assets_at_month(-1),
+          monthly_expenses: monthly_expenses.transform_keys { |cat| company_for cat },
           liability_sources: ['American Express'],
           liabilities_by_month: (0...num_months_in_project).map { |i| liabilities_at_month i },
           assets_by_month: (0...num_months_in_project).map { |i| assets_at_month i }
@@ -222,7 +248,9 @@ module RRA
       end
 
       def num_months_in_project
-        @num_months_in_project ||= ((today.year * 12) + today.month) - ((project_starts_on.year * 12) + project_starts_on.month) + 1
+        @num_months_in_project ||= ((today.year * 12) + today.month) -
+                                   ((project_starts_on.year * 12) +
+                                    project_starts_on.month) + 1
       end
 
       def each_year_in_project(&block)
@@ -237,7 +265,7 @@ module RRA
       def liabilities_at_month(num)
         # I played with this until it offered a nice contrast with the assets curve
         RRA::Journal::Commodity.from_symbol_and_amount('$',
-                                                        (Math.sin((num.to_f + 40) / 24) * 30_000) + 30_000)
+                                                       (Math.sin((num.to_f + 40) / 24) * 30_000) + 30_000)
       end
 
       def assets_at_month(num)
