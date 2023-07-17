@@ -74,7 +74,7 @@ module RRA
     private
 
     def default_grid_starting_at
-      transformer_years = Dir.glob(project_path('transformers/*.yml')).map do |f|
+      transformer_years = Dir.glob(project_path('app/transformers/*.yml')).map do |f|
         ::Regexp.last_match(1).to_i if /\A(\d{4}).+/.match File.basename(f)
       end.compact.uniq.sort
 

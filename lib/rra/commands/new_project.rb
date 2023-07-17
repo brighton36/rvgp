@@ -90,7 +90,7 @@ module RRA
         end
 
         # Create the sub directories:
-        %w[build feeds transformers].each do |dir|
+        %w[build feeds].each do |dir|
           full_dir = [app_dir, dir].join('/')
           if Dir.exist? full_dir
             @warnings << [I18n.t('commands.new_project.errors.directory_exists', dir: full_dir)]
@@ -118,7 +118,6 @@ module RRA
 
       def initialize_bank_feeds
         each_year_in_project do |year|
-          # entries = liability_payments.select { |e| e['Date'].year == year }
           File.write destination_path('%<app_dir>s/feeds/%<year>d-personal-basic-checking.csv', year: year),
                      bank_feed(year)
         end
@@ -128,7 +127,7 @@ module RRA
 
       def initialize_transformers
         each_year_in_project do |year|
-          File.write destination_path('%<app_dir>s/transformers/%<year>d-personal-basic-checking.yml',
+          File.write destination_path('%<app_dir>s/app/transformers/%<year>d-personal-basic-checking.yml',
                                       year: year),
                      RRA::Fakers::FakeTransformer.basic_checking(
                        label: format('Personal AcmeBank:Checking (%<year>s)', year: year),

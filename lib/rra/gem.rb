@@ -18,7 +18,7 @@ module RRA
 
           s.summary = 'A workflow tool to: transform bank-downloaded csv\'s into ' \
                       'categorized pta journals. Run finance validations on those ' \
-                      'journals. And generate reports and graphs on the output.'
+                      'journals. And generate csvs and plots on the output.'
           s.homepage = 'https://github.com/brighton36/rra'
 
           s.files = files

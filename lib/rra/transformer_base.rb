@@ -373,7 +373,7 @@ module RRA
       # Nonetheless, this code works for now. Maybe if we add another 
       # driver, we can renovate it, and add some kind of registry for drivers.
 
-      Dir.glob("%s/transformers/*.yml" % directory_path).collect{|path|
+      Dir.glob("%s/app/transformers/*.yml" % directory_path).collect{|path|
         yaml = RRA::Yaml.new path, RRA.app.config.project_path
 
         raise MissingFields.new :input unless yaml.has_key? :input
