@@ -103,6 +103,14 @@ module RRA
           FileUtils.cp_r filename, app_dir
         end
 
+        # These are the app subdirectories...
+        %w[commands grids plots transformers validations].each do |dir|
+          full_dir = [app_dir, 'app', dir].join('/')
+          next if Dir.exist? full_dir
+
+          Dir.mkdir full_dir
+        end
+
         # Main project journal:
         File.write project_journal_path,
                    format(PROJECT_FILE, project_name: @project_name.gsub('"', '\\"'))

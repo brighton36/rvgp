@@ -17,7 +17,11 @@ for the ruby literate, to:
 
 Or, publish to google, and share it with your accountant:
 
-* TODO Image
+### Cashflow
+![Cashflow Google](resources/README.MD/2022-cashflow-google.png)
+
+### Wealth Report
+![Wealth Report Google](resources/README.MD/all-wealth-growth-google.png)
 
 Plus, you get a bunch of other nice features. Like...
 * A TUI cashflow output, for understanding your monthly cashflow on a dashboard
