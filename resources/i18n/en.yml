@@ -77,7 +77,7 @@ en:
         unrecognized_path: 'Unrecognized path: %{file}'
     new_project:
       directory_exists_prompt: "The directory \"%{dir}\" already exists. Continuing will overwrite some of its contents. Are you sure you wish to continue creating a new project in this directory? (Type \"Yes\" to continue) : "
-      project_name_prompt: "Who's project is this? A person's full name or a company name will work: "
+      project_name_prompt: "Whose project is this? A person's full name or a company name will work: "
       project_name_confirmation: "You entered \"%{project_name}\". Is that correct? (Type \"Yes\" to continue) : "
       confirm_operation: "Yes"
       operation_aborted: "\"new_project\" project operation aborted"
