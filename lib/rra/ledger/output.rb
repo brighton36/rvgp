@@ -1,6 +1,7 @@
 require 'nokogiri'
+require_relative '../pta_connection'
 
-module RRA::Ledger
+class RRA::Ledger < RRA::PTAConnection
   module Output
     class ReaderBase
       def self.readers(*readers)
