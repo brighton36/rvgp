@@ -98,15 +98,15 @@ class RRA::HLedger < RRA::PTAConnection
     end
   end
 
-  def self.files(opts = {})
+  def files(opts = {})
     command('files', opts).split("\n")
   end
 
-  def self.balance(account, opts = {})
+  def balance(account, opts = {})
     RRA::HLedger::Output::Balance.new command 'balance', account, { 'output-format': 'json' }.merge(opts)
   end
 
-  def self.register(*args)
+  def register(*args)
     opts = args.last.is_a?(Hash) ? args.pop : {}
 
     pricer = opts.delete :pricer

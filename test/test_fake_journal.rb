@@ -25,7 +25,7 @@ class TestFakeJournal < Minitest::Test
     assert_equal ['Expense'], journal.postings.map { |posting| posting.transfers[0].account.to_s }.uniq
     assert_equal ['Cash'], journal.postings.map { |posting| posting.transfers[1].account.to_s }.uniq
 
-    balance = RRA::Ledger.balance 'Expense', from_s: journal.to_s
+    balance = RRA::Ledger.new.balance 'Expense', from_s: journal.to_s
     assert_equal 1, balance.accounts.length
     assert_equal 'Expense', balance.accounts[0].fullname
     assert_equal 1, balance.accounts[0].amounts.length
@@ -41,7 +41,7 @@ class TestFakeJournal < Minitest::Test
       assert_kind_of RRA::Journal, journal
       assert_equal(10, journal.postings.length)
 
-      balance = RRA::Ledger.balance 'Expense', from_s: journal.to_s
+      balance = RRA::Ledger.new.balance 'Expense', from_s: journal.to_s
 
       assert_equal 1, balance.accounts.length
       assert_equal 'Expense', balance.accounts[0].fullname

@@ -2,13 +2,6 @@
 
 module RRA
   class PTAConnection
-    # NOTE: I think the goal of this class, would be for #initialize to return
-    # a pipe that stays open. Which, ledger supports (I think, just run it w/o
-    # a command), but which hledger does not...
-    # We may just want to not make this a class, though. I don't know yet.
-    # Maybe initialize should take the LEDGER_FILE... and we move these
-    # methods to instances
-
     class AssertionError < StandardError
     end
 
@@ -59,15 +52,14 @@ module RRA
         # There's a whole section on default valuation behavior here :
         # https://hledger.org/hledger.html#valuation
         date = options[:price_date] || Date.today
-        converted = commodities.collect{|a|
+        converted = commodities.map do |a|
           begin
             # There are some outputs, which have no .code. And which only have
             # a quantity. We don't want to raise an exception for these, if
             # their quantity is zero, because that's still accumulateable.
-            next if a.quantity == 0
+            next if a.quantity.zero?
 
-            (a.alphabetic_code != currency.alphabetic_code) ?
-              pricer.convert(date.to_time, a, code) : a
+            a.alphabetic_code == currency.alphabetic_code ? a : pricer.convert(date.to_time, a, code)
           rescue RRA::Pricer::NoPriceError
             if ignore_unknown_codes
               # This seems to be what ledger does...
@@ -77,7 +69,7 @@ module RRA
               raise RRA::Pricer::NoPriceError
             end
           end
-        }.compact
+        end.compact
 
         # The case of [].sum will return an integer 0, which, isn't quite what
         # we want...
@@ -85,43 +77,47 @@ module RRA
       end
     end
 
-    def self.command(*args)
-      opts = args.pop if args.last.kind_of? Hash
+    def command(*args)
+      opts = args.pop if args.last.is_a? Hash
       open3_opts = {}
-      args += opts.collect{|k, v|
-        if k.to_sym == :from_s
-          open3_opts[:stdin_data] = v
-          ['-f', '-']
-        else
-          ['--%s' % [k.to_s], (v == true) ? nil : v]
-        end
-        }.flatten.compact if opts
+      if opts
+        args += opts.map do |k, v|
+          if k.to_sym == :from_s
+            open3_opts[:stdin_data] = v
+            %w[-f -]
+          else
+            [format('--%s', k.to_s), v == true ? nil : v]
+          end
+        end.flatten.compact
+      end
 
-      cmd = ([bin_path]+args.collect{|a| Shellwords.escape a}).join(' ')
+      cmd = ([bin_path] + args.collect { |a| Shellwords.escape a }).join(' ')
 
-      # We should probably send this to a RRA.logger.trace...
-      pretty_cmd = ([bin_path]+args).join(' ')
+      if ENV.key?('RRA_LOG_COMMANDS') && !ENV['RRA_LOG_COMMANDS'].empty?
+        # We should probably send this to a RRA.logger.trace...
+        pretty_cmd = ([bin_path] + args).join(' ')
+
+        puts pretty_cmd
+      end
 
       output, error, status = Open3.capture3 cmd, open3_opts
 
-      raise StandardError, "ledger exited non-zero (%d): %s" % [
-        status.exitstatus, error] unless status.success?
+      unless status.success?
+        raise StandardError, format('ledger exited non-zero (%<msg>d): %<exitstatus>s',
+                                    exitstatus: status.exitstatus,
+                                    msg: error)
+      end
 
       output
     end
 
-    def self.bin_path
+    def bin_path
       # Maybe we should support more than just /usr/bin...
-      self::BIN_PATH
+      self.class::BIN_PATH
     end
 
-    # TODO: I think we should pull this path from the config.primary_journal_path ...
-    #       but, let's take that in an #initialize(), and stop with this class method nonsense
-    def self.path(relfile = nil)
-      unless ENV.has_key? 'LEDGER_FILE'
-        raise StandardError, "LEDGER_FILE environment variable is set incorrectly"
-      end
-      [File.dirname(ENV['LEDGER_FILE']),relfile].compact.join('/')
+    def adapter_name
+      self.class.name.split(':').last.downcase.to_sym
     end
   end
 end

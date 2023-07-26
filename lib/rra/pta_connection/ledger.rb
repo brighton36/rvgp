@@ -110,11 +110,11 @@ class RRA::Ledger < RRA::PTAConnection
     end
   end
 
-  def self.balance(account, opts = {})
+  def balance(account, opts = {})
     RRA::Ledger::Output::Balance.new account, command('xml', opts)
   end
 
-  def self.register(*args)
+  def register(*args)
     opts = args.last.is_a?(Hash) ? args.pop : {}
 
     pricer = opts.delete :pricer
@@ -128,16 +128,16 @@ class RRA::Ledger < RRA::PTAConnection
                                       translate_meta_accounts: translate_meta_accounts
   end
 
-  def self.newest_transaction(account = nil, opts = {})
+  def newest_transaction(account = nil, opts = {})
     first_transaction account, opts.merge(sort: 'date', tail: 1)
   end
 
-  def self.oldest_transaction(account = nil, opts = {})
+  def oldest_transaction(account = nil, opts = {})
     first_transaction account, opts.merge(sort: 'date', head: 1)
   end
 
-  def self.first_transaction(*args)
-    reg = RRA::Ledger.register(*args)
+  def first_transaction(*args)
+    reg = register(*args)
 
     raise RRA::PTAConnection::AssertionError, 'Expected a single transaction' unless reg.transactions.length == 1
 

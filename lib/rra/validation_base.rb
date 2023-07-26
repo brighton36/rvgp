@@ -51,8 +51,8 @@ module RRA
 
     # I suppose we'd want/need an hledger_opts parameter over time...
     def validate_no_transactions(with_error_msg, ledger_opts)
-      results = RRA::Ledger.register transformer.from,
-                                     { file: transformer.output_file }.merge(ledger_opts)
+      results = RRA::Ledger.new.register transformer.from,
+                                         { file: transformer.output_file }.merge(ledger_opts)
 
       error_citations = results.transactions.map do |posting|
         format '%<date>s: %<payee>s', date: posting.date.to_s, payee: posting.payee
@@ -62,7 +62,7 @@ module RRA
     end
 
     def validate_no_balance(with_error_msg, account)
-      results = RRA::HLedger.balance account, file: transformer.output_file
+      results = RRA::HLedger.new.balance account, file: transformer.output_file
 
       error_citations = results.accounts.map do |ra|
         ra.amounts.map { |commodity| [ra.fullname, RRA.pastel.red('━'), commodity.to_s].join(' ') }

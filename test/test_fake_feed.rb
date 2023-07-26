@@ -193,7 +193,7 @@ class TestFakeFeed < Minitest::Test
   private
 
   def account_by_month(acct, journal_s, accrue_by = :total_in)
-    RRA::Ledger.register(acct,
+    RRA::Ledger.new.register(acct,
                          collapse: true,
                          sort: 'date',
                          monthly: true,

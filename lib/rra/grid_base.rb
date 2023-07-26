@@ -105,7 +105,7 @@ class RRA::GridBase
 
     initial = opts[:initial] || Hash.new
 
-    RRA::Ledger.register(*args, ledger_opts).transactions.inject(initial) do |ret, tx|
+    RRA::Ledger.new.register(*args, ledger_opts).transactions.inject(initial) do |ret, tx|
       tx.postings.reduce(ret) do |sum, posting|
         block.call sum, tx.date, posting
       end
@@ -138,7 +138,7 @@ class RRA::GridBase
       # But, if we start using this before the journals are built, we're going to
       # need to clear this cache, thereafter. So, maybe we want to take a parameter
       # here, or figure something out then, to prevent problems.
-      @dependency_paths ||= RRA::HLedger.files(file: RRA.app.config.project_journal_path)
+      @dependency_paths ||= RRA::HLedger.new.files(file: RRA.app.config.project_journal_path)
     end
 
     def uptodate?(year)

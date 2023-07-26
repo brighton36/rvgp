@@ -97,7 +97,7 @@ module RRA
       lambda do
         return Date.today unless Dir[build_path('journals/*.journal')].count.positive?
 
-        end_date = Ledger.newest_transaction(nil, file: project_journal_path).date
+        end_date = Ledger.new.newest_transaction(nil, file: project_journal_path).date
 
         return end_date if end_date == Date.civil(end_date.year, end_date.month, -1)
 

@@ -9,9 +9,33 @@ require_relative '../lib/rra'
 # TODO : add RRA::Ledger below
 [RRA::HLedger].each do |pta_klass|
   describe pta_klass do
-    subject { pta_klass }
+    subject { pta_klass.new }
 
-    describe '.balance' do
+    describe '#adapter_name' do
+      it 'should return the appropriate symbol' do
+        value(subject.adapter_name).must_equal subject.is_a?(RRA::HLedger) ? :hledger : :ledger
+      end
+    end
+
+    describe '#newest_transaction' do
+      it 'returns the newest transaction in the file' do
+        skip 'TODO'
+      end
+    end
+
+    describe '#oldest_transaction' do
+      it 'returns the oldest transaction in the file' do
+        skip 'TODO'
+      end
+    end
+
+    describe '#files' do
+      it 'returns all the files referenced in a journal' do
+        skip 'TODO'
+      end
+    end
+
+    describe '#balance' do
       # TODO: Add a pricer test on balance
 
       it 'must parse a simple balance query' do
@@ -89,7 +113,7 @@ require_relative '../lib/rra'
       end
     end
 
-    describe '.balance' do
+    describe '#register' do
       it 'matches the output of the csv command, on longer queries' do
         # This is just your basic activity, on a mostly unused savings account
         journal = <<~JOURNAL
