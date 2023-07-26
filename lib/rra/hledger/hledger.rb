@@ -69,7 +69,7 @@ class RRA::HLedger < RRA::PTAConnection
         end
 
         @transactions.map! do |postings|
-          date = Date.strptime(postings[0][0], '%Y-%m-%d')
+          date = Date.strptime postings[0][0], '%Y-%m-%d'
 
           RRA::PTAConnection::RegisterTransaction.new(
             date,

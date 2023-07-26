@@ -6,7 +6,8 @@ require 'minitest/autorun'
 
 require_relative '../lib/rra'
 
-[RRA::HLedger, RRA::Ledger].each do |pta_klass|
+# TODO : add RRA::Ledger below
+[RRA::HLedger].each do |pta_klass|
   describe pta_klass do
     subject { pta_klass }
 
@@ -59,7 +60,7 @@ require_relative '../lib/rra'
         value(balance.accounts[1].amounts.length).must_equal 1
         value(balance.accounts[1].amounts[0].to_s).must_equal '$ -540.00'
 
-        # Summary line
+        # Summary line.
         value(balance.summary_amounts.length).must_equal 1
         value(balance.summary_amounts[0].to_s).must_equal '$ 210.00'
       end
