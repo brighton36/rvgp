@@ -14,8 +14,8 @@ require_relative 'rra/transformer_modules/international_atm'
 require_relative 'rra/validation_base'
 
 require_relative 'rra/journal'
-require_relative 'rra/ledger/ledger'
-require_relative 'rra/hledger/hledger'
+require_relative 'rra/pta_connection/ledger'
+require_relative 'rra/pta_connection/hledger'
 
 require_relative 'rra/grid_base'
 
