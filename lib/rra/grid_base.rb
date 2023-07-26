@@ -84,8 +84,7 @@ class RRA::GridBase
   def reduce_postings_by_month(*args, &block)
     opts = args.last.kind_of?(Hash) ? args.pop : {}
 
-    ledger_opts = { sort: 'date',
-                    pricer: RRA.app.pricer,
+    ledger_opts = { pricer: RRA.app.pricer,
                     monthly: true,
                     empty: true,
                     file: RRA.app.config.project_journal_path }

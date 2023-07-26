@@ -11,16 +11,18 @@ class RRA::Ledger < RRA::PTAConnection
   BIN_PATH = '/usr/bin/ledger'
 
   def self.balance(account, opts = {})
-    RRA::Ledger::Output::Balance.new account, command("xml", opts)
+    RRA::Ledger::Output::Balance.new account, command('xml', opts)
   end
 
   def self.register(*args)
-    opts = args.last.kind_of?(Hash) ? args.pop : {}
+    opts = args.last.is_a?(Hash) ? args.pop : {}
 
     pricer = opts.delete :pricer
     translate_meta_accounts = opts[:empty]
 
-    RRA::Ledger::Output::Register.new command("xml", *args, opts), 
+    # We stipulate, by default, a date sort. Mostly because it makes sense. But, also so
+    # that this matches HLedger's default sort order
+    RRA::Ledger::Output::Register.new command('xml', *args, { sort: 'date' }.merge(opts)),
                                       monthly: (opts[:monthly] == true),
                                       pricer: pricer,
                                       translate_meta_accounts: translate_meta_accounts
@@ -34,13 +36,10 @@ class RRA::Ledger < RRA::PTAConnection
     first_transaction account, opts.merge(sort: 'date', head: 1)
   end
 
-  private
-
   def self.first_transaction(*args)
     reg = RRA::Ledger.register(*args)
 
-    raise RRA::PTAConnection::AssertionError, "Expected a single transaction" unless(
-      reg.transactions.length == 1)
+    raise RRA::PTAConnection::AssertionError, 'Expected a single transaction' unless reg.transactions.length == 1
 
     reg.transactions.first
   end

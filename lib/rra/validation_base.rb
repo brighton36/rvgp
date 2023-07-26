@@ -52,7 +52,7 @@ module RRA
     # I suppose we'd want/need an hledger_opts parameter over time...
     def validate_no_transactions(with_error_msg, ledger_opts)
       results = RRA::Ledger.register transformer.from,
-                                     { file: transformer.output_file, sort: 'date' }.merge(ledger_opts)
+                                     { file: transformer.output_file }.merge(ledger_opts)
 
       error_citations = results.transactions.map do |posting|
         format '%<date>s: %<payee>s', date: posting.date.to_s, payee: posting.payee
