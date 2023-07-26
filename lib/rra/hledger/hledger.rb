@@ -49,7 +49,7 @@ class RRA::HLedger < RRA::PTAConnection
           raise RRA::PTAConnection::AssertionError unless json_account[0] == json_account[1]
 
           RRA::PTAConnection::BalanceAccount.new(json_account[0],
-                      json_account[3].collect { |l| commodity_from_json l })
+                                                 json_account[3].collect { |l| commodity_from_json l })
         end
 
         @summary_amounts = @json[1].collect { |json_amount| commodity_from_json json_amount }
