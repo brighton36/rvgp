@@ -91,16 +91,20 @@ module RRA
         end.flatten.compact
       end
 
+      is_logging = ENV.key?('RRA_LOG_COMMANDS') && !ENV['RRA_LOG_COMMANDS'].empty?
+
       cmd = ([bin_path] + args.collect { |a| Shellwords.escape a }).join(' ')
 
-      if ENV.key?('RRA_LOG_COMMANDS') && !ENV['RRA_LOG_COMMANDS'].empty?
-        # We should probably send this to a RRA.logger.trace...
+      time_start = Time.now if is_logging
+      output, error, status = Open3.capture3 cmd, open3_opts
+      time_end = Time.now if is_logging
+
+      # Maybe We should send this to a RRA.logger.trace...
+      if is_logging
         pretty_cmd = ([bin_path] + args).join(' ')
 
-        puts pretty_cmd
+        puts format('(%.2<time>f elapsed) %<cmd>s', time: time_end - time_start, cmd: pretty_cmd)
       end
-
-      output, error, status = Open3.capture3 cmd, open3_opts
 
       unless status.success?
         raise StandardError, format('ledger exited non-zero (%<msg>d): %<exitstatus>s',

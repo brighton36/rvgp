@@ -193,15 +193,12 @@ class TestFakeFeed < Minitest::Test
   private
 
   def account_by_month(acct, journal_s, accrue_by = :total_in)
-    RRA::Ledger.new.register(acct,
-                         collapse: true,
-                         sort: 'date',
-                         monthly: true,
-                         empty: true,
-                         from_s: journal_s).transactions.map do |tx|
-      assert_equal 1, tx.postings.length
-      tx.postings[0].send(accrue_by, '$')
-    end
+    ledger = RRA::Ledger.new
+    ledger.register(acct, monthly: true, from_s: journal_s)
+          .transactions.map do |tx|
+            assert_equal 1, tx.postings.length
+            tx.postings[0].send(accrue_by, '$')
+          end
   end
 
   def reconcile_journal(feed, transformer_opts)

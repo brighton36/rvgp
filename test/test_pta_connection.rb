@@ -36,8 +36,6 @@ require_relative '../lib/rra'
     end
 
     describe '#balance' do
-      # TODO: Add a pricer test on balance
-
       it 'must parse a simple balance query' do
         balance = subject.balance 'Transfers', from_s: <<~JOURNAL
           2023-01-01 Transaction 1
@@ -110,6 +108,10 @@ require_relative '../lib/rra'
         assert_equal 2, balance.summary_amounts.length
         assert_equal '$ 41.00', balance.summary_amounts[0].to_s
         assert_equal '1847.00 GTQ', balance.summary_amounts[1].to_s
+      end
+
+      it 'converts commodities, given a pricer' do
+        skip 'TODO'
       end
     end
 
