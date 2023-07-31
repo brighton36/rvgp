@@ -107,7 +107,7 @@ module RRA
       end
 
       unless status.success?
-        raise StandardError, format('ledger exited non-zero (%<msg>d): %<exitstatus>s',
+        raise StandardError, format('ledger exited non-zero (%<exitstatus>d): %<msg>s',
                                     exitstatus: status.exitstatus,
                                     msg: error)
       end

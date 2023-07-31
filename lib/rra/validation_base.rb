@@ -43,16 +43,19 @@ module RRA
 
     register_descendants RRA, :journal_validations, name_capture: NAME_CAPTURE
 
-    attr_reader :transformer
+    attr_reader :transformer, :ledger
 
-    def initialize(transformer)
+    # TODO: This default, should maybe come from RRA.app..
+    def initialize(transformer, ledger: RRA::Ledger.new)
       @transformer = transformer
+      @ledger = ledger
     end
 
     # I suppose we'd want/need an hledger_opts parameter over time...
-    def validate_no_transactions(with_error_msg, ledger_opts)
-      results = RRA::Ledger.new.register transformer.from,
-                                         { file: transformer.output_file }.merge(ledger_opts)
+    def validate_no_transactions(with_error_msg, *args)
+      ledger_opts = args.last.is_a?(Hash) ? args.pop : {}
+
+      results = ledger.register(*args, { file: transformer.output_file }.merge(ledger_opts))
 
       error_citations = results.transactions.map do |posting|
         format '%<date>s: %<payee>s', date: posting.date.to_s, payee: posting.payee
@@ -71,6 +74,15 @@ module RRA
       error_citations.flatten!
 
       error! with_error_msg, error_citations unless error_citations.empty?
+    end
+
+    def adapter_args(ledger_args, hledger_args)
+      case ledger.adapter_name
+      when :ledger then ledger_args
+      when :hledger then hledger_args
+      else
+        raise StandardError, 'Unsupported PTA Adapter encountered'
+      end
     end
   end
 
