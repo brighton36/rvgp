@@ -78,7 +78,7 @@ module RRA
         ::Regexp.last_match(1).to_i if /\A(\d{4}).+/.match File.basename(f)
       end.compact.uniq.sort
 
-      transformer_years.empty? ? (Date.today - 365) : Date.new(transformer_years.first, 1, 1)
+      transformer_years.empty? ? (Date.today << 12) : Date.new(transformer_years.first, 1, 1)
     end
 
     # We want/need grid tasks that are defined by (year)-gridname. However, we want

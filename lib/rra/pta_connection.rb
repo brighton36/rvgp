@@ -86,7 +86,7 @@ module RRA
             open3_opts[:stdin_data] = v
             %w[-f -]
           else
-            [format('--%s', k.to_s), v == true ? nil : v]
+            [format('--%s', k.to_s), v == true ? nil : v] unless v == false
           end
         end.flatten.compact
       end

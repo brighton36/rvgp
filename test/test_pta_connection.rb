@@ -6,36 +6,35 @@ require 'minitest/autorun'
 
 require_relative '../lib/rra'
 
-# TODO : add RRA::Ledger below
-[RRA::HLedger].each do |pta_klass|
+[RRA::Ledger, RRA::HLedger].each do |pta_klass|
   describe pta_klass do
     subject { pta_klass.new }
 
-    describe '#adapter_name' do
+    describe "#{pta_klass}#adapter_name" do
       it 'should return the appropriate symbol' do
         value(subject.adapter_name).must_equal subject.is_a?(RRA::HLedger) ? :hledger : :ledger
       end
     end
 
-    describe '#newest_transaction' do
+    describe "#{pta_klass}#newest_transaction" do
       it 'returns the newest transaction in the file' do
         skip 'TODO'
       end
     end
 
-    describe '#oldest_transaction' do
+    describe "#{pta_klass}#oldest_transaction" do
       it 'returns the oldest transaction in the file' do
         skip 'TODO'
       end
     end
 
-    describe '#files' do
+    describe "#{pta_klass}#files" do
       it 'returns all the files referenced in a journal' do
         skip 'TODO'
       end
     end
 
-    describe '#balance' do
+    describe "#{pta_klass}#balance" do
       it 'must parse a simple balance query' do
         balance = subject.balance 'Transfers', from_s: <<~JOURNAL
           2023-01-01 Transaction 1
@@ -115,7 +114,7 @@ require_relative '../lib/rra'
       end
     end
 
-    describe '#register' do
+    describe "#{pta_klass}#register" do
       it 'matches the output of the csv command, on longer queries' do
         # This is just your basic activity, on a mostly unused savings account
         journal = <<~JOURNAL
@@ -336,6 +335,34 @@ require_relative '../lib/rra'
         value(register.transactions[1].postings[0].amount_in('$').to_s).must_equal '$ -720.68976'
         value(register.transactions[1].postings[0].total_in('$').to_s).must_equal '$ -1463.075314'
       end
+
+      # TODO: So, this is a bug in ledger. The register output works fine. The xml output, does not. Possibly... we should
+      # warn here, so that when the problem is solved, we can ... know it?
+      it 'returns nil for the case of a query whose net change is 0' do
+        # This was a very specific bug that crept up, mostly because ledger handles this a bit differently than
+        # hledger. If two transactions 'cancel each other out' in a given month, hledger reports nil, and ledger
+        # reports '0'. This may be a case where all 0's, without a currency code, should return nil. And, I just
+        # happened to find that case exhibited in this circumstance.
+        #
+        # This test also ensures that if there's only one such transaction - we receive an empty transactions list.
+        register = subject.register(
+          'Personal:Assets:AcmeBank:Checking',
+          monthly: true,
+          from_s: <<~JOURNAL
+            2020/07/14 AMZN Mktp US Amzn.com/bill WA TransactionID CARD 1234
+                Personal:Expenses:Hobbies:VideoGames     $ 78.00
+                Personal:Assets:AcmeBank:Checking
+
+            2020/07/29 RMA: Amazon TransactionID
+                Personal:Expenses:Hobbies:VideoGames    $ -78.00
+                Personal:Assets:AcmeBank:Checking
+          JOURNAL
+        )
+
+        puts register.transactions.inspect
+        value(register.transactions.length).must_equal 0
+      end
+
     end
   end
 end

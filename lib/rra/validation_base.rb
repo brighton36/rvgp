@@ -3,21 +3,21 @@
 require_relative 'descendant_registry'
 
 module RRA
-  # This module offers mixin functions, for use with your validations.
-  module ValidationBaseHelpers
+  class ValidationBase
     NAME_CAPTURE = /\A(.+)Validation\Z/.freeze
+
+    attr_reader :errors, :warnings
+
+    def initialize(*args)
+      @errors = []
+      @warnings = []
+    end
 
     def valid?
       @errors = []
       @warnings = []
       validate
       (@errors.length + @warnings.length).zero?
-    end
-
-    def self.included(base)
-      base.instance_eval do
-        attr_reader :errors, :warnings
-      end
     end
 
     private
@@ -37,8 +37,7 @@ module RRA
 
   # This base class is intended for use by inheritors, and contains most of the
   # logic needed, to implement the validation of a journal file
-  class JournalValidationBase
-    include ValidationBaseHelpers
+  class JournalValidationBase < ValidationBase
     include RRA::DescendantRegistry
 
     register_descendants RRA, :journal_validations, name_capture: NAME_CAPTURE
@@ -46,18 +45,20 @@ module RRA
     attr_reader :transformer, :ledger
 
     # TODO: This default, should maybe come from RRA.app..
-    def initialize(transformer, ledger: RRA::Ledger.new)
+    def initialize(transformer, ledger: RRA::HLedger.new)
+      super
       @transformer = transformer
       @ledger = ledger
     end
 
-    # I suppose we'd want/need an hledger_opts parameter over time...
     def validate_no_transactions(with_error_msg, *args)
       ledger_opts = args.last.is_a?(Hash) ? args.pop : {}
 
       results = ledger.register(*args, { file: transformer.output_file }.merge(ledger_opts))
 
-      error_citations = results.transactions.map do |posting|
+      transactions = block_given? ? yield(results.transactions) : results.transactions
+
+      error_citations = transactions.map do |posting|
         format '%<date>s: %<payee>s', date: posting.date.to_s, payee: posting.payee
       end
 
@@ -65,7 +66,7 @@ module RRA
     end
 
     def validate_no_balance(with_error_msg, account)
-      results = RRA::HLedger.new.balance account, file: transformer.output_file
+      results = ledger.balance account, file: transformer.output_file
 
       error_citations = results.accounts.map do |ra|
         ra.amounts.map { |commodity| [ra.fullname, RRA.pastel.red('━'), commodity.to_s].join(' ') }
@@ -88,8 +89,7 @@ module RRA
 
   # This base class is intended for use by inheritors, and contains most of the
   # logic needed, to implement the validation of a system file
-  class SystemValidationBase
-    include ValidationBaseHelpers
+  class SystemValidationBase < ValidationBase
     include RRA::DescendantRegistry
 
     task_names = ->(registry) { registry.names.map { |name| format('validate_system:%s', name) } }

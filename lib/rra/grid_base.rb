@@ -15,13 +15,15 @@ class RRA::GridBase
     }
   }
 
-  attr_reader :starting_at, :ending_at, :year
+  attr_reader :starting_at, :ending_at, :year, :ledger
 
-  def initialize(starting_at, ending_at)
+  # TODO: This default, should maybe come from RRA.app..
+  def initialize(starting_at, ending_at, ledger: RRA::Ledger.new)
     # NOTE: It seems that with monthly queries, the ending date works a bit
     # differently. It's not necessariy to add one to the day here. If you do,
     # you get the whole month of January, in the next year added to the output.
     @year, @starting_at, @ending_at = starting_at.year, starting_at, ending_at
+    @ledger = ledger
   end
 
   def to_file!
@@ -34,6 +36,16 @@ class RRA::GridBase
   end
 
   private
+
+  # TODO: This was copied from validation base. Maybe we should move it into somewhere else, and DRY this
+  def adapter_args(ledger_args, hledger_args)
+    case ledger.adapter_name
+    when :ledger then ledger_args
+    when :hledger then hledger_args
+    else
+      raise StandardError, 'Unsupported PTA Adapter encountered'
+    end
+  end
 
   def monthly_totals_by_account(*args)
     reduce_monthly_by_account(*args, :total_in)
@@ -70,7 +82,12 @@ class RRA::GridBase
     opts = args.last.kind_of?(Hash) ? args.pop : {}
 
     in_code = opts[:in_code] || '$'
-    opts[:collapse] = true unless opts.has_key? :collapse
+
+    if ledger.adapter_name == :ledger
+      opts[:collapse] = true unless opts.key?(:collapse)
+    else
+      args << 'depth:0' unless args.any? { |arg| /^depth:\d+$/.match arg }
+    end
 
     reduce_postings_by_month(*args, opts) do |sum, date, posting|
       sum[date] ||= RRA::Journal::Commodity.from_symbol_and_amount in_code, 0
@@ -86,26 +103,35 @@ class RRA::GridBase
 
     ledger_opts = { pricer: RRA.app.pricer,
                     monthly: true,
-                    empty: true,
                     file: RRA.app.config.project_journal_path }
 
     ledger_opts[:collapse] = opts[:collapse] if opts[:collapse]
 
+    # TODO: I've never been crazy about this name... maybe we can borrow terminology
+    # from the hledger help, on what historical is...
     if opts[:accrue_before_begin]
-      ledger_opts[:display] = format('date>=[%<starting_at>s] and date <=[%<ending_at>s]',
-                                     starting_at: starting_at.strftime('%Y-%m-%d'),
-                                     ending_at: ending_at.strftime('%Y-%m-%d'))
+      if ledger.adapter_name == :ledger
+        ledger_opts[:display] = format('date>=[%<starting_at>s] and date <=[%<ending_at>s]',
+                                       starting_at: starting_at.strftime('%Y-%m-%d'),
+                                       ending_at: ending_at.strftime('%Y-%m-%d'))
+      else
+        args << format('date:%s-', starting_at.strftime('%Y/%m/%d'))
+        args << format('date:-%s', ending_at.strftime('%Y/%m/%d'))
+        ledger_opts[:historical] = true
+      end
     else
       # NOTE: I'm not entirely sure we want this path. It may be that we should always use the
       # display option....
-      ledger_opts[:begin] = (opts[:begin] ? opts[:begin] :
-        starting_at).strftime('%Y-%m-%d')
-      ledger_opts[:end] = ending_at.strftime('%Y-%m-%d')
+      ledger_opts[:begin] = (opts[:begin] || starting_at).strftime('%Y-%m-%d')
+      # It seems that ledger interprets the --end parameter as :<, and hledger
+      # interprets it as :<= . So, we add one here, and, this makes the output consistent with
+      # hledger, as well as our :display syntax above.
+      ledger_opts[:end] = (ledger.adapter_name == :hledger ? ending_at : ending_at + 1).strftime('%Y-%m-%d')
     end
 
     initial = opts[:initial] || Hash.new
 
-    RRA::Ledger.new.register(*args, ledger_opts).transactions.inject(initial) do |ret, tx|
+    ledger.register(*args, ledger_opts).transactions.inject(initial) do |ret, tx|
       tx.postings.reduce(ret) do |sum, posting|
         block.call sum, tx.date, posting
       end
