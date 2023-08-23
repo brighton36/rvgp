@@ -18,7 +18,7 @@ class RRA::GridBase
   attr_reader :starting_at, :ending_at, :year, :ledger
 
   # TODO: This default, should maybe come from RRA.app..
-  def initialize(starting_at, ending_at, ledger: RRA::Ledger.new)
+  def initialize(starting_at, ending_at, ledger: RRA::HLedger.new)
     # NOTE: It seems that with monthly queries, the ending date works a bit
     # differently. It's not necessariy to add one to the day here. If you do,
     # you get the whole month of January, in the next year added to the output.
@@ -71,9 +71,15 @@ class RRA::GridBase
     reduce_postings_by_month(*args, opts) do |sum, date, posting|
       next sum if posting.account.nil? || posting.account.is_a?(Symbol)
 
-      sum[posting.account] ||= {}
-      sum[posting.account][date] ||= RRA::Journal::Commodity.from_symbol_and_amount in_code, 0
-      sum[posting.account][date] += posting.send(posting_method, in_code) 
+      amount_in_code = posting.send posting_method, in_code
+      if amount_in_code
+        sum[posting.account] ||= {}
+        if sum[posting.account].key? date
+          sum[posting.account][date] += amount_in_code
+        else
+          sum[posting.account][date] = amount_in_code
+        end
+      end
       sum
     end
   end
@@ -90,8 +96,14 @@ class RRA::GridBase
     end
 
     reduce_postings_by_month(*args, opts) do |sum, date, posting|
-      sum[date] ||= RRA::Journal::Commodity.from_symbol_and_amount in_code, 0
-      sum[date] += posting.send(posting_method, in_code)
+      amount_in_code = posting.send(posting_method, in_code)
+      if amount_in_code
+        if sum[date]
+          sum[date] += amount_in_code
+        else
+          sum[date] = amount_in_code
+        end
+      end
       sum
     end
   end
@@ -103,6 +115,7 @@ class RRA::GridBase
 
     ledger_opts = { pricer: RRA.app.pricer,
                     monthly: true,
+                    empty: false, # This applies to Ledger, and ensures it's results match HLedger's exactly
                     file: RRA.app.config.project_journal_path }
 
     ledger_opts[:collapse] = opts[:collapse] if opts[:collapse]

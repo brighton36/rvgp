@@ -72,8 +72,11 @@ module RRA
         end.compact
 
         # The case of [].sum will return an integer 0, which, isn't quite what
-        # we want...
-        converted.empty? ? RRA::Journal::Commodity.from_symbol_and_amount(code, 0) : converted.sum
+        # we want. At one point, we returned RRA::Journal::Commodity.from_symbol_and_amount(code, 0).
+        # However, for some queries, this distorted the output to produce '$ 0.00', when we
+        # really expected nil. This seems to be the best return, that way the caller can just ||
+        # whatever they want, in the case they want to override this behavior.
+        converted.empty? ? nil : converted.sum
       end
     end
 

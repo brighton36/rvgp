@@ -335,34 +335,69 @@ require_relative '../lib/rra'
         value(register.transactions[1].postings[0].amount_in('$').to_s).must_equal '$ -720.68976'
         value(register.transactions[1].postings[0].total_in('$').to_s).must_equal '$ -1463.075314'
       end
+    end
+  end
+end
 
-      # TODO: So, this is a bug in ledger. The register output works fine. The xml output, does not. Possibly... we should
-      # warn here, so that when the problem is solved, we can ... know it?
-      it 'returns nil for the case of a query whose net change is 0' do
-        # This was a very specific bug that crept up, mostly because ledger handles this a bit differently than
-        # hledger. If two transactions 'cancel each other out' in a given month, hledger reports nil, and ledger
-        # reports '0'. This may be a case where all 0's, without a currency code, should return nil. And, I just
-        # happened to find that case exhibited in this circumstance.
-        #
-        # This test also ensures that if there's only one such transaction - we receive an empty transactions list.
-        register = subject.register(
-          'Personal:Assets:AcmeBank:Checking',
-          monthly: true,
-          from_s: <<~JOURNAL
-            2020/07/14 AMZN Mktp US Amzn.com/bill WA TransactionID CARD 1234
-                Personal:Expenses:Hobbies:VideoGames     $ 78.00
-                Personal:Assets:AcmeBank:Checking
+describe 'pta adapter errata' do
+  # This is a bug in ledger. The register output works fine. The xml output, does not. Possibly... we should
+  # warn here, so that when the problem is solved, we can ... know it?
+  # alternatively, we can just fix this in our code, I think. By adjusting the ledger adapter, for the case
+  # when 0 is returned....
+  describe '--empty bug' do
+    let(:args) do
+      # NOTE: This errata only triggers, if there's another tx in the listings, for that month. Hence the Reading
+      ['Personal:Expenses',
+       { monthly: true, begin: Date.new(2023, 7, 1), end: Date.new(2023, 8, 1), from_s: <<~JOURNAL }]
+         2023/07/11 Shakespeare and Company
+             Personal:Expenses:Hobbies:Reading        $ 12.34
+             Personal:Assets:AcmeBank:Checking
 
-            2020/07/29 RMA: Amazon TransactionID
-                Personal:Expenses:Hobbies:VideoGames    $ -78.00
-                Personal:Assets:AcmeBank:Checking
-          JOURNAL
-        )
+         2023/07/13 GAP Clothing
+             Personal:Expenses:Clothes                $ 50.01
+             Personal:Assets:AcmeBank:Checking
 
-        puts register.transactions.inspect
-        value(register.transactions.length).must_equal 0
+         2023/07/24 GAP Clothing (RMA)
+             Personal:Expenses:Clothes               $ -50.01
+             Personal:Assets:AcmeBank:Checking
+       JOURNAL
+    end
+
+    let(:args_with_fix) do
+      [args[0], args[1].merge(empty: false)]
+    end
+
+    it 'returns nil for the case of a query whose net change is 0' do
+      # This was a very specific bug that crept up, mostly because ledger handles this a bit differently than
+      # hledger. If two transactions 'cancel each other out' in a given month, hledger reports nil, and ledger
+      # reports '0'. This may be a case where all 0's, without a currency code, should return nil. And, I just
+      # happened to find that case exhibited in this circumstance.
+      #
+      # This test also ensures that if there's only one such transaction - we receive an empty transactions list.
+
+      # Hledger just works, and these tests are here for posterity. Asserting that hledger works as expected
+      [args, args_with_fix].each do |a|
+        transactions = RRA::HLedger.new.register(*a).transactions
+        value(transactions.length).must_equal 1
+        value(transactions[0].payee).must_be_nil
+        value(transactions[0].postings.length).must_equal 1
+        value(transactions[0].postings[0].amounts.map(&:to_s)).must_equal ['$ 12.34']
       end
 
+      # These specs just define the error, through our expectations of how it manefests:
+      transactions = RRA::Ledger.new.register(*args).transactions
+      value(transactions.length).must_equal 1
+      value(transactions[0].payee).must_equal '- 23-Jul-31'
+      value(transactions[0].postings.length).must_equal 2
+      value(transactions[0].postings[0].amounts.map(&:to_s)).must_equal ['$ 0.00']
+      value(transactions[0].postings[1].amounts.map(&:to_s)).must_equal ['$ 12.34']
+
+      # This is the fix:
+      transactions = RRA::Ledger.new.register(*args_with_fix).transactions
+      value(transactions.length).must_equal 1
+      value(transactions[0].payee).must_equal '- 23-Jul-31'
+      value(transactions[0].postings.length).must_equal 1
+      value(transactions[0].postings[0].amounts.map(&:to_s)).must_equal ['$ 12.34']
     end
   end
 end

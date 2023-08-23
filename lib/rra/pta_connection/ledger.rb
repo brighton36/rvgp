@@ -89,6 +89,13 @@ class RRA::Ledger < RRA::PTAConnection
                 end
               end
 
+              if options[:empty] == false
+                amounts.reject! { |amnt| amnt.quantity.zero? }
+                totals.reject! { |amnt| amnt.quantity.zero? }
+
+                next if [amounts, totals].all?(&:empty?)
+              end
+
               account = xp.at('account/name').content
 
               # This phenomenon of '<None>' and '<total>', seems to only happen
@@ -110,7 +117,7 @@ class RRA::Ledger < RRA::PTAConnection
                 # monthly query
                 price_date: options[:monthly] ? Date.new(date.year, date.month, -1) : date
               )
-            end
+            end.compact
           )
         end
       end
@@ -131,6 +138,7 @@ class RRA::Ledger < RRA::PTAConnection
     # that this matches HLedger's default sort order
     RRA::Ledger::Output::Register.new command('xml', *args, { sort: 'date' }.merge(opts)),
                                       monthly: (opts[:monthly] == true),
+                                      empty: opts[:empty],
                                       pricer: pricer,
                                       translate_meta_accounts: translate_meta_accounts
   end
