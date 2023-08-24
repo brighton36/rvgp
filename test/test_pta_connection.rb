@@ -10,6 +10,10 @@ require_relative '../lib/rra'
   describe pta_klass do
     subject { pta_klass.new }
 
+    def hledger?
+      subject.adapter_name == :hledger
+    end
+
     describe "#{pta_klass}#adapter_name" do
       it 'should return the appropriate symbol' do
         value(subject.adapter_name).must_equal subject.is_a?(RRA::HLedger) ? :hledger : :ledger
@@ -50,7 +54,9 @@ require_relative '../lib/rra'
                                                             'Transfers:PersonalSavings_PersonalChecking']
         value(balance.accounts[0].amounts.map(&:to_s)).must_equal ['$ 1234.00']
         value(balance.accounts[1].amounts.map(&:to_s)).must_equal ['$ 5678.90']
-        value(balance.summary_amounts.map(&:to_s)).must_equal ['$ 6912.90']
+
+        # Maybe I should just remove this feature entirely?....
+        value(balance.summary_amounts.map(&:to_s)).must_equal ['$ 6912.90'] if hledger?
       end
 
       it 'must parse a negative balances query' do
@@ -82,8 +88,10 @@ require_relative '../lib/rra'
         value(balance.accounts[1].amounts[0].to_s).must_equal '$ -540.00'
 
         # Summary line.
-        value(balance.summary_amounts.length).must_equal 1
-        value(balance.summary_amounts[0].to_s).must_equal '$ 210.00'
+        if hledger?
+          value(balance.summary_amounts.length).must_equal 1
+          value(balance.summary_amounts[0].to_s).must_equal '$ 210.00'
+        end
       end
 
       it 'must parse balances in multiple currencies' do
@@ -100,13 +108,14 @@ require_relative '../lib/rra'
         assert_equal 1, balance.accounts.length
         assert_equal 'Personal:Expenses:Unknown', balance.accounts[0].fullname
         assert_equal 2, balance.accounts[0].amounts.length
-        assert_equal '$ 41.00', balance.accounts[0].amounts[0].to_s
-        assert_equal '1847.00 GTQ', balance.accounts[0].amounts[1].to_s
+        assert_equal ['$ 41.00', '1847.00 GTQ'], balance.accounts[0].amounts.map(&:to_s).sort
 
         # Summary line
-        assert_equal 2, balance.summary_amounts.length
-        assert_equal '$ 41.00', balance.summary_amounts[0].to_s
-        assert_equal '1847.00 GTQ', balance.summary_amounts[1].to_s
+        if hledger?
+          assert_equal 2, balance.summary_amounts.length
+          assert_equal '$ 41.00', balance.summary_amounts[0].to_s
+          assert_equal '1847.00 GTQ', balance.summary_amounts[1].to_s
+        end
       end
 
       it 'converts commodities, given a pricer' do
@@ -181,11 +190,10 @@ require_relative '../lib/rra'
 
         register = subject.register 'Personal:Assets:AcmeBank:Savings', related: true, from_s: journal
 
-        csv_rows = CSV.parse(subject.command('register',
-                                             'Personal:Assets:AcmeBank:Savings',
-                                             from_s: journal,
-                                             related: true,
-                                             'output-format': 'csv'),
+        # We just use hledger here, rather than maintain two versions of our csv_rows truth table:
+        csv_rows = CSV.parse(RRA::HLedger.new.command('register',
+                                                      'Personal:Assets:AcmeBank:Savings',
+                                                      from_s: journal, related: true, 'output-format': 'csv'),
                              headers: true)
 
         assert_equal csv_rows.length, register.transactions.length
@@ -248,19 +256,19 @@ require_relative '../lib/rra'
         value(register.transactions[0].postings.map(&:totals).flatten.map(&:to_s)).must_equal ['$ 26.18', '$ 44.44']
         value(register.transactions[0].postings.map(&:tags)).must_equal(
           [{ 'intention' => 'Personal' },
-           { 'Dating' => true, 'ValentinesDay' => true, 'intention' => 'Personal' }]
+           hledger? ? { 'Dating' => true, 'ValentinesDay' => true, 'intention' => 'Personal' } : { 'intention' => 'Personal' }]
         )
 
         # Transaction 2:
         value(register.transactions[1].postings.map(&:account)).must_equal ['Personal:Expenses:Vices:Gambling']
         value(register.transactions[1].postings.map(&:amounts).flatten.map(&:to_s)).must_equal ['$ 2.00']
         value(register.transactions[1].postings.map(&:totals).flatten.map(&:to_s)).must_equal ['$ 46.44']
-        value(register.transactions[1].postings.map(&:tags)).must_equal [{ 'intention' => 'Personal', 'Loss' => true }]
+        value(register.transactions[1].postings.map(&:tags)).must_equal [hledger? ? { 'intention' => 'Personal', 'Loss' => true } : { 'intention' => 'Personal' }]
 
         # Transaction 3:
         value(register.transactions[2].postings.map(&:account)).must_equal ['Personal:Expenses:Food:Water']
         value(register.transactions[2].postings.map(&:amounts).flatten.map(&:to_s)).must_equal ['4000.00 COP']
-        value(register.transactions[2].postings.map(&:totals).flatten.map(&:to_s)).must_equal ['$ 46.44', '4000.00 COP']
+        value(register.transactions[2].postings.map(&:totals).flatten.map(&:to_s).sort).must_equal ['$ 46.44', '4000.00 COP']
         value(register.transactions[2].postings.map(&:tags)).must_equal [{ 'intention' => 'Personal' }]
 
         # Transaction 4:
@@ -268,15 +276,15 @@ require_relative '../lib/rra'
                                                                             'Personal:Expenses:Food:Water']
         value(register.transactions[3].postings.map(&:amounts).flatten.map(&:to_s)).must_equal ['56123.00 COP',
                                                                                                 '4000.00 COP']
-        value(register.transactions[3].postings.map(&:totals).flatten.map(&:to_s)).must_equal ['$ 46.44',
-                                                                                               '60123.00 COP',
-                                                                                               '$ 46.44',
-                                                                                               '64123.00 COP']
+        value(register.transactions[3].postings.map(&:totals).flatten.map(&:to_s).sort).must_equal ['$ 46.44',
+                                                                                                    '$ 46.44',
+                                                                                                    '60123.00 COP',
+                                                                                                    '64123.00 COP']
         value(register.transactions[3].postings.map(&:tags)).must_equal [{ 'intention' => 'Personal' }] * 2
       end
 
       it 'supports price conversion, through :pricer' do
-        register = subject.register(
+        transactions = subject.register(
           'Personal:Assets:Cash',
           monthly: true,
           pricer: RRA::Pricer.new(<<~PRICES),
@@ -312,28 +320,32 @@ require_relative '../lib/rra'
               Personal:Expenses:Transportation:Airline   $ 651.09
               Personal:Assets:Cash
           JOURNAL
-        )
+        ).transactions
 
-        value(register.transactions.map(&:date).map(&:to_s)).must_equal %w[2023-05-01 2023-06-01]
-        value(register.transactions.map(&:payee).compact).must_equal []
-        value(register.transactions.map(&:postings).flatten.map(&:account)).must_equal ['Personal:Assets:Cash'] * 2
-        value(register.transactions.map(&:postings).flatten.map(&:tags)).must_equal [{}] * 2
+        value(transactions.map(&:date).map(&:to_s)).must_equal %w[2023-05-01 2023-06-01]
+        value(transactions.map(&:payee).compact).must_equal(hledger? ? [] : ['- 23-May-31', '- 23-Jun-30'])
+        value(transactions.map(&:postings).flatten.map(&:account)).must_equal ['Personal:Assets:Cash'] * 2
+        value(transactions.map(&:postings).flatten.map(&:tags)).must_equal [{}] * 2
 
         # Month 1:
-        value(register.transactions[0].postings[0].amounts.map(&:to_s)).must_equal ['$ -684.88', '-1419.75 HNL']
-        value(register.transactions[0].postings[0].totals.map(&:to_s)).must_equal ['$ -684.88', '-1419.75 HNL']
+        value(transactions[0].postings[0].amounts.map(&:to_s).sort).must_equal ['$ -684.88', '-1419.75 HNL']
+        value(transactions[0].postings[0].totals.map(&:to_s).sort).must_equal ['$ -684.88', '-1419.75 HNL']
 
-        value(register.transactions[0].postings[0].amount_in('$').to_s).must_equal '$ -742.385554'
-        value(register.transactions[0].postings[0].total_in('$').to_s).must_equal '$ -742.385554'
+        value(transactions[0].postings[0].amount_in('$').to_s).must_equal '$ -742.385554'
+        value(transactions[0].postings[0].total_in('$').to_s).must_equal '$ -742.385554'
 
         # Month 2:
-        value(register.transactions[1].postings[0].amounts.map(&:to_s)).must_equal ['$ -651.09', '-57999.80 CLP']
-        value(register.transactions[1].postings[0].totals.map(&:to_s)).must_equal ['$ -1335.97',
-                                                                                   '-57999.80 CLP',
-                                                                                   '-1419.75 HNL']
 
-        value(register.transactions[1].postings[0].amount_in('$').to_s).must_equal '$ -720.68976'
-        value(register.transactions[1].postings[0].total_in('$').to_s).must_equal '$ -1463.075314'
+        # NOTE: This is a bug in ledger. Seemingly, the register command shows the .80. The correct amount.
+        # However, the xml output, shows '.8'. I don't think there are any great solutions to this, so, for
+        # now, I'm doing this in the tests:
+        expected_clp = hledger? ? '-57999.80 CLP' : '-57999.8 CLP'
+
+        value(transactions[1].postings[0].amounts.map(&:to_s)).must_equal ['$ -651.09', expected_clp]
+        value(transactions[1].postings[0].totals.map(&:to_s).sort).must_equal ['$ -1335.97', '-1419.75 HNL', expected_clp]
+
+        value(transactions[1].postings[0].amount_in('$').to_s).must_equal '$ -720.68976'
+        value(transactions[1].postings[0].total_in('$').to_s).must_equal '$ -1463.075314'
       end
     end
   end

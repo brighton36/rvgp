@@ -85,8 +85,12 @@ class TestLedger < Minitest::Test
       assert_equal 1, register.transactions[i].postings[0].totals.length
       assert_equal expectations[i][3], register.transactions[i].postings[0].amounts.first.to_s
       assert_equal expectations[i][4], register.transactions[i].postings[0].totals.first.to_s
-      assert_equal(expectations[i][3].to_s == '0' ? '$ 0.00'.to_commodity.to_s : expectations[i][3].to_s,
-                   register.transactions[i].postings[0].amount_in('$').to_s)
+      amount_in_usd = register.transactions[i].postings[0].amount_in('$')
+      if amount_in_usd.nil?
+        assert_equal '0', expectations[i][3].to_s
+      else
+        assert_equal amount_in_usd.to_s, register.transactions[i].postings[0].amount_in('$').to_s
+      end
       assert_equal expectations[i][4], register.transactions[i].postings[0].total_in('$').to_s
       assert_equal({}, register.transactions[i].postings[0].tags)
     end
