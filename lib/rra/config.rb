@@ -1,8 +1,12 @@
 # frozen_string_literal: true
 
+require_relative 'pta_connection'
+
 module RRA
   # This class provides the app configuration options accessors and parsing logic.
   class Config
+    include RRA::PTAConnection::AvailabilityHelper
+
     attr_reader :prices_path, :project_journal_path
 
     def initialize(project_path)
@@ -97,7 +101,7 @@ module RRA
       lambda do
         return Date.today unless Dir[build_path('journals/*.journal')].count.positive?
 
-        end_date = Ledger.new.newest_transaction(nil, file: project_journal_path).date
+        end_date = pta_adapter.newest_transaction_date file: project_journal_path
 
         return end_date if end_date == Date.civil(end_date.year, end_date.month, -1)
 

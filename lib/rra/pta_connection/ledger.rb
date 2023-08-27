@@ -143,12 +143,24 @@ class RRA::Ledger < RRA::PTAConnection
                                       translate_meta_accounts: translate_meta_accounts
   end
 
-  def newest_transaction(account = nil, opts = {})
-    first_transaction account, opts.merge(sort: 'date', tail: 1)
+  def files(opts = {})
+    stats(opts)['Files these postings came from'].tap do |ret|
+      ret.unshift opts[:file] if opts.key?(:file) && !ret.include?(opts[:file])
+    end
   end
 
-  def oldest_transaction(account = nil, opts = {})
-    first_transaction account, opts.merge(sort: 'date', head: 1)
+  def newest_transaction(*args)
+    opts = args.last.is_a?(Hash) ? args.pop : {}
+    first_transaction(*args, opts.merge(sort: 'date', tail: 1))
+  end
+
+  def oldest_transaction(*args)
+    opts = args.last.is_a?(Hash) ? args.pop : {}
+    first_transaction(*args, opts.merge(sort: 'date', head: 1))
+  end
+
+  def newest_transaction_date(opts = {})
+    Date.strptime ::Regexp.last_match(1), '%y-%b-%d' if /to ([^ ]+)/.match stats(opts)['Time period']
   end
 
   def first_transaction(*args)

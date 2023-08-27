@@ -102,6 +102,25 @@ class RRA::HLedger < RRA::PTAConnection
     command('files', opts).split("\n")
   end
 
+  # This is a really inefficient function. Probably you shouldn't use it. It's mostly here
+  # to ensure compatibility with the ledger adapter. Consider using #newest_transaction_date
+  # instead
+  def newest_transaction(*args)
+    register(*args)&.transactions&.last
+  end
+
+  # This is a really inefficient function. Probably you shouldn't use it. It's mostly here
+  # to ensure compatibility with the ledger adapter.
+  def oldest_transaction(*args)
+    register(*args)&.transactions&.first
+  end
+
+  # This optimization exists, mostly due to the lack of a .last or .first in hledger.
+  # And, the utility of this specific function, in the RRA.config.
+  def newest_transaction_date(opts = {})
+    Date.strptime stats(opts)['Last transaction'], '%Y-%m-%d'
+  end
+
   def balance(account, opts = {})
     RRA::HLedger::Output::Balance.new command 'balance', account, { 'output-format': 'json' }.merge(opts)
   end

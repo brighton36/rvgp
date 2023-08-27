@@ -10,31 +10,85 @@ require_relative '../lib/rra'
   describe pta_klass do
     subject { pta_klass.new }
 
-    def hledger?
-      subject.adapter_name == :hledger
-    end
-
     describe "#{pta_klass}#adapter_name" do
       it 'should return the appropriate symbol' do
         value(subject.adapter_name).must_equal subject.is_a?(RRA::HLedger) ? :hledger : :ledger
       end
     end
 
-    describe "#{pta_klass}#newest_transaction" do
-      it 'returns the newest transaction in the file' do
-        skip 'TODO'
-      end
-    end
+    describe "#{pta_klass} - #oldest_transaction, #newest_transaction_date, and #{pta_klass}#newest_transaction" do
+      let(:journal) do
+        <<~JOURNAL
+          1990-01-01 Wendy's
+            Personal:Expenses:Food:Restaurant    $8.44
+            Personal:Assets:Cash
 
-    describe "#{pta_klass}#oldest_transaction" do
+          1982-01-01 McDonald's
+            Personal:Expenses:Food:Restaurant    $10.15
+            Personal:Assets:Cash
+
+          2002-01-01 Burger King
+            Personal:Expenses:Food:Restaurant    $3.94
+            Personal:Assets:Cash
+
+          2000-01-01 Arby's
+            Personal:Expenses:Food:Restaurant    $12.87
+            Personal:Assets:Cash
+        JOURNAL
+      end
+
+      let(:oldest_tx) { subject.oldest_transaction from_s: journal }
+      let(:newest_tx) { subject.newest_transaction from_s: journal }
+
       it 'returns the oldest transaction in the file' do
-        skip 'TODO'
+        value(oldest_tx.payee).must_equal "McDonald's"
+        value(oldest_tx.date).must_equal Date.new(1982, 1, 1)
+        value(oldest_tx.postings.length).must_equal 2
+        value(oldest_tx.postings[0].account).must_equal 'Personal:Expenses:Food:Restaurant'
+        value(oldest_tx.postings[0].amounts.map(&:to_s)).must_equal ['$ 10.15']
+        value(oldest_tx.postings[1].account).must_equal 'Personal:Assets:Cash'
+        value(oldest_tx.postings[1].amounts.map(&:to_s)).must_equal ['$ -10.15']
+      end
+
+      it 'returns the newest transaction in the file' do
+        value(newest_tx.payee).must_equal 'Burger King'
+        value(newest_tx.date).must_equal Date.new(2002, 1, 1)
+        value(newest_tx.postings.length).must_equal 2
+        value(newest_tx.postings[0].account).must_equal 'Personal:Expenses:Food:Restaurant'
+        value(newest_tx.postings[0].amounts.map(&:to_s)).must_equal ['$ 3.94']
+        value(newest_tx.postings[1].account).must_equal 'Personal:Assets:Cash'
+        value(newest_tx.postings[1].amounts.map(&:to_s)).must_equal ['$ -3.94']
+      end
+
+      it 'returns the newest transaction date in the file' do
+        # This is a specific optimization, that enables us to use hledger stats in the rra/config.rb
+        value(subject.newest_transaction_date(from_s: journal)).must_equal Date.new(2002, 1, 1)
       end
     end
 
     describe "#{pta_klass}#files" do
       it 'returns all the files referenced in a journal' do
-        skip 'TODO'
+        journals = 5.times.map { Tempfile.open %w[rra_test .journal] }
+
+        journals[1...].each do |journal|
+          journal.write(<<~JOURNAL)
+            1990-01-01 Wendy's
+              Personal:Expenses:Food:Restaurant    $8.44
+              Personal:Assets:Cash
+          JOURNAL
+          journal.close
+        end
+
+        journals[0].write(journals[1...].map do |journal|
+          format 'include %s', journal.path
+        end.zip(["\n"] * journals.length).flatten.join)
+
+        journals[0].close
+
+        value(subject.files(file: journals[0].path).sort).must_equal journals.map(&:path).sort
+
+      ensure
+        journals.each(&:unlink)
       end
     end
 
@@ -56,7 +110,7 @@ require_relative '../lib/rra'
         value(balance.accounts[1].amounts.map(&:to_s)).must_equal ['$ 5678.90']
 
         # Maybe I should just remove this feature entirely?....
-        value(balance.summary_amounts.map(&:to_s)).must_equal ['$ 6912.90'] if hledger?
+        value(balance.summary_amounts.map(&:to_s)).must_equal ['$ 6912.90'] if subject.hledger?
       end
 
       it 'must parse a negative balances query' do
@@ -88,7 +142,7 @@ require_relative '../lib/rra'
         value(balance.accounts[1].amounts[0].to_s).must_equal '$ -540.00'
 
         # Summary line.
-        if hledger?
+        if subject.hledger?
           value(balance.summary_amounts.length).must_equal 1
           value(balance.summary_amounts[0].to_s).must_equal '$ 210.00'
         end
@@ -111,7 +165,7 @@ require_relative '../lib/rra'
         assert_equal ['$ 41.00', '1847.00 GTQ'], balance.accounts[0].amounts.map(&:to_s).sort
 
         # Summary line
-        if hledger?
+        if subject.hledger?
           assert_equal 2, balance.summary_amounts.length
           assert_equal '$ 41.00', balance.summary_amounts[0].to_s
           assert_equal '1847.00 GTQ', balance.summary_amounts[1].to_s
@@ -119,7 +173,8 @@ require_relative '../lib/rra'
       end
 
       it 'converts commodities, given a pricer' do
-        skip 'TODO'
+        # TODO: Put the TestLedger#test_balance_multiple_with_empty here. Refactored
+        skip 'TODO: Put the TestLedger#test_balance_multiple_with_empty here. Refactored'
       end
     end
 
@@ -256,14 +311,14 @@ require_relative '../lib/rra'
         value(register.transactions[0].postings.map(&:totals).flatten.map(&:to_s)).must_equal ['$ 26.18', '$ 44.44']
         value(register.transactions[0].postings.map(&:tags)).must_equal(
           [{ 'intention' => 'Personal' },
-           hledger? ? { 'Dating' => true, 'ValentinesDay' => true, 'intention' => 'Personal' } : { 'intention' => 'Personal' }]
+           subject.hledger? ? { 'Dating' => true, 'ValentinesDay' => true, 'intention' => 'Personal' } : { 'intention' => 'Personal' }]
         )
 
         # Transaction 2:
         value(register.transactions[1].postings.map(&:account)).must_equal ['Personal:Expenses:Vices:Gambling']
         value(register.transactions[1].postings.map(&:amounts).flatten.map(&:to_s)).must_equal ['$ 2.00']
         value(register.transactions[1].postings.map(&:totals).flatten.map(&:to_s)).must_equal ['$ 46.44']
-        value(register.transactions[1].postings.map(&:tags)).must_equal [hledger? ? { 'intention' => 'Personal', 'Loss' => true } : { 'intention' => 'Personal' }]
+        value(register.transactions[1].postings.map(&:tags)).must_equal [subject.hledger? ? { 'intention' => 'Personal', 'Loss' => true } : { 'intention' => 'Personal' }]
 
         # Transaction 3:
         value(register.transactions[2].postings.map(&:account)).must_equal ['Personal:Expenses:Food:Water']
@@ -323,7 +378,7 @@ require_relative '../lib/rra'
         ).transactions
 
         value(transactions.map(&:date).map(&:to_s)).must_equal %w[2023-05-01 2023-06-01]
-        value(transactions.map(&:payee).compact).must_equal(hledger? ? [] : ['- 23-May-31', '- 23-Jun-30'])
+        value(transactions.map(&:payee).compact).must_equal(subject.hledger? ? [] : ['- 23-May-31', '- 23-Jun-30'])
         value(transactions.map(&:postings).flatten.map(&:account)).must_equal ['Personal:Assets:Cash'] * 2
         value(transactions.map(&:postings).flatten.map(&:tags)).must_equal [{}] * 2
 
@@ -339,7 +394,7 @@ require_relative '../lib/rra'
         # NOTE: This is a bug in ledger. Seemingly, the register command shows the .80. The correct amount.
         # However, the xml output, shows '.8'. I don't think there are any great solutions to this, so, for
         # now, I'm doing this in the tests:
-        expected_clp = hledger? ? '-57999.80 CLP' : '-57999.8 CLP'
+        expected_clp = subject.hledger? ? '-57999.80 CLP' : '-57999.8 CLP'
 
         value(transactions[1].postings[0].amounts.map(&:to_s)).must_equal ['$ -651.09', expected_clp]
         value(transactions[1].postings[0].totals.map(&:to_s).sort).must_equal ['$ -1335.97', '-1419.75 HNL', expected_clp]

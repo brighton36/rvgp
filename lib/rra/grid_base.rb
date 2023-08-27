@@ -15,15 +15,14 @@ class RRA::GridBase
     }
   }
 
-  attr_reader :starting_at, :ending_at, :year, :ledger
+  attr_reader :starting_at, :ending_at, :year
 
   # TODO: This default, should maybe come from RRA.app..
-  def initialize(starting_at, ending_at, ledger: RRA::HLedger.new)
+  def initialize(starting_at, ending_at)
     # NOTE: It seems that with monthly queries, the ending date works a bit
     # differently. It's not necessariy to add one to the day here. If you do,
     # you get the whole month of January, in the next year added to the output.
     @year, @starting_at, @ending_at = starting_at.year, starting_at, ending_at
-    @ledger = ledger
   end
 
   def to_file!
@@ -36,16 +35,6 @@ class RRA::GridBase
   end
 
   private
-
-  # TODO: This was copied from validation base. Maybe we should move it into somewhere else, and DRY this
-  def adapter_args(ledger_args, hledger_args)
-    case ledger.adapter_name
-    when :ledger then ledger_args
-    when :hledger then hledger_args
-    else
-      raise StandardError, 'Unsupported PTA Adapter encountered'
-    end
-  end
 
   def monthly_totals_by_account(*args)
     reduce_monthly_by_account(*args, :total_in)
@@ -89,7 +78,7 @@ class RRA::GridBase
 
     in_code = opts[:in_code] || '$'
 
-    if ledger.adapter_name == :ledger
+    if pta_adapter.ledger?
       opts[:collapse] = true unless opts.key?(:collapse)
     else
       args << 'depth:0' unless args.any? { |arg| /^depth:\d+$/.match arg }
@@ -123,7 +112,7 @@ class RRA::GridBase
     # TODO: I've never been crazy about this name... maybe we can borrow terminology
     # from the hledger help, on what historical is...
     if opts[:accrue_before_begin]
-      if ledger.adapter_name == :ledger
+      if pta_adapter.ledger?
         ledger_opts[:display] = format('date>=[%<starting_at>s] and date <=[%<ending_at>s]',
                                        starting_at: starting_at.strftime('%Y-%m-%d'),
                                        ending_at: ending_at.strftime('%Y-%m-%d'))
@@ -139,12 +128,12 @@ class RRA::GridBase
       # It seems that ledger interprets the --end parameter as :<, and hledger
       # interprets it as :<= . So, we add one here, and, this makes the output consistent with
       # hledger, as well as our :display syntax above.
-      ledger_opts[:end] = (ledger.adapter_name == :hledger ? ending_at : ending_at + 1).strftime('%Y-%m-%d')
+      ledger_opts[:end] = (pta_adapter.hledger? ? ending_at : ending_at + 1).strftime('%Y-%m-%d')
     end
 
     initial = opts[:initial] || Hash.new
 
-    ledger.register(*args, ledger_opts).transactions.inject(initial) do |ret, tx|
+    pta_adapter.register(*args, ledger_opts).transactions.inject(initial) do |ret, tx|
       tx.postings.reduce(ret) do |sum, posting|
         block.call sum, tx.date, posting
       end
@@ -167,7 +156,7 @@ class RRA::GridBase
     attr_reader :output_path_template
 
     def grid(name, description, status_name_template, options = {})
-      @name, @description, @status_name_template = name, description, 
+      @name, @description, @status_name_template = name, description,
         status_name_template
       @output_path_template = options[:output_path_template]
     end
@@ -177,7 +166,7 @@ class RRA::GridBase
       # But, if we start using this before the journals are built, we're going to
       # need to clear this cache, thereafter. So, maybe we want to take a parameter
       # here, or figure something out then, to prevent problems.
-      @dependency_paths ||= RRA::HLedger.new.files(file: RRA.app.config.project_journal_path)
+      @dependency_paths ||= pta_adapter.files(file: RRA.app.config.project_journal_path)
     end
 
     def uptodate?(year)

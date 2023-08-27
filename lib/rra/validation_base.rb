@@ -39,22 +39,22 @@ module RRA
   # logic needed, to implement the validation of a journal file
   class JournalValidationBase < ValidationBase
     include RRA::DescendantRegistry
+    include RRA::PTAConnection::AvailabilityHelper
 
     register_descendants RRA, :journal_validations, name_capture: NAME_CAPTURE
 
-    attr_reader :transformer, :ledger
+    attr_reader :transformer
 
     # TODO: This default, should maybe come from RRA.app..
-    def initialize(transformer, ledger: RRA::HLedger.new)
+    def initialize(transformer)
       super
       @transformer = transformer
-      @ledger = ledger
     end
 
     def validate_no_transactions(with_error_msg, *args)
       ledger_opts = args.last.is_a?(Hash) ? args.pop : {}
 
-      results = ledger.register(*args, { file: transformer.output_file }.merge(ledger_opts))
+      results = pta_adapter.register(*args, { file: transformer.output_file }.merge(ledger_opts))
 
       transactions = block_given? ? yield(results.transactions) : results.transactions
 
@@ -66,7 +66,7 @@ module RRA
     end
 
     def validate_no_balance(with_error_msg, account)
-      results = ledger.balance account, file: transformer.output_file
+      results = pta_adapter.balance account, file: transformer.output_file
 
       error_citations = results.accounts.map do |ra|
         ra.amounts.map { |commodity| [ra.fullname, RRA.pastel.red('━'), commodity.to_s].join(' ') }
@@ -75,15 +75,6 @@ module RRA
       error_citations.flatten!
 
       error! with_error_msg, error_citations unless error_citations.empty?
-    end
-
-    def adapter_args(ledger_args, hledger_args)
-      case ledger.adapter_name
-      when :ledger then ledger_args
-      when :hledger then hledger_args
-      else
-        raise StandardError, 'Unsupported PTA Adapter encountered'
-      end
     end
   end
 

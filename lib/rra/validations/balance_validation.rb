@@ -12,10 +12,12 @@ class BalanceValidation < RRA::JournalValidationBase
       cite_balances = transformer.balances.map do |d, expected_balance_s|
         expected_balance = expected_balance_s.to_commodity
 
-        balances_on_day = RRA::HLedger.new.balance transformer.from,
-                                                   depth: 1,
-                                                   end: d.to_s,
-                                                   file: RRA.app.config.project_journal_path
+        # TODO: This needs to switch to pta_adapter. I think the problem, is that the
+        # transformer.from, breaks when there are colons in it. Write a test/fix
+        balances_on_day = hledger.balance transformer.from,
+                                          depth: 1,
+                                          end: d.to_s,
+                                          file: RRA.app.config.project_journal_path
 
         balances_found = balances_on_day.accounts.map(&:amounts).flatten.find_all do |amount|
           amount.code == expected_balance.code

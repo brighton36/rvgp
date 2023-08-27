@@ -2,6 +2,32 @@
 
 module RRA
   class PTAConnection
+    # This module is intended for use in clasess that wish to provide #ledger, #hledger,
+    # and #pta_adapter methods, to instances.
+    module AvailabilityHelper
+      def ledger
+        @ledger ||= RRA::Ledger.new
+      end
+
+      def hledger
+        @hledger ||= RRA::HLedger.new
+      end
+
+      def pta_adapter
+        # TODO: How do we want to implement this
+        ledger
+      end
+
+      def adapter_args(ledger_args, hledger_args)
+        case pta_adapter.adapter_name
+        when :ledger then ledger_args
+        when :hledger then hledger_args
+        else
+          raise StandardError, 'Unsupported PTA Adapter encountered'
+        end
+      end
+    end
+
     class AssertionError < StandardError
     end
 
@@ -80,6 +106,20 @@ module RRA
       end
     end
 
+    # Somehow, it turned out that both hledger and ledger were similar enough, that I could abstract
+    # this here....
+    def stats(opts = {})
+      command('stats', opts).scan(/^\n? *(?:([^:]+?)|(?:([^:]+?) *: *(.*?))) *$/).each_with_object([]) do |match, sum|
+        if match[0]
+          sum.last[1] = [sum.last[1]] unless sum.last[1].is_a?(Array)
+          sum.last[1] << match[0]
+        else
+          sum << [match[1], match[2].empty? ? Array.new : match[2]]
+        end
+        sum
+      end.to_h
+    end
+
     def command(*args)
       opts = args.pop if args.last.is_a? Hash
       open3_opts = {}
@@ -110,7 +150,8 @@ module RRA
       end
 
       unless status.success?
-        raise StandardError, format('ledger exited non-zero (%<exitstatus>d): %<msg>s',
+        raise StandardError, format('%<adapter_name>s exited non-zero (%<exitstatus>d): %<msg>s',
+                                    adapter_name: adapter_name,
                                     exitstatus: status.exitstatus,
                                     msg: error)
       end
@@ -125,6 +166,14 @@ module RRA
 
     def adapter_name
       self.class.name.split(':').last.downcase.to_sym
+    end
+
+    def ledger?
+      adapter_name == :ledger
+    end
+
+    def hledger?
+      adapter_name == :hledger
     end
   end
 end

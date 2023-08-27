@@ -1,4 +1,8 @@
+require_relative 'pta_connection'
+
 module RRA::Utilities
+  include RRA::PTAConnection::AvailabilityHelper
+
   # This returns each month in a series from the first date, to the last, in the
   # provided array of dates
   def months_through_dates(*args)
@@ -24,7 +28,7 @@ module RRA::Utilities
     args = ['--file', RRA.app.config.project_journal_path, 'tags', '--values', for_tag]
     args += ['--begin', options[:year], '--end', options[:year] + 1] if options[:year]
     args += [options[:query]].flatten if options[:query]
-    RRA::HLedger.new.command(*args).lines.collect { |l| l.chomp.to_sym }.sort
+    hledger.command(*args).lines.collect { |l| l.chomp.to_sym }.sort
   end
 
   def string_to_regex(s)
