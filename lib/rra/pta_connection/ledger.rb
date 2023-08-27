@@ -42,26 +42,32 @@ class RRA::Ledger < RRA::PTAConnection
     class Balance < XmlBase
       attr_reader :accounts
 
-      def initialize(needle, xml, options = {})
+      def initialize(xml, options = {})
         super xml, options
 
+        # NOTE: Our output matches the --flat output, of ledger. We mostly do this
+        # because hledger defaults to the same output. It might cause some
+        # expectations to fail though, if you're comparing our balance return,
+        # to the cli output of balance
+        #
         # Bear in mind that this query is slightly odd, in that account is nested
         # So, I stipulate that we are at the end of a nest "not account" and
         # have children "*"
-        xaccounts = doc.xpath('//accounts//account[not(account) and *]')
+        xaccounts = doc.xpath('//accounts//account[not(account[*]) and *]')
 
         if xaccounts
           @accounts = xaccounts.collect do |xaccount|
-            account = RRA::PTAConnection::BalanceAccount.new(
-              xaccount.at('fullname').content,
+            fullname = xaccount.at('fullname')&.content
+
+            RRA::PTAConnection::BalanceAccount.new(
+              fullname,
               xaccount.xpath('account-amount/amount|account-amount/*/amount').collect do |amount|
                 commodity = RRA::Journal::Commodity.from_symbol_and_amount(
                   amount.at('symbol').content, amount.at('quantity').content
                 )
                 commodity if commodity.quantity != 0
               end.compact
-            )
-            account if [/#{Regexp.escape(needle)}/.match(account.fullname), !account.amounts.empty?].all?
+            ) if fullname
           end.compact
         end
       end
@@ -124,8 +130,10 @@ class RRA::Ledger < RRA::PTAConnection
     end
   end
 
-  def balance(account, opts = {})
-    RRA::Ledger::Output::Balance.new account, command('xml', opts)
+  def balance(*args)
+    opts = args.last.is_a?(Hash) ? args.pop : {}
+
+    RRA::Ledger::Output::Balance.new command('xml', *args, opts)
   end
 
   def register(*args)

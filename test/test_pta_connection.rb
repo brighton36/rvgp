@@ -176,6 +176,21 @@ require_relative '../lib/rra'
         # TODO: Put the TestLedger#test_balance_multiple_with_empty here. Refactored
         skip 'TODO: Put the TestLedger#test_balance_multiple_with_empty here. Refactored'
       end
+
+      it "parses depth #{pta_klass}" do
+        balance = pta_klass.new.balance 'Personal:Assets:AcmeBank:Checking',
+                                        depth: 1,
+                                        from_s: <<~JOURNAL
+                                          1996-02-03 Publix
+                                            Personal:Expenses:Food:Groceries    $ 123.45
+                                            Personal:Assets:AcmeBank:Checking
+                                        JOURNAL
+
+        value(balance.accounts.length).must_equal 1
+        value(balance.accounts[0].fullname).must_equal 'Personal'
+        value(balance.accounts[0].amounts.length).must_equal 1
+        value(balance.accounts[0].amounts[0].to_s).must_equal '$ -123.45'
+      end
     end
 
     describe "#{pta_klass}#register" do
@@ -403,6 +418,12 @@ require_relative '../lib/rra'
         value(transactions[1].postings[0].total_in('$').to_s).must_equal '$ -1463.075314'
       end
     end
+
+    describe "#{pta_klass}#tags" do
+      it 'parses tags' do
+        skip 'TODO: Put the TestLedger#test_balance_multiple_with_empty here. Refactored'
+      end
+    end
   end
 end
 
@@ -467,4 +488,12 @@ describe 'pta adapter errata' do
       value(transactions[0].postings[0].amounts.map(&:to_s)).must_equal ['$ 12.34']
     end
   end
+
+  # TODO: Formalize and describe this better. Probably this belongs in the balance section above
+  describe 'balance validation issue' do
+
+    [RRA::Ledger, RRA::HLedger].each do |pta_klass|
+    end
+  end
+
 end
