@@ -420,8 +420,69 @@ require_relative '../lib/rra'
     end
 
     describe "#{pta_klass}#tags" do
+      let(:journal) do
+        <<~JOURNAL
+          2023-01-01 Transaction 1
+            Personal:Expenses:TaggedExpense    $ 1.00
+            ; color: red
+            ; vacation: Hawaii
+            Personal:Assets:AcmeBank:Checking
+
+          2023-01-02 Transaction 2
+            Personal:Expenses:TaggedExpense    $ 2.00
+            ; color: orange
+            ; :business:
+            Personal:Assets:AcmeBank:Checking
+
+          2023-01-03 Transaction 3
+            Personal:Expenses:TaggedExpense    $ 3.00
+            ; color: yellow
+            ; :medical:
+            Personal:Assets:AcmeBank:Checking
+
+          2023-01-04 Transaction 4
+            Personal:Expenses:TaggedExpense    $ 4.00
+            ; color: green
+            Personal:Assets:AcmeBank:Checking
+
+          2023-01-05 Transaction 5
+            Personal:Expenses:TaggedExpense    $ 5.00
+            ; color: blue
+            Personal:Assets:AcmeBank:Checking
+
+          2023-01-06 Transaction 6
+            Personal:Expenses:TaggedExpense    $ 6.00
+            ; color: indigo
+            Personal:Assets:AcmeBank:Checking
+
+          2023-01-07 Transaction 7
+            Personal:Expenses:TaggedExpense    $ 7.00
+            ; color: violet
+            Personal:Assets:AcmeBank:Checking
+
+          2023-01-08 Transaction 8
+            Personal:Expenses:TaggedExpense    $ 8.00
+            ; vacation: Argentina
+            Personal:Assets:AcmeBank:Checking
+
+          2023-01-09 Transaction 9
+            Personal:Expenses:TaggedExpense    $ 9.00
+            ; vacation: Germany
+            Personal:Assets:AcmeBank:Checking
+
+          2023-01-10 Transaction 10
+            Personal:Expenses:TaggedExpense    $ 10.00
+            ; vacation: Japan
+            Personal:Assets:AcmeBank:Checking
+        JOURNAL
+      end
+
       it 'parses tags' do
-        skip 'TODO: Put the TestLedger#test_balance_multiple_with_empty here. Refactored'
+        value(subject.tags(from_s: journal)).must_equal %w[business color medical vacation]
+        value(subject.tags('color', from_s: journal, values: true)).must_equal(
+          %w[blue green indigo orange red violet yellow]
+        )
+        value(subject.tags('vacation', from_s: journal, values: true)).must_equal %w[Argentina Germany Hawaii Japan]
       end
     end
   end

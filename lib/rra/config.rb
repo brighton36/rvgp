@@ -39,8 +39,8 @@ module RRA
       @grid_starting_at = @yaml[:grid_starting_at] if @yaml.key? :grid_starting_at
       @grid_starting_at ||= default_grid_starting_at
 
-      # NOTE: RRA::Ledger.newest_transaction.date.year works in lieu of Date.today,
-      #       but that query takes forever. (and it requires that we've already
+      # NOTE: pta_adapter.newest_transaction_date.year works in lieu of Date.today,
+      #       but that query takes time. (and it requires that we've already
       #       performed a build step at the time it's called) so, we use
       #       Date.today instead.
       @grid_ending_at = @yaml[:grid_ending_at] if @yaml.key? :grid_ending_at

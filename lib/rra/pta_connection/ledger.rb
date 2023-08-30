@@ -136,6 +136,21 @@ class RRA::Ledger < RRA::PTAConnection
     RRA::Ledger::Output::Balance.new command('xml', *args, opts)
   end
 
+  # The behavior between hledger and ledger are rather different here. This behavior
+  # strikes a balance between compatibility and features. The latter of which, ledger
+  # seems to excel at.
+  def tags(*args)
+    opts = args.last.is_a?(Hash) ? args.pop : {}
+
+    # The first arg, is the tag whose values we want. This is how hledger does it, and
+    # we just copy that
+    for_tag = args.shift if args.length > 0
+
+    tags = command('tags', *args, opts).split("\n")
+
+    for_tag ? tags.map { |tag| ::Regexp.last_match(1) if /\A#{for_tag}: *(.*)/.match tag }.compact : tags
+  end
+
   def register(*args)
     opts = args.last.is_a?(Hash) ? args.pop : {}
 

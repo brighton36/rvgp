@@ -4,6 +4,8 @@ require_relative 'descendant_registry'
 
 module RRA
   class ValidationBase
+    include RRA::PTAConnection::AvailabilityHelper
+
     NAME_CAPTURE = /\A(.+)Validation\Z/.freeze
 
     attr_reader :errors, :warnings
@@ -39,7 +41,6 @@ module RRA
   # logic needed, to implement the validation of a journal file
   class JournalValidationBase < ValidationBase
     include RRA::DescendantRegistry
-    include RRA::PTAConnection::AvailabilityHelper
 
     register_descendants RRA, :journal_validations, name_capture: NAME_CAPTURE
 

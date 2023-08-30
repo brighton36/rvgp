@@ -18,6 +18,9 @@ module RRA
         ledger
       end
 
+      # TODO: I think we should remove this, and instead, support ledger_args: and
+      # hledger_args in the pta_adapter methods themselves. Perhaps ledger_opts: and
+      # hledger_opts:, as well
       def adapter_args(ledger_args, hledger_args)
         case pta_adapter.adapter_name
         when :ledger then ledger_args

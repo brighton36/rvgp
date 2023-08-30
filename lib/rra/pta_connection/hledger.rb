@@ -98,6 +98,11 @@ class RRA::HLedger < RRA::PTAConnection
     end
   end
 
+  def tags(*args)
+    opts = args.last.is_a?(Hash) ? args.pop : {}
+    command('tags', *args, opts).split("\n")
+  end
+
   def files(opts = {})
     command('files', opts).split("\n")
   end

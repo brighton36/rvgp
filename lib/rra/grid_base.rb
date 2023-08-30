@@ -4,7 +4,7 @@ require_relative 'utilities'
 
 class RRA::GridBase
   include RRA::DescendantRegistry
-
+  include RRA::PTAConnection::AvailabilityHelper
   include RRA::Utilities
 
   register_descendants RRA, :grids, accessors: {
@@ -151,6 +151,7 @@ class RRA::GridBase
 
   class << self
     include RRA::Utilities
+    include RRA::PTAConnection::AvailabilityHelper
 
     attr_reader :name, :description
     attr_reader :output_path_template
