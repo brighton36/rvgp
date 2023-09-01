@@ -1,33 +1,12 @@
 # frozen_string_literal: true
 
 module RRA
-  class PTAConnection
+  class PtaAdapter
     # This module is intended for use in clasess that wish to provide #ledger, #hledger,
     # and #pta_adapter methods, to instances.
     module AvailabilityHelper
-      def ledger
-        @ledger ||= RRA::Ledger.new
-      end
-
-      def hledger
-        @hledger ||= RRA::HLedger.new
-      end
-
-      def pta_adapter
-        # TODO: How do we want to implement this
-        ledger
-      end
-
-      # TODO: I think we should remove this, and instead, support ledger_args: and
-      # hledger_args in the pta_adapter methods themselves. Perhaps ledger_opts: and
-      # hledger_opts:, as well
-      def adapter_args(ledger_args, hledger_args)
-        case pta_adapter.adapter_name
-        when :ledger then ledger_args
-        when :hledger then hledger_args
-        else
-          raise StandardError, 'Unsupported PTA Adapter encountered'
-        end
+      %w[ledger hledger pta_adapter].each do |attr|
+        define_method(attr) { RRA::PtaAdapter.send attr }
       end
     end
 
@@ -51,7 +30,7 @@ module RRA
       end
     end
 
-    class BalanceAccount < RRA::PTAConnection::ReaderBase
+    class BalanceAccount < RRA::PtaAdapter::ReaderBase
       readers :fullname, :amounts
     end
 
@@ -111,7 +90,11 @@ module RRA
 
     # Somehow, it turned out that both hledger and ledger were similar enough, that I could abstract
     # this here....
-    def stats(opts = {})
+    def stats(*args)
+      args, opts = args_and_opts(*args)
+      # TODO: This should get its own error class...
+      raise StandardError, "Unexpected argument(s) : #{args.inspect}" unless args.empty?
+
       command('stats', opts).scan(/^\n? *(?:([^:]+?)|(?:([^:]+?) *: *(.*?))) *$/).each_with_object([]) do |match, sum|
         if match[0]
           sum.last[1] = [sum.last[1]] unless sum.last[1].is_a?(Array)
@@ -162,6 +145,30 @@ module RRA
       output
     end
 
+    def args_and_opts(*args)
+      opts = args.last.is_a?(Hash) ? args.pop : {}
+
+      if ledger?
+        opts.delete :hledger_opts
+        opts.delete :hledger_args
+
+        args += opts.delete(:ledger_args) if opts.key? :ledger_args
+        opts.merge! opts.delete(:ledger_opts) if opts.key? :ledger_opts
+      elsif hledger?
+        opts.delete :ledger_opts
+        opts.delete :ledger_args
+
+        args += opts.delete(:hledger_args) if opts.key? :hledger_args
+        opts.merge! opts.delete(:hledger_opts) if opts.key? :hledger_opts
+      end
+
+      [args, opts]
+    end
+
+    def present?
+      File.executable? bin_path
+    end
+
     def bin_path
       # Maybe we should support more than just /usr/bin...
       self.class::BIN_PATH
@@ -177,6 +184,33 @@ module RRA
 
     def hledger?
       adapter_name == :hledger
+    end
+
+    class << self
+      def ledger
+        RRA::Ledger.new
+      end
+
+      def hledger
+        RRA::HLedger.new
+      end
+
+      def pta_adapter
+        @pta_adapter ||= if @pta_adapter_driver
+                           send @pta_adapter_driver
+                         elsif ledger.present?
+                           ledger
+                         elsif hledger.present?
+                           hledger
+                         else
+                           raise StandardError, 'No pta adapter specified, or detected, on system'
+                         end
+      end
+
+      def pta_adapter=(driver)
+        @pta_adapter = nil
+        @pta_adapter_driver = driver.to_sym
+      end
     end
   end
 end

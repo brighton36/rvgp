@@ -4,9 +4,9 @@ require 'shellwords'
 require 'json'
 
 require_relative '../pricer'
-require_relative '../pta_connection'
+require_relative '../pta_adapter'
 
-class RRA::HLedger < RRA::PTAConnection
+class RRA::HLedger < RRA::PtaAdapter
   BIN_PATH = '/usr/bin/hledger'
 
   module Output
@@ -24,7 +24,7 @@ class RRA::HLedger < RRA::PTAConnection
 
       def commodity_from_json(json)
         symbol = json['acommodity']
-        raise RRA::PTAConnection::AssertionError unless json.key? 'aquantity'
+        raise RRA::PtaAdapter::AssertionError unless json.key? 'aquantity'
 
         currency = RRA::Journal::Currency.from_code_or_symbol symbol
         # TODO: It seems like HLedger defaults to 10 digits. Probably
@@ -42,13 +42,13 @@ class RRA::HLedger < RRA::PTAConnection
       def initialize(json, options = {})
         super json, options
 
-        raise RRA::PTAConnection::AssertionError unless @json.length == 2
+        raise RRA::PtaAdapter::AssertionError unless @json.length == 2
 
         @accounts = @json[0].collect do |json_account|
           # I'm not sure why there are two identical entries here, for fullname
-          raise RRA::PTAConnection::AssertionError unless json_account[0] == json_account[1]
+          raise RRA::PtaAdapter::AssertionError unless json_account[0] == json_account[1]
 
-          RRA::PTAConnection::BalanceAccount.new(json_account[0],
+          RRA::PtaAdapter::BalanceAccount.new(json_account[0],
                                                  json_account[3].collect { |l| commodity_from_json l })
         end
 
@@ -71,7 +71,7 @@ class RRA::HLedger < RRA::PTAConnection
         @transactions.map! do |postings|
           date = Date.strptime postings[0][0], '%Y-%m-%d'
 
-          RRA::PTAConnection::RegisterTransaction.new(
+          RRA::PtaAdapter::RegisterTransaction.new(
             date,
             postings[0][2], # Payee
             (postings.map do |posting|
@@ -79,7 +79,7 @@ class RRA::HLedger < RRA::PTAConnection
                  pamounts.map { |pamount| commodity_from_json pamount }
                end
 
-               RRA::PTAConnection::RegisterPosting.new(
+               RRA::PtaAdapter::RegisterPosting.new(
                  posting[3]['paccount'],
                  amounts,
                  totals,
@@ -99,11 +99,15 @@ class RRA::HLedger < RRA::PTAConnection
   end
 
   def tags(*args)
-    opts = args.last.is_a?(Hash) ? args.pop : {}
+    args, opts = args_and_opts(*args)
     command('tags', *args, opts).split("\n")
   end
 
-  def files(opts = {})
+  def files(*args)
+    args, opts = args_and_opts(*args)
+    # TODO: This should get its own error class...
+    raise StandardError, "Unexpected argument(s) : #{args.inspect}" unless args.empty?
+
     command('files', opts).split("\n")
   end
 
@@ -122,16 +126,17 @@ class RRA::HLedger < RRA::PTAConnection
 
   # This optimization exists, mostly due to the lack of a .last or .first in hledger.
   # And, the utility of this specific function, in the RRA.config.
-  def newest_transaction_date(opts = {})
-    Date.strptime stats(opts)['Last transaction'], '%Y-%m-%d'
+  def newest_transaction_date(*args)
+    Date.strptime stats(*args)['Last transaction'], '%Y-%m-%d'
   end
 
-  def balance(account, opts = {})
-    RRA::HLedger::Output::Balance.new command 'balance', account, { 'output-format': 'json' }.merge(opts)
+  def balance(*args)
+    args, opts = args_and_opts(*args)
+    RRA::HLedger::Output::Balance.new command('balance', *args, { 'output-format': 'json' }.merge(opts))
   end
 
   def register(*args)
-    opts = args.last.is_a?(Hash) ? args.pop : {}
+    args, opts = args_and_opts(*args)
 
     pricer = opts.delete :pricer
     #TODO: Do we really need this? probably..

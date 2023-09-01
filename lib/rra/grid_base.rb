@@ -4,7 +4,7 @@ require_relative 'utilities'
 
 class RRA::GridBase
   include RRA::DescendantRegistry
-  include RRA::PTAConnection::AvailabilityHelper
+  include RRA::PtaAdapter::AvailabilityHelper
   include RRA::Utilities
 
   register_descendants RRA, :grids, accessors: {
@@ -78,11 +78,11 @@ class RRA::GridBase
 
     in_code = opts[:in_code] || '$'
 
-    if pta_adapter.ledger?
-      opts[:collapse] = true unless opts.key?(:collapse)
-    else
-      args << 'depth:0' unless args.any? { |arg| /^depth:\d+$/.match arg }
-    end
+    opts[:ledger_opts] ||= {}
+    opts[:ledger_opts][:collapse] ||= true
+
+    opts[:hledger_args] ||= []
+    opts[:hledger_args] << 'depth:0' unless (args + opts[:hledger_args]).any? { |arg| /^depth:\d+$/.match arg }
 
     reduce_postings_by_month(*args, opts) do |sum, date, posting|
       amount_in_code = posting.send(posting_method, in_code)
@@ -100,40 +100,44 @@ class RRA::GridBase
   # This method keeps our grids DRY. It accrues a sum for each posting, on a
   # monthly query
   def reduce_postings_by_month(*args, &block)
-    opts = args.last.kind_of?(Hash) ? args.pop : {}
+    opts = args.last.is_a?(Hash) ? args.pop : {}
 
-    ledger_opts = { pricer: RRA.app.pricer,
-                    monthly: true,
-                    empty: false, # This applies to Ledger, and ensures it's results match HLedger's exactly
-                    file: RRA.app.config.project_journal_path }
-
-    ledger_opts[:collapse] = opts[:collapse] if opts[:collapse]
+    initial = opts.delete(:initial) || Hash.new
 
     # TODO: I've never been crazy about this name... maybe we can borrow terminology
     # from the hledger help, on what historical is...
-    if opts[:accrue_before_begin]
-      if pta_adapter.ledger?
-        ledger_opts[:display] = format('date>=[%<starting_at>s] and date <=[%<ending_at>s]',
-                                       starting_at: starting_at.strftime('%Y-%m-%d'),
-                                       ending_at: ending_at.strftime('%Y-%m-%d'))
-      else
-        args << format('date:%s-', starting_at.strftime('%Y/%m/%d'))
-        args << format('date:-%s', ending_at.strftime('%Y/%m/%d'))
-        ledger_opts[:historical] = true
-      end
+    accrue_before_begin = opts.delete :accrue_before_begin
+
+    opts.merge!({ pricer: RRA.app.pricer,
+                  monthly: true,
+                  empty: false, # This applies to Ledger, and ensures it's results match HLedger's exactly
+                  #TODO: I don't think I need this fgile: here
+                  file: RRA.app.config.project_journal_path })
+
+    opts[:hledger_opts] ||= {}
+    opts[:ledger_opts] ||= {}
+    opts[:hledger_args] ||= []
+
+    if accrue_before_begin
+      opts[:ledger_opts][:display] = format('date>=[%<starting_at>s] and date <=[%<ending_at>s]',
+                                            starting_at: starting_at.strftime('%Y-%m-%d'),
+                                            ending_at: ending_at.strftime('%Y-%m-%d'))
+      # TODO: Can we maybe use opts on this?
+      opts[:hledger_args] += [format('date:%s-', starting_at.strftime('%Y/%m/%d')),
+                              format('date:-%s', ending_at.strftime('%Y/%m/%d'))]
+      opts[:hledger_opts][:historical] = true
     else
       # NOTE: I'm not entirely sure we want this path. It may be that we should always use the
       # display option....
-      ledger_opts[:begin] = (opts[:begin] || starting_at).strftime('%Y-%m-%d')
+      opts[:begin] = (opts[:begin] || starting_at).strftime('%Y-%m-%d')
       # It seems that ledger interprets the --end parameter as :<, and hledger
       # interprets it as :<= . So, we add one here, and, this makes the output consistent with
       # hledger, as well as our :display syntax above.
-      ledger_opts[:end] = (pta_adapter.hledger? ? ending_at : ending_at + 1).strftime('%Y-%m-%d')
+      opts[:ledger_opts][:end] = (ending_at + 1).strftime('%Y-%m-%d')
+      opts[:hledger_opts][:end] = ending_at.strftime('%Y-%m-%d')
     end
 
-    initial = opts[:initial] || Hash.new
-
-    pta_adapter.register(*args, ledger_opts).transactions.inject(initial) do |ret, tx|
+    pta_adapter.register(*args, opts).transactions.inject(initial) do |ret, tx|
       tx.postings.reduce(ret) do |sum, posting|
         block.call sum, tx.date, posting
       end
@@ -151,7 +155,7 @@ class RRA::GridBase
 
   class << self
     include RRA::Utilities
-    include RRA::PTAConnection::AvailabilityHelper
+    include RRA::PtaAdapter::AvailabilityHelper
 
     attr_reader :name, :description
     attr_reader :output_path_template

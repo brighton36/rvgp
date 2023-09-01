@@ -1,12 +1,11 @@
 # frozen_string_literal: true
 
-require_relative 'pta_connection'
+require_relative 'pta_adapter'
 
 module RRA
   # This class provides the app configuration options accessors and parsing logic.
   class Config
-    include RRA::PTAConnection::AvailabilityHelper
-
+    include RRA::PtaAdapter::AvailabilityHelper
     attr_reader :prices_path, :project_journal_path
 
     def initialize(project_path)
@@ -15,6 +14,8 @@ module RRA
 
       config_path = project_path 'config/rra.yml'
       @yaml = RRA::Yaml.new config_path, project_path if File.exist? config_path
+
+      RRA::PtaAdapter.pta_adapter = @yaml[:pta_adapter].to_sym if @yaml.key? :pta_adapter
 
       @prices_path = @yaml.key?(:prices_path) ? @yaml[:prices_path] : project_path('journals/prices.db')
 

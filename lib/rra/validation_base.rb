@@ -4,7 +4,7 @@ require_relative 'descendant_registry'
 
 module RRA
   class ValidationBase
-    include RRA::PTAConnection::AvailabilityHelper
+    include RRA::PtaAdapter::AvailabilityHelper
 
     NAME_CAPTURE = /\A(.+)Validation\Z/.freeze
 

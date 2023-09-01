@@ -2,7 +2,7 @@ require 'bigdecimal'
 
 module RRA
   class Pricer
-    class Price < RRA::PTAConnection::ReaderBase
+    class Price < RRA::PtaAdapter::ReaderBase
       readers :at, :lcode, :rcode, :amount
 
       def to_key

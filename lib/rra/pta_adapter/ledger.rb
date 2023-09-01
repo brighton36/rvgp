@@ -4,15 +4,15 @@ require 'shellwords'
 require 'open3'
 require 'nokogiri'
 
-require_relative '../pta_connection'
+require_relative '../pta_adapter'
 require_relative '../pricer'
 
-class RRA::Ledger < RRA::PTAConnection
+class RRA::Ledger < RRA::PtaAdapter
   BIN_PATH = '/usr/bin/ledger'
 
   module Output
     class XmlBase
-      class Commodity < RRA::PTAConnection::ReaderBase
+      class Commodity < RRA::PtaAdapter::ReaderBase
         readers :symbol, :date, :price
       end
 
@@ -59,7 +59,7 @@ class RRA::Ledger < RRA::PTAConnection
           @accounts = xaccounts.collect do |xaccount|
             fullname = xaccount.at('fullname')&.content
 
-            RRA::PTAConnection::BalanceAccount.new(
+            RRA::PtaAdapter::BalanceAccount.new(
               fullname,
               xaccount.xpath('account-amount/amount|account-amount/*/amount').collect do |amount|
                 commodity = RRA::Journal::Commodity.from_symbol_and_amount(
@@ -82,7 +82,7 @@ class RRA::Ledger < RRA::PTAConnection
         @transactions = doc.xpath('//transactions/transaction').collect do |xt|
           date = Date.strptime(xt.at('date').content, '%Y/%m/%d')
 
-          RRA::PTAConnection::RegisterTransaction.new(
+          RRA::PtaAdapter::RegisterTransaction.new(
             date,
             xt.at('payee').content,
             xt.xpath('postings/posting').collect do |xp|
@@ -113,7 +113,7 @@ class RRA::Ledger < RRA::PTAConnection
                 end
               end
 
-              RRA::PTAConnection::RegisterPosting.new(
+              RRA::PtaAdapter::RegisterPosting.new(
                 account,
                 amounts,
                 totals,
@@ -131,7 +131,7 @@ class RRA::Ledger < RRA::PTAConnection
   end
 
   def balance(*args)
-    opts = args.last.is_a?(Hash) ? args.pop : {}
+    args, opts = args_and_opts(*args)
 
     RRA::Ledger::Output::Balance.new command('xml', *args, opts)
   end
@@ -140,7 +140,7 @@ class RRA::Ledger < RRA::PTAConnection
   # strikes a balance between compatibility and features. The latter of which, ledger
   # seems to excel at.
   def tags(*args)
-    opts = args.last.is_a?(Hash) ? args.pop : {}
+    args, opts = args_and_opts(*args)
 
     # The first arg, is the tag whose values we want. This is how hledger does it, and
     # we just copy that
@@ -152,7 +152,7 @@ class RRA::Ledger < RRA::PTAConnection
   end
 
   def register(*args)
-    opts = args.last.is_a?(Hash) ? args.pop : {}
+    args, opts = args_and_opts(*args)
 
     pricer = opts.delete :pricer
     translate_meta_accounts = opts[:empty]
@@ -166,30 +166,35 @@ class RRA::Ledger < RRA::PTAConnection
                                       translate_meta_accounts: translate_meta_accounts
   end
 
-  def files(opts = {})
-    stats(opts)['Files these postings came from'].tap do |ret|
+  def files(*args)
+    args, opts = args_and_opts(*args)
+
+    # TODO: This should get its own error class...
+    raise StandardError, "Unexpected argument(s) : #{args.inspect}" unless args.empty?
+
+    stats(*args, opts)['Files these postings came from'].tap do |ret|
       ret.unshift opts[:file] if opts.key?(:file) && !ret.include?(opts[:file])
     end
   end
 
   def newest_transaction(*args)
-    opts = args.last.is_a?(Hash) ? args.pop : {}
+    args, opts = args_and_opts(*args)
     first_transaction(*args, opts.merge(sort: 'date', tail: 1))
   end
 
   def oldest_transaction(*args)
-    opts = args.last.is_a?(Hash) ? args.pop : {}
+    args, opts = args_and_opts(*args)
     first_transaction(*args, opts.merge(sort: 'date', head: 1))
   end
 
-  def newest_transaction_date(opts = {})
-    Date.strptime ::Regexp.last_match(1), '%y-%b-%d' if /to ([^ ]+)/.match stats(opts)['Time period']
+  def newest_transaction_date(*args)
+    Date.strptime ::Regexp.last_match(1), '%y-%b-%d' if /to ([^ ]+)/.match stats(*args)['Time period']
   end
 
   def first_transaction(*args)
     reg = register(*args)
 
-    raise RRA::PTAConnection::AssertionError, 'Expected a single transaction' unless reg.transactions.length == 1
+    raise RRA::PtaAdapter::AssertionError, 'Expected a single transaction' unless reg.transactions.length == 1
 
     reg.transactions.first
   end
