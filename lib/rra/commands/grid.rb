@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class RRA::Commands::Grid < RRA::CommandBase
   accepts_options OPTION_ALL, OPTION_LIST
 
@@ -35,8 +37,8 @@ class RRA::Commands::Grid < RRA::CommandBase
       starting_at = RRA.app.config.grid_starting_at
       ending_at = RRA.app.config.grid_ending_at
 
-      starting_at.year.upto(ending_at.year).collect{ |y|
-        RRA.grids.classes.collect do |klass|
+      starting_at.year.upto(ending_at.year).map{ |y|
+        RRA.grids.classes.map do |klass|
           self.new klass,
             ((y == starting_at.year) ? starting_at : Date.new(y, 1,1)),
             ((y == ending_at.year) ? ending_at : Date.new(y, 12, 31))

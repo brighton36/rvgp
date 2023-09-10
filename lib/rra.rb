@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'rra/yaml'
 require_relative 'rra/application'
 require_relative 'rra/commands'

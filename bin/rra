@@ -1,6 +1,8 @@
 #!/usr/bin/env ruby
 # vim: syntax=ruby
+# -*- mode: ruby -*-
+# frozen_string_literal: true
 
 require_relative '../lib/rra/commands'
 
-RRA::Commands.dispatch! *ARGV
+RRA::Commands.dispatch!(*ARGV)
