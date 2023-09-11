@@ -98,7 +98,7 @@ en:
       target_description: '%{description} for %{year}'
     transform:
       list_targets: 'The following transforms are available:'
-      target_description: 'Validate the "%{input_file}" journal'
+      target_description: 'Transform the "%{input_file}" journal'
       errors:
         journal_missing: 'Journal(s) Missing.'
         either_concise_or_stdout: 'Either -concise or -stdout mode can be specified. But, alas, not both.'

@@ -40,7 +40,7 @@ class OutputGoogleSheets
 
   # The the contents of the :secrets_file, was missing one or more required parameters
   class MissingSecretsParams < StandardError
-    MSG_FORMAT = 'Config file is missing one or more of the required parameters: '\
+    MSG_FORMAT = 'Config file is missing one or more of the required parameters: ' \
                  ':client_id, :project_id, :client_secret, :token_path, :application_name'
 
     def initialize
@@ -221,7 +221,7 @@ class OutputGoogleSheets
       value_input_option: 'RAW'
     )
 
-    unless [(response.updated_cells == values_transformed.flatten.reject(&:nil?).count),
+    unless [(response.updated_cells == values_transformed.flatten.compact.count),
             (response.updated_rows == values_transformed.count),
             (response.updated_columns == values_transformed.max_by(&:length).length)].all?
       raise StandardError, 'Not all cells were updated'

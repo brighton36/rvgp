@@ -7,8 +7,6 @@ module RRA
   # yaml. Once a grid is assembled, it's dispatched to a driver (google or gnuplot)
   # for rendering.
   class Plot
-    include RRA::DescendantRegistry
-
     attr_reader :path, :yaml, :glob, :sort_by_rows, :truncate_rows,
                 :switch_rows_columns
 

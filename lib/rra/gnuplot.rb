@@ -77,7 +77,7 @@ module RRA
             dates = gnuplot.column(0).map { |xtic| Date.strptime xtic, '%m-%y' }.sort
             is_multiyear = dates.first.year != dates.last.year
 
-            if !dates.empty?
+            unless dates.empty?
               opts[:xrange_start] ||= is_multiyear ? dates.first : Date.new(dates.first.year, 1, 1)
               opts[:xrange_end] ||= is_multiyear ? dates.last : Date.new(dates.last.year, 12, 31)
             end
@@ -92,7 +92,7 @@ module RRA
       end
 
       def format_num(num)
-        num+1
+        num + 1
       end
 
       def reverse_series_range?
@@ -105,10 +105,10 @@ module RRA
 
       def format_xrange(opts)
         fmt_parts = %i[xrange_start xrange_end].each_with_object({}) do |attr, ret|
-                         value = opts[attr]
-                         value = value.strftime('%m-%y') if value.respond_to?(:strftime)
-                         ret.merge!(attr => value.is_a?(String) ? format('"%s"', value) : value.to_s)
-                       end
+          value = opts[attr]
+          value = value.strftime('%m-%y') if value.respond_to?(:strftime)
+          ret.merge!(attr => value.is_a?(String) ? format('"%s"', value) : value.to_s)
+        end
         format '[%<xrange_start>s:%<xrange_end>s]', fmt_parts
       end
 
@@ -175,7 +175,7 @@ module RRA
           gnuplot.set 'style', 'fill solid border -1'
           reverse_series_colors!
 
-          # TODO The box width straddles the tic, which, causes the box widths to
+          # TODO: The box width straddles the tic, which, causes the box widths to
           # be half-width on the left and right sides of the plot. Roughly here,
           # we want to expand that xrange start/end by maybe two weeks.
           # This will require a bit more work than we want atm, because:

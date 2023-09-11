@@ -1,42 +1,54 @@
-class RRA::Commands::ValidateJournal < RRA::CommandBase
-  accepts_options OPTION_ALL, OPTION_LIST
+# frozen_string_literal: true
 
-  include RakeTask
-  rake_tasks :validate_journal
+module RRA
+  module Commands
+    # This class contains dispatch logic for the 'validate_journal' command and task.
+    class ValidateJournal < RRA::CommandBase
+      accepts_options OPTION_ALL, OPTION_LIST
 
-  class Target < RRA::CommandBase::TransformerTarget
-    for_command :validate_journal
+      include RakeTask
+      rake_tasks :validate_journal
 
-    def uptodate?
-      @transformer.validated?
-    end
+      # This class principally represents the journals, by way of  the transformer
+      # in which the journal is defined. See RRA::CommandBase::TransformerTarget, for
+      # most of the logic that this class inherits. Typically, these targets take
+      # the form of "#{year}-#{transformer_name}"
+      class Target < RRA::CommandBase::TransformerTarget
+        for_command :validate_journal
 
-    def mark_validated!
-      @transformer.mark_validated!
-    end
+        def uptodate?
+          @transformer.validated?
+        end
 
-    def execute(options)
-      disable_checks = @transformer.disable_checks.collect(&:to_sym)
+        def mark_validated!
+          @transformer.mark_validated!
+        end
 
-      # Make sure the file exists, before proceeding with anything:
-      return [I18n.t('commands.transform.errors.journal_missing')], 
-        [] unless File.exist? @transformer.output_file
+        def execute(_options)
+          disable_checks = @transformer.disable_checks.map(&:to_sym)
 
-      warnings, errors = [], []
+          # Make sure the file exists, before proceeding with anything:
+          return [I18n.t('commands.transform.errors.journal_missing')], [] unless File.exist? @transformer.output_file
 
-      RRA.journal_validations.classes.each do |klass|
-        unless disable_checks.include? klass.name.to_sym
-          validation = klass.new @transformer
-          unless validation.valid?
+          warnings = []
+          errors = []
+
+          RRA.journal_validations.classes.each do |klass|
+            next if disable_checks.include? klass.name.to_sym
+
+            validation = klass.new @transformer
+
+            next if validation.valid?
+
             warnings += validation.warnings
             errors += validation.errors
           end
+
+          @transformer.mark_validated! if (errors.length + warnings.length).zero?
+
+          [warnings, errors]
         end
       end
-
-      @transformer.mark_validated! if errors.length + warnings.length == 0
-
-      [warnings, errors]
     end
   end
 end

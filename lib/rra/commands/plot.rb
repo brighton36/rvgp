@@ -1,44 +1,52 @@
+# frozen_string_literal: true
+
 require_relative '../plot'
 
-class RRA::Commands::Plot < RRA::CommandBase
-  accepts_options OPTION_ALL, OPTION_LIST, [:stdout, :s]
+module RRA
+  module Commands
+    # This class contains the handling of the 'plot' command and task.
+    class Plot < RRA::CommandBase
+      accepts_options OPTION_ALL, OPTION_LIST, %i[stdout s]
 
-  include RakeTask
-  rake_tasks :plot
+      include RakeTask
+      rake_tasks :plot
 
-  def execute!
-    RRA.app.ensure_build_dir! 'plots' unless options[:stdout]
-    super
-  end
+      def execute!
+        RRA.app.ensure_build_dir! 'plots' unless options[:stdout]
+        super
+      end
 
-  # TODO: This should get broken down, if possible. We should only use this
-  # path, if there are no available grids
-  def self.initialize_rake(rake_main)
-    command_klass = self
+      # TODO: This should get broken down, if possible. We should only use this
+      # path, if there are no available grids
+      def self.initialize_rake(rake_main)
+        command_klass = self
 
-    # TODO: This was copy pasta'd from RakeTask
-    # TODO: This should show each plot individually, if the grids exist...
-    rake_main.instance_eval do
-      desc "Generate all Plots"
-      task "plot" do |task, task_args|
-        Target.all.each do |target|
-          command_klass.task_exec(target).call(task, task_args)
+        # TODO: This was copy pasta'd from RakeTask
+        # TODO: This should show each plot individually, if the grids exist...
+        rake_main.instance_eval do
+          desc 'Generate all Plots'
+          task 'plot' do |task, task_args|
+            Target.all.each { |target| command_klass.task_exec(target).call task, task_args }
+          end
         end
       end
-    end
 
-  end
+      # This class represents a plot, available for building. And dispatches a build request.
+      # Typically, the name of a plot takes the form of "#{year}-#{plotname}". See
+      # RRA::CommandBase::PlotTarget, from which this class inherits, for a better
+      # representation of how this class works.
+      class Target < RRA::CommandBase::PlotTarget
+        def execute(options)
+          if options[:stdout]
+            puts plot.script(name)
+          else
+            RRA.app.ensure_build_dir! 'plots'
+            plot.write!(name)
+          end
 
-  class Target < RRA::CommandBase::PlotTarget
-    def execute(options)
-      if options[:stdout]
-        puts plot.script(name)
-      else
-        RRA.app.ensure_build_dir! 'plots'
-        plot.write!(name)
+          nil
+        end
       end
-
-      return nil
     end
   end
 end

@@ -10,6 +10,8 @@ module RRA
       class << self
         include FakerHelpers
 
+        # This error is thrown when there is a mismatch between two parameter arrays, passed to
+        # a function, whose lengths are required to match.
         class ParameterLengthError < StandardError
           MSG_FORMAT = 'Expected %<expected>s elements in %<parameter>s, but found %<found>s'
 
@@ -29,8 +31,10 @@ module RRA
         #
         # @param from [Date] The date to start generated feed from
         # @param to [Date] The date to end generated feed
-        # @param income_descriptions [Array] Strings containing the pool of available income descriptions, for use in random selection
-        # @param expense_descriptions [Array] Strings containing the pool of available expense descriptions, for use in random selection
+        # @param income_descriptions [Array] Strings containing the pool of available income descriptions, for use in
+        #                                    random selection
+        # @param expense_descriptions [Array] Strings containing the pool of available expense descriptions, for use in
+        #                                     random selection
         # @param deposit_average [RRA::Journal::Commodity] The average deposit amount
         # @param deposit_stddev [Float] The stand deviation, on random deposits
         # @param withdrawal_average [RRA::Journal::Commodity] The average withdrawal amount
@@ -82,7 +86,8 @@ module RRA
               accumulator, mean, stddev, type, description = *(
                 if Faker::Boolean.boolean true_ratio: deposit_ratio
                   [:+, deposit_average.to_f, deposit_stddev, 'ACH',
-                   format('%s DIRECT DEP', income_descriptions ? income_descriptions.sample : Faker::Company.name.upcase)]
+                   format('%s DIRECT DEP',
+                          income_descriptions ? income_descriptions.sample : Faker::Company.name.upcase)]
                 else
                   [:-, withdrawal_average.to_f, withdrawal_stddev, 'VISA',
                    expense_descriptions ? expense_descriptions.sample : Faker::Company.name.upcase]
@@ -104,17 +109,20 @@ module RRA
           end
         end
 
-        # Generates a basic csv feed string, that resembles those offered by banking institutions. Unlike #basic_checking,
-        # this faker supports a set of parameters that will better conform the output to a typical model of commerence
-        # for an employee with a paycheck and living expenses. As such, the parameters are a bit different, and suited to
-        # plotting aesthetics.
+        # Generates a basic csv feed string, that resembles those offered by banking institutions. Unlike
+        # #basic_checking, this faker supports a set of parameters that will better conform the output to a
+        # typical model of commerence for an employee with a paycheck and living expenses. As such, the
+        # parameters are a bit different, and suited to plotting aesthetics.
         #
         # @param from [Date] The date to start generated feed from
         # @param to [Date] The date to end generated feed
         # @param income_sources [Array] Strings containing the pool of income companies, to use for growing our assets
-        # @param expense_sources [Array] Strings containing the pool of available expense companies, to use for shrinking our assets
-        # @param opening_liability_balance [RRA::Journal::Commodity] The opening balance of the liability account, preceeding month zero
-        # @param opening_asset_balance [RRA::Journal::Commodity] The opening balance of the asset account, preceeding month zero
+        # @param expense_sources [Array] Strings containing the pool of available expense companies, to use for
+        #                                shrinking our assets
+        # @param opening_liability_balance [RRA::Journal::Commodity] The opening balance of the liability account,
+        #                                                            preceeding month zero
+        # @param opening_asset_balance [RRA::Journal::Commodity] The opening balance of the asset account, preceeding
+        #                                                        month zero
         # @param liability_sources [Array] Strings containing the pool of available liability sources (aka 'companies')
         # @param liabilities_by_month [Array] An array of RRA::Journal::Commodity entries, indicatiing the liability
         #                                     balance for a month with offset n, from the from date
