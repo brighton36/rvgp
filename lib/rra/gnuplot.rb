@@ -22,7 +22,7 @@ module RRA
         @series_colors[@last_series_color % @series_colors.length]
       end
 
-      def respond_to_missing?(name, *)
+      def respond_to_missing?(name, _include_private = false)
         @base_colors.key? name
       end
 

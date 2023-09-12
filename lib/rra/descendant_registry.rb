@@ -39,7 +39,7 @@ module RRA
         classes.collect(&:name)
       end
 
-      def respond_to_missing?(name)
+      def respond_to_missing?(name, _include_private = false)
         @accessors.key? name
       end
 

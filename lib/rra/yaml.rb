@@ -52,7 +52,7 @@ module RRA
         @block.call
       end
 
-      def respond_to_missing?(name)
+      def respond_to_missing?(name, _include_private = false)
         @params&.key?(name.to_sym)
       end
 
