@@ -67,15 +67,15 @@ class TestFakeJournal < Minitest::Test
       RRA::Journal::Posting.new(
         Date.new(2019, 12, 31), 'Posting from Dec 2019',
         transfers: [
-        RRA::Journal::Posting::Transfer.new('Personal:Expenses:Testing', commodity: '$ 9.00'.to_commodity),
-        RRA::Journal::Posting::Transfer.new('Cash')
+          RRA::Journal::Posting::Transfer.new('Personal:Expenses:Testing', commodity: '$ 9.00'.to_commodity),
+          RRA::Journal::Posting::Transfer.new('Cash')
         ]
       ),
       RRA::Journal::Posting.new(
         Date.new(2020, 2, 1), 'Posting from Feb 2020',
         transfers: [
-        RRA::Journal::Posting::Transfer.new('Personal:Expenses:Testing', commodity: '$ 8.00'.to_commodity),
-        RRA::Journal::Posting::Transfer.new('Cash')
+          RRA::Journal::Posting::Transfer.new('Personal:Expenses:Testing', commodity: '$ 8.00'.to_commodity),
+          RRA::Journal::Posting::Transfer.new('Cash')
         ]
       )
     ]

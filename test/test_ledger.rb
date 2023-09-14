@@ -71,7 +71,7 @@ class TestLedger < Minitest::Test
     assert_equal expectations.length, register.transactions.length
 
     # First:
-    0.upto(expectations.length-1) do |i|
+    0.upto(expectations.length - 1) do |i|
       assert_equal expectations[i][0], register.transactions[i].date.to_s
       assert_equal expectations[i][1], register.transactions[i].payee
       assert_equal 1, register.transactions[i].postings.length

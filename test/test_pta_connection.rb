@@ -326,19 +326,28 @@ require_relative '../lib/rra'
         value(register.transactions[0].postings.map(&:totals).flatten.map(&:to_s)).must_equal ['$ 26.18', '$ 44.44']
         value(register.transactions[0].postings.map(&:tags)).must_equal(
           [{ 'intention' => 'Personal' },
-           subject.hledger? ? { 'Dating' => true, 'ValentinesDay' => true, 'intention' => 'Personal' } : { 'intention' => 'Personal' }]
+           if subject.hledger?
+             { 'Dating' => true, 'ValentinesDay' => true, 'intention' => 'Personal' }
+           else
+             { 'intention' => 'Personal' }
+           end]
         )
 
         # Transaction 2:
         value(register.transactions[1].postings.map(&:account)).must_equal ['Personal:Expenses:Vices:Gambling']
         value(register.transactions[1].postings.map(&:amounts).flatten.map(&:to_s)).must_equal ['$ 2.00']
         value(register.transactions[1].postings.map(&:totals).flatten.map(&:to_s)).must_equal ['$ 46.44']
-        value(register.transactions[1].postings.map(&:tags)).must_equal [subject.hledger? ? { 'intention' => 'Personal', 'Loss' => true } : { 'intention' => 'Personal' }]
+        value(register.transactions[1].postings.map(&:tags)).must_equal [if subject.hledger?
+                                                                           { 'intention' => 'Personal', 'Loss' => true }
+                                                                         else
+                                                                           { 'intention' => 'Personal' }
+                                                                         end]
 
         # Transaction 3:
         value(register.transactions[2].postings.map(&:account)).must_equal ['Personal:Expenses:Food:Water']
         value(register.transactions[2].postings.map(&:amounts).flatten.map(&:to_s)).must_equal ['4000.00 COP']
-        value(register.transactions[2].postings.map(&:totals).flatten.map(&:to_s).sort).must_equal ['$ 46.44', '4000.00 COP']
+        value(register.transactions[2].postings.map(&:totals).flatten.map(&:to_s).sort).must_equal ['$ 46.44',
+                                                                                                    '4000.00 COP']
         value(register.transactions[2].postings.map(&:tags)).must_equal [{ 'intention' => 'Personal' }]
 
         # Transaction 4:
@@ -412,7 +421,9 @@ require_relative '../lib/rra'
         expected_clp = subject.hledger? ? '-57999.80 CLP' : '-57999.8 CLP'
 
         value(transactions[1].postings[0].amounts.map(&:to_s)).must_equal ['$ -651.09', expected_clp]
-        value(transactions[1].postings[0].totals.map(&:to_s).sort).must_equal ['$ -1335.97', '-1419.75 HNL', expected_clp]
+        value(transactions[1].postings[0].totals.map(&:to_s).sort).must_equal ['$ -1335.97',
+                                                                               '-1419.75 HNL',
+                                                                               expected_clp]
 
         value(transactions[1].postings[0].amount_in('$').to_s).must_equal '$ -720.68976'
         value(transactions[1].postings[0].total_in('$').to_s).must_equal '$ -1463.075314'
@@ -549,12 +560,4 @@ describe 'pta adapter errata' do
       value(transactions[0].postings[0].amounts.map(&:to_s)).must_equal ['$ 12.34']
     end
   end
-
-  # TODO: Formalize and describe this better. Probably this belongs in the balance section above
-  describe 'balance validation issue' do
-
-    [RRA::Ledger, RRA::HLedger].each do |pta_klass|
-    end
-  end
-
 end

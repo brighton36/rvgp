@@ -1,9 +1,11 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
 require 'minitest/autorun'
 
 require_relative '../lib/rra'
 
+# Minitest class, used to test RRA::Journal::Currency
 class TestCurrency < Minitest::Test
   def test_currency
     currency = RRA::Journal::Currency.from_code_or_symbol 'USD'

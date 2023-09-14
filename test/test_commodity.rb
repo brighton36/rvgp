@@ -1,114 +1,111 @@
 #!/usr/bin/env ruby
+# frozen_string_literal: true
 
-require "minitest/autorun"
+require 'minitest/autorun'
 
 require_relative '../lib/rra'
 
+# Minitest class, used to test RRA::Journal::Commodity
 class TestCommodity < Minitest::Test
   def test_commodity_comparision_when_precision_not_equal
-    assert_equal commodity("$ 23.01"), commodity("$ 23.010")
-    assert_equal commodity("$ 23.010"), commodity("$ 23.01")
+    assert_equal commodity('$ 23.01'), commodity('$ 23.010')
+    assert_equal commodity('$ 23.010'), commodity('$ 23.01')
 
-    assert_equal commodity("$ 23.010"), commodity("$ 23.01")
-    assert_equal commodity("$ 23.01"), commodity("$ 23.010")
+    assert_equal commodity('$ 23.010'), commodity('$ 23.01')
+    assert_equal commodity('$ 23.01'), commodity('$ 23.010')
 
-    assert_equal commodity("$ 23.00"), commodity("$ 23.000000")
-    assert_equal commodity("$ 23.000000"), commodity("$ 23.00")
+    assert_equal commodity('$ 23.00'), commodity('$ 23.000000')
+    assert_equal commodity('$ 23.000000'), commodity('$ 23.00')
 
-    assert(commodity("$ 13.000") != commodity("$ 23.00"))
-    assert(commodity("$ 23.00") != commodity("$ 13.000"))
+    assert(commodity('$ 13.000') != commodity('$ 23.00'))
+    assert(commodity('$ 23.00') != commodity('$ 13.000'))
 
-    assert(commodity("$ 23.00") != commodity("$ 13.000"))
-    assert(commodity("$ 13.000") != commodity("$ 23.00"))
+    assert(commodity('$ 23.00') != commodity('$ 13.000'))
+    assert(commodity('$ 13.000') != commodity('$ 23.00'))
   end
 
   def test_commodity_add_and_sub_when_precision_not_equal
-    assert_equal '$ 32.00', commodity_op("$ 2", :+, "$ 30")
-    assert_equal '$ 25.01', commodity_op("$ 24.01", :+, "$ 1")
-    assert_equal '$ 46.02', commodity_op("$ 23.01", :+, "$ 23.010")
-    assert_equal '$ 15.01002', commodity_op("$ 5.000020", :+, "$ 10.010")
-    assert_equal '$ 110.00001', commodity_op("$ 10.000004", :+, "$ 100.000006")
-    assert_equal '$ 15.20', commodity_op("$ 5.1", :+, "$ 10.1")
-    assert_equal '$ 15.10', commodity_op("$ 5.10", :+, "$ 10")
-    assert_equal '$ 10.01', commodity_op("$ 5.005", :+, "$ 5.005")
+    assert_equal '$ 32.00', commodity_op('$ 2', :+, '$ 30')
+    assert_equal '$ 25.01', commodity_op('$ 24.01', :+, '$ 1')
+    assert_equal '$ 46.02', commodity_op('$ 23.01', :+, '$ 23.010')
+    assert_equal '$ 15.01002', commodity_op('$ 5.000020', :+, '$ 10.010')
+    assert_equal '$ 110.00001', commodity_op('$ 10.000004', :+, '$ 100.000006')
+    assert_equal '$ 15.20', commodity_op('$ 5.1', :+, '$ 10.1')
+    assert_equal '$ 15.10', commodity_op('$ 5.10', :+, '$ 10')
+    assert_equal '$ 10.01', commodity_op('$ 5.005', :+, '$ 5.005')
 
-    assert_equal '$ 0.00', commodity_op("$ 1", :-, '$ 1')
-    assert_equal '$ 1.9996', commodity_op("$ 3.0009", :-, '$ 1.0013')
-    assert_equal '$ -1.00', 
-      commodity_op("$ 1.000000000000001", :-, '$ 2.000000000000001')
-    assert_equal '$ 0.10', commodity_op("$ 0.2", :-, '$ 0.1')
-    assert_equal '$ 0.01', commodity_op("$ 0.02", :-, '$ 0.01')
-    assert_equal '$ 0.05', commodity_op("$ 0.1", :-, '$ 0.05')
-    assert_equal '$ 0.90', commodity_op("$ 1.0", :-, '$ 0.1')
-    assert_equal '$ 0.99', commodity_op("$ 1.0", :-, '$ 0.01')
+    assert_equal '$ 0.00', commodity_op('$ 1', :-, '$ 1')
+    assert_equal '$ 1.9996', commodity_op('$ 3.0009', :-, '$ 1.0013')
+    assert_equal '$ -1.00', commodity_op('$ 1.000000000000001', :-, '$ 2.000000000000001')
+    assert_equal '$ 0.10', commodity_op('$ 0.2', :-, '$ 0.1')
+    assert_equal '$ 0.01', commodity_op('$ 0.02', :-, '$ 0.01')
+    assert_equal '$ 0.05', commodity_op('$ 0.1', :-, '$ 0.05')
+    assert_equal '$ 0.90', commodity_op('$ 1.0', :-, '$ 0.1')
+    assert_equal '$ 0.99', commodity_op('$ 1.0', :-, '$ 0.01')
 
-    assert_equal '$ -0.10', commodity_op("$ -0.2", :-, '$ -0.1')
-    assert_equal '$ -0.01', commodity_op("$ -0.02", :-, '$ -0.01')
-    assert_equal '$ -0.05', commodity_op("$ -0.1", :-, '$ -0.05')
-    assert_equal '$ -0.90', commodity_op("$ -1.0", :-, '$ -0.1')
-    assert_equal '$ -0.99', commodity_op("$ -1.0", :-, '$ -0.01')
+    assert_equal '$ -0.10', commodity_op('$ -0.2', :-, '$ -0.1')
+    assert_equal '$ -0.01', commodity_op('$ -0.02', :-, '$ -0.01')
+    assert_equal '$ -0.05', commodity_op('$ -0.1', :-, '$ -0.05')
+    assert_equal '$ -0.90', commodity_op('$ -1.0', :-, '$ -0.1')
+    assert_equal '$ -0.99', commodity_op('$ -1.0', :-, '$ -0.01')
 
-    assert_equal '$ -0.30', commodity_op("$ -0.2", :-, '$ 0.1')
-    assert_equal '$ -0.03', commodity_op("$ -0.02", :-, '$ 0.01')
-    assert_equal '$ -0.15', commodity_op("$ -0.1", :-, '$ 0.05')
-    assert_equal '$ -1.10', commodity_op("$ -1.0", :-, '$ 0.1')
-    assert_equal '$ -1.01', commodity_op("$ -1.0", :-, '$ 0.01')
+    assert_equal '$ -0.30', commodity_op('$ -0.2', :-, '$ 0.1')
+    assert_equal '$ -0.03', commodity_op('$ -0.02', :-, '$ 0.01')
+    assert_equal '$ -0.15', commodity_op('$ -0.1', :-, '$ 0.05')
+    assert_equal '$ -1.10', commodity_op('$ -1.0', :-, '$ 0.1')
+    assert_equal '$ -1.01', commodity_op('$ -1.0', :-, '$ 0.01')
 
-    assert_equal '$ 0.30', commodity_op("$ 0.2", :-, '$ -0.1')
-    assert_equal '$ 0.03', commodity_op("$ 0.02", :-, '$ -0.01')
-    assert_equal '$ 0.15', commodity_op("$ 0.1", :-, '$ -0.05')
-    assert_equal '$ 1.10', commodity_op("$ 1.0", :-, '$ -0.1')
-    assert_equal '$ 1.01', commodity_op("$ 1.0", :-, '$ -0.01')
+    assert_equal '$ 0.30', commodity_op('$ 0.2', :-, '$ -0.1')
+    assert_equal '$ 0.03', commodity_op('$ 0.02', :-, '$ -0.01')
+    assert_equal '$ 0.15', commodity_op('$ 0.1', :-, '$ -0.05')
+    assert_equal '$ 1.10', commodity_op('$ 1.0', :-, '$ -0.1')
+    assert_equal '$ 1.01', commodity_op('$ 1.0', :-, '$ -0.01')
   end
 
   def test_sum
-    assert_equal commodity('$ 100.00'), 
-      ["$ 22.00", "$ 60.00", "$ 8.00", "$ 10.00"].collect{|s| commodity s}.sum
+    assert_equal commodity('$ 100.00'), ['$ 22.00', '$ 60.00', '$ 8.00', '$ 10.00'].collect { |s| commodity s }.sum
   end
 
   def test_commodity_mul_by_numeric
-    assert_equal commodity('$ 32.00'), commodity("$ 2") * 16
-    assert_equal commodity('$ 17.00'), commodity("$ 2") * 8.5
-    assert_equal commodity('$ 2.00'), commodity("$ 0.5") * 4
+    assert_equal commodity('$ 32.00'), commodity('$ 2') * 16
+    assert_equal commodity('$ 17.00'), commodity('$ 2') * 8.5
+    assert_equal commodity('$ 2.00'), commodity('$ 0.5') * 4
 
-    assert_equal commodity('$ -32.00'), commodity("$ -2") * 16
-    assert_equal commodity('$ -17.00'), commodity("$ -2") * 8.5
-    assert_equal commodity('$ -2.00'), commodity("$ -0.5") * 4
+    assert_equal commodity('$ -32.00'), commodity('$ -2') * 16
+    assert_equal commodity('$ -17.00'), commodity('$ -2') * 8.5
+    assert_equal commodity('$ -2.00'), commodity('$ -0.5') * 4
 
-    assert_equal commodity('$ -32.00'), commodity("$ 2") * -16
-    assert_equal commodity('$ -17.00'), commodity("$ 2") * -8.5
-    assert_equal commodity('$ -2.00'), commodity("$ 0.5") * -4
+    assert_equal commodity('$ -32.00'), commodity('$ 2') * -16
+    assert_equal commodity('$ -17.00'), commodity('$ 2') * -8.5
+    assert_equal commodity('$ -2.00'), commodity('$ 0.5') * -4
 
-    assert_equal commodity('$ 0.5000125'), commodity("$ 2.00005") * 0.25
-    assert_equal commodity('$ 0.5000125'), commodity("$ 0.25") * 2.00005
+    assert_equal commodity('$ 0.5000125'), commodity('$ 2.00005') * 0.25
+    assert_equal commodity('$ 0.5000125'), commodity('$ 0.25') * 2.00005
   end
 
   def test_commodity_div_by_numeric
-    assert_equal commodity("$ 2"), commodity('$ 32.00') / 16
-    assert_equal commodity("$ 2"), commodity('$ 17.00') / 8.5
-    assert_equal commodity("$ 0.5"), commodity('$ 2.00') / 4
+    assert_equal commodity('$ 2'), commodity('$ 32.00') / 16
+    assert_equal commodity('$ 2'), commodity('$ 17.00') / 8.5
+    assert_equal commodity('$ 0.5'), commodity('$ 2.00') / 4
 
-    assert_equal commodity("$ -2"), commodity('$ -32.00') / 16
-    assert_equal commodity("$ -2"), commodity('$ -17.00') / 8.5
-    assert_equal commodity("$ -0.5"), commodity('$ -2.00') / 4
+    assert_equal commodity('$ -2'), commodity('$ -32.00') / 16
+    assert_equal commodity('$ -2'), commodity('$ -17.00') / 8.5
+    assert_equal commodity('$ -0.5'), commodity('$ -2.00') / 4
 
-    assert_equal commodity("$ 2"), commodity('$ -32.00') / -16
-    assert_equal commodity("$ 2"), commodity('$ -17.00') / -8.5
-    assert_equal commodity("$ 0.5"), commodity('$ -2.00') / -4
+    assert_equal commodity('$ 2'), commodity('$ -32.00') / -16
+    assert_equal commodity('$ 2'), commodity('$ -17.00') / -8.5
+    assert_equal commodity('$ 0.5'), commodity('$ -2.00') / -4
 
-    assert_equal commodity("$ 2.00005"), commodity('$ 0.5000125') / 0.25
-    assert_equal commodity("$ 0.25"), commodity('$ 0.5000125') / 2.00005
-    assert_equal commodity("$ 0.005"), commodity('$ 0.01') / 2
+    assert_equal commodity('$ 2.00005'), commodity('$ 0.5000125') / 0.25
+    assert_equal commodity('$ 0.25'), commodity('$ 0.5000125') / 2.00005
+    assert_equal commodity('$ 0.005'), commodity('$ 0.01') / 2
   end
 
   def test_huge_decimal_sum_when_decimal_zeros
     # This bug showed up while testing the HLedger::balance ...
-    assert_equal '$ 493.00', [
-      '$ 443.0000000000'.to_commodity, '$ 50.0000000000'.to_commodity].sum.to_s
-    assert_equal '$ 493.10', [
-      '$ 443.0500000000'.to_commodity, '$ 50.0500000000'.to_commodity].sum.to_s
-    assert_equal '$ 0.00', [
-      '$ 0.0000000000'.to_commodity, '$ 0.0000000000'.to_commodity].sum.to_s
+    assert_equal '$ 493.00', ['$ 443.0000000000'.to_commodity, '$ 50.0000000000'.to_commodity].sum.to_s
+    assert_equal '$ 493.10', ['$ 443.0500000000'.to_commodity, '$ 50.0500000000'.to_commodity].sum.to_s
+    assert_equal '$ 0.00', ['$ 0.0000000000'.to_commodity, '$ 0.0000000000'.to_commodity].sum.to_s
   end
 
   def test_round
@@ -143,7 +140,7 @@ class TestCommodity < Minitest::Test
     # Found/fixed on 2022-11-13:
     # The reason this is a bug, is because the mantissa begins with zero's. We
     # had to cheange the implementation to switch to precision, from a log10() operation
-    assert_equal "$ 5.01", ("$ 139.76".to_commodity * (22290.0 / 622290.0)).round(2).to_s
+    assert_equal '$ 5.01', ('$ 139.76'.to_commodity * (22_290.0 / 622_290.0)).round(2).to_s
   end
 
   def test_floor
@@ -191,7 +188,7 @@ class TestCommodity < Minitest::Test
     assert_equal '$ 123.00', '$ 123.00'.to_commodity.to_s(precision: 2)
     assert_equal '$ 123.000', '$ 123.00'.to_commodity.to_s(precision: 3)
     assert_equal '$ 123.0000', '$ 123.00'.to_commodity.to_s(precision: 4)
-    
+
     assert_equal '$ 123.46', '$ 123.455'.to_commodity.to_s(precision: 2)
     assert_equal '$ 123.45', '$ 123.454'.to_commodity.to_s(precision: 2)
     assert_equal '$ 124', '$ 123.5'.to_commodity.to_s(precision: 0)
@@ -200,15 +197,14 @@ class TestCommodity < Minitest::Test
 
     assert_equal '$ 0.00000', '$ 0'.to_commodity.to_s(precision: 5)
 
-    assert_equal '$ 1,234,567.00000', '$ 1234567.00'.to_commodity.to_s(
-      commatize: true, precision: 5)
+    assert_equal '$ 1,234,567.00000', '$ 1234567.00'.to_commodity.to_s(commatize: true, precision: 5)
   end
 
   def test_commodity_from_s_with_double_quotes
     # Seems like we need to support commodities in these forms, after spending
     # some time going through the ledger documentation:
 
-    palette_cleanser = "1 FLORIDAHOME".to_commodity
+    palette_cleanser = '1 FLORIDAHOME'.to_commodity
     assert_equal 1, palette_cleanser.quantity
     assert_equal 'FLORIDAHOME', palette_cleanser.alphabetic_code
     assert_equal 'FLORIDAHOME', palette_cleanser.code
@@ -243,7 +239,7 @@ class TestCommodity < Minitest::Test
     assert_equal '1 "test \\" ing"', reverse_pesky_code.to_s
   end
 
-  # This code path appeared, when parsing the results of "--empty" in register
+  # This code path appeared, when parsing the results of '--empty' in register
   # queries. Here's what's in the xml:
   #  <post-amount>
   #    <amount>
@@ -268,7 +264,7 @@ class TestCommodity < Minitest::Test
     RRA::Journal::Commodity.from_s str
   end
 
-  def commodity_op(lstr, op, rstr)
-    commodity(lstr).send(op, commodity(rstr)).to_s
+  def commodity_op(lstr, operation, rstr)
+    commodity(lstr).send(operation, commodity(rstr)).to_s
   end
 end
