@@ -139,27 +139,27 @@ module RRA
     end
 
     def write!(name)
-      File.open(output_file(name, 'gpi'), 'w') { |f| f.write gnuplot(name).script }
+      File.write output_file(name, 'gpi'), gnuplot(name).script
     end
 
     # This returns what plot variants are possible, given the glob, against the
     # provided files.
     # If pair_values contains key: value combinations, then, any of the returned
     # variants will be sorted under the key:value provided . (Its really just meant
-    # for {year: 'all'}  atm..)
-    def self.glob_variants(glob, corpus, pair_values = {} )
+    # for year: 'all'}  atm..)
+    def self.glob_variants(glob, corpus, pair_values = {})
       variant_names = glob.scan(/%\{([^ }]+)/).flatten.map(&:to_sym)
 
-      glob_vars = Hash[variant_names.map { |key| [key, '(.+)'] }]
+      glob_vars = variant_names.to_h { |key| [key, '(.+)'] }
       variant_matcher = Regexp.new format(glob, glob_vars)
 
       corpus.each_with_object([]) do |file, ret|
         matches = variant_matcher.match File.basename(file)
 
         if matches
-          pairs = Hash[variant_names.map.with_index do |key, i|
+          pairs = variant_names.map.with_index do |key, i|
             [key, pair_values.key?(key.to_sym) ? pair_values[key] : matches[i + 1]]
-          end]
+          end.to_h
 
           pair_i = ret.find_index { |variant| variant[:pairs] == pairs }
           if pair_i

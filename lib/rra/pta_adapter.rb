@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 module RRA
+  # A base class, for use by plain text accounting adapters. Presumably for use with
+  # hledger and ledger. This class contains abstractions and code shared by all PtaAdapter's.
   class PtaAdapter
     # This module is intended for use in clasess that wish to provide #ledger, #hledger,
     # and #pta_adapter methods, to instances.
@@ -13,6 +15,8 @@ module RRA
     class AssertionError < StandardError
     end
 
+    # This class provides shorthand, for classes whose public readers are populated via
+    # #initialize().
     class ReaderBase
       def self.readers(*readers)
         attr_reader(*readers)
@@ -38,22 +42,23 @@ module RRA
       readers :date, :payee, :postings
     end
 
+    # A posting, as output by the 'register' command.
     class RegisterPosting < ReaderBase
       readers :account, :amounts, :totals, :tags
 
-      def amount_in(code, ignore_unknown_codes = false)
-        commodities_sum amounts, code, ignore_unknown_codes
+      def amount_in(code)
+        commodities_sum amounts, code
       end
 
-      def total_in(code, ignore_unknown_codes = false)
-        commodities_sum totals, code, ignore_unknown_codes
+      def total_in(code)
+        commodities_sum totals, code
       end
 
       private
 
       # Bear in mind that code/conversion is required, because the only reason
       # we'd have multiple amounts, is if we have multiple currencies.
-      def commodities_sum(commodities, code, ignore_unknown_codes)
+      def commodities_sum(commodities, code)
         currency = RRA::Journal::Currency.from_code_or_symbol code
 
         pricer = options[:pricer] || RRA::Pricer.new
@@ -61,22 +66,15 @@ module RRA
         # https://hledger.org/hledger.html#valuation
         date = options[:price_date] || Date.today
         converted = commodities.map do |a|
-          begin
-            # There are some outputs, which have no .code. And which only have
-            # a quantity. We don't want to raise an exception for these, if
-            # their quantity is zero, because that's still accumulateable.
-            next if a.quantity.zero?
+          # There are some outputs, which have no .code. And which only have
+          # a quantity. We don't want to raise an exception for these, if
+          # their quantity is zero, because that's still accumulateable.
+          next if a.quantity.zero?
 
-            a.alphabetic_code == currency.alphabetic_code ? a : pricer.convert(date.to_time, a, code)
-          rescue RRA::Pricer::NoPriceError
-            if ignore_unknown_codes
-              # This seems to be what ledger does...
-              nil
-            else
-              # This seems to be what we want...
-              raise RRA::Pricer::NoPriceError
-            end
-          end
+          a.alphabetic_code == currency.alphabetic_code ? a : pricer.convert(date.to_time, a, code)
+        rescue RRA::Pricer::NoPriceError
+          # This seems to be what we want...
+          raise RRA::Pricer::NoPriceError
         end.compact
 
         # The case of [].sum will return an integer 0, which, isn't quite what
@@ -100,7 +98,7 @@ module RRA
           sum.last[1] = [sum.last[1]] unless sum.last[1].is_a?(Array)
           sum.last[1] << match[0]
         else
-          sum << [match[1], match[2].empty? ? Array.new : match[2]]
+          sum << [match[1], match[2].empty? ? [] : match[2]]
         end
         sum
       end.to_h

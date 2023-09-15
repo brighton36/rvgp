@@ -3,6 +3,8 @@
 require_relative 'descendant_registry'
 
 module RRA
+  # The base class, from which all Journal and System validations inherit. This
+  # class contains the code shared by all validations.
   class ValidationBase
     include RRA::PtaAdapter::AvailabilityHelper
 
@@ -10,7 +12,7 @@ module RRA
 
     attr_reader :errors, :warnings
 
-    def initialize(*args)
+    def initialize(*_args)
       @errors = []
       @warnings = []
     end
