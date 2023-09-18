@@ -18,13 +18,13 @@ end
 
 desc 'Check code notation'
 RuboCop::RakeTask.new(:lint) do |task|
-  task.patterns = RRA::Gem.files.select { |f| /\A(?:bin.*|Rakefile|.*\.rb)\Z/.match f }
+  task.patterns = RRA::Gem.ruby_files
   task.formatters += ['html']
   task.options += ['--fail-level', 'convention', '--out', 'rubocop.html']
 end
 
 YARD::Rake::YardocTask.new do |t|
-  t.files = RRA::Gem.files
+  t.files = RRA::Gem.ruby_files
   t.options = ['--no-private', '--protected']
   t.stats_options = ['--list-undoc']
 end

@@ -45,6 +45,10 @@ module RRA
         end
       end
 
+      def ruby_files
+        files.select { |f| /\A(?:bin.*|Rakefile|.*\.rb)\Z/.match f }
+      end
+
       def root(sub_path = nil)
         sub_path ? [GEM_DIR, sub_path].join('/') : GEM_DIR
       end
