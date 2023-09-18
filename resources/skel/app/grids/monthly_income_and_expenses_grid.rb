@@ -8,7 +8,7 @@ class MonthlyIncomeAndExpensesGrid < RRA::GridBase
        output_path_template: '%s-monthly-income-and-expenses'
 
   def sheet_header
-    ['Date', 'Income', 'Expense']
+    %w[Date Income Expense]
   end
 
   def sheet_body

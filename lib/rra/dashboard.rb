@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 gem 'tty-table'
 require 'tty-table'
 
 module RRA
   class Dashboard
-    CELL_PADDING = [0,1,0,1]
-    NULL_CELL_TO_TABLE = {value: '⋯', alignment: :center}
+    CELL_PADDING = [0, 1, 0, 1]
+    NULL_CELL_TO_TABLE = { value: '⋯', alignment: :center }
 
     attr_reader :label, :series_column_label, :csv
 

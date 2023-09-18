@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'rra'
 
 RRA.initialize_app(File.dirname(__FILE__)).initialize_rake! self

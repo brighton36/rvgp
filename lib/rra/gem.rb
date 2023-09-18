@@ -11,6 +11,7 @@ module RRA
         ::Gem::Specification.new do |s|
           s.name        = 'rra'
           s.version     = '0.3'
+          s.required_ruby_version = '>= 3.0.0'
           s.licenses    = ['LGPL-2.0']
           s.authors     = ['Chris DeRose']
           s.email       = 'chris@chrisderose.com'

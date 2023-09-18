@@ -1,5 +1,5 @@
 #!/usr/bin/env gem build
-# encoding: utf-8
+# frozen_string_literal: true
 
 require_relative 'lib/rra/gem'
 
