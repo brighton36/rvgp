@@ -24,7 +24,9 @@ RuboCop::RakeTask.new(:lint) do |task|
 end
 
 YARD::Rake::YardocTask.new do |t|
-  t.files = RRA::Gem.ruby_files
+  t.files = RRA::Gem.ruby_files.reject do |f|
+    %r{\A(?:(?:test|resources/skel)/.*|.*finance_gem_hacks\.rb\Z)}.match f
+  end
   t.options = ['--no-private', '--protected']
   t.stats_options = ['--list-undoc']
 end

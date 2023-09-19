@@ -32,17 +32,13 @@ module RRA
       MSG_TOO_MANY = 'Too many %s in ComplexCommodity::from_s. Against: %s'
       MSG_UNPARSEABLE = 'The ComplexCommodity::from_s "%s" appears to be unparseable'
 
-      ATTRIBUTES = %w[left right operation left_date left_lot left_lot_operation left_lot_is_equal left_expression
-                      right_expression left_lambda left_is_equal right_is_equal].freeze
-
-      attr_reader(*ATTRIBUTES.map(&:to_sym))
+      attr_reader :left, :right, :operation, :left_date, :left_lot, :left_lot_operation, :left_lot_is_equal,
+                  :left_expression, :right_expression, :left_lambda, :left_is_equal, :right_is_equal
 
       class Error < StandardError; end
 
       def initialize(opts = {})
-        ATTRIBUTES.select { |attr| opts.key? attr.to_sym }.each do |attr|
-          instance_variable_set("@#{attr}".to_sym, opts[attr.to_sym])
-        end
+        opts.each { |attr, val| instance_variable_set("@#{attr}".to_sym, val) }
       end
 
       # For now, we simply delegate these messages to the left commodity. This path

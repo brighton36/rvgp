@@ -10,11 +10,21 @@ module RRA
   # submodules initialized after initialization. In addition, this class implements
   # the main() entry point used by Rakefiles, and in turn, instigates the
   # equivalent entry points in various modules thereafter.
+  #
+  # @attr_reader [String] project_directory The directory path, from which this application was initialized.
+  # @attr_reader [RRA::StatusOutputRake] logger The application logger. This is provided so that callers can output
+  #                                             to the console. (Or wherever the output device is logging)
+  # @attr_reader [RRA::Pricer] pricer This attribute contains the pricer that's used by the application. Price
+  #                                   data is automatically loaded from config.prices_path (typically
+  #                                   'journals/prices.db')
+  # @attr_reader [RRA::Config] config The application configuration, most of which is parsed from the config.yaml
   class Application
     class InvalidProjectDir < StandardError; end
 
     attr_reader :project_directory, :logger, :pricer, :config
 
+    # Creates an instance of Application, given the files and structure of the provided project path.
+    # @param project_directory [String] The directory path, to an RRA project.
     def initialize(project_directory)
       raise InvalidProjectDir unless [project_directory, format('%s/app', project_directory)].all? { |f| Dir.exist? f }
 
@@ -65,30 +75,14 @@ module RRA
       require_grids!
     end
 
-    def require_commands!
-      # Built-in commands:
-      RRA::Commands.require_files!
-
-      # App commands:
-      require_app_files! 'commands'
-    end
-
-    def require_grids!
-      require_app_files! 'grids'
-    end
-
-    def require_validations!
-      # Built-in validations:
-      Dir.glob(RRA::Gem.root('lib/rra/validations/*.rb')).sort.each { |file| require file }
-
-      # App validations:
-      require_app_files! 'validations'
-    end
-
+    # @return [Array] An array, containing all the transformer objects, defined in the project
     def transformers
       @transformers ||= TransformerBase.all project_directory
     end
 
+    # This method will insert all the project tasks, into a Rake object.
+    # Typically, 'self' is that object, when calling from a Rakefile. (aka 'main')
+    # @param rake_main [Object] The Rake object to attach RRA to.
     def initialize_rake!(rake_main)
       require 'rake/clean'
 
@@ -129,6 +123,26 @@ module RRA
     end
 
     private
+
+    def require_commands!
+      # Built-in commands:
+      RRA::Commands.require_files!
+
+      # App commands:
+      require_app_files! 'commands'
+    end
+
+    def require_grids!
+      require_app_files! 'grids'
+    end
+
+    def require_validations!
+      # Built-in validations:
+      Dir.glob(RRA::Gem.root('lib/rra/validations/*.rb')).sort.each { |file| require file }
+
+      # App validations:
+      require_app_files! 'validations'
+    end
 
     def require_app_files!(subdir)
       Dir.glob([project_directory, 'app', subdir, '*.rb'].join('/')).sort.each { |file| require file }

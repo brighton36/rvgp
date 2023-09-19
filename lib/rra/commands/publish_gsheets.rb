@@ -53,9 +53,11 @@ module RRA
 
       def execute!
         output = if options.key?(:csvdir)
-                   OutputCsv.new(destination: options[:csvdir], format: 'csv')
+                   RRA::GoogleDrive::ExportLocalCsvs.new(destination: options[:csvdir], format: 'csv')
                  else
-                   OutputGoogleSheets.new(format: 'google_sheets', title: options[:title], secrets_file: @secrets_path)
+                   RRA::GoogleDrive::ExportSheets.new(format: 'google_sheets',
+                                                      title: options[:title],
+                                                      secrets_file: @secrets_path)
                  end
 
         targets.each do |target|
@@ -64,7 +66,7 @@ module RRA
 
             # NOTE: This should fix the complaints that google issues, from too many
             # requests per second.
-            sleep options[:sleep] if output.is_a? OutputGoogleSheets
+            sleep options[:sleep] if output.is_a? RRA::GoogleDrive::ExportSheets
 
             {}
           end

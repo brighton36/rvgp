@@ -29,16 +29,20 @@ RRA::Journal::Currency.currencies_config = RRA::Gem.root('resources/iso-4217-cur
 
 # The base module, under which all RRA code is filed
 module RRA
+  # @param from_path [String] The directory path, to an RRA project.
+  # @return [RRA::Application] The initialized application, that was stored in RRA.app
   def self.initialize_app(from_path)
     raise StandardError, 'Application is already initialized' if @app
 
     @app = Application.new from_path
   end
 
+  # @return [RRA::Application] The currently-initialized RRA:Application
   def self.app
     @app
   end
 
+  # @return [Pastel] The global pastel object, used to output to the console.
   def self.pastel
     @pastel ||= Pastel.new enabled: $stdout.tty?
   end
