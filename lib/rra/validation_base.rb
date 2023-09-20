@@ -8,7 +8,7 @@ module RRA
   class ValidationBase
     include RRA::PtaAdapter::AvailabilityHelper
 
-    NAME_CAPTURE = /\A(.+)Validation\Z/.freeze
+    NAME_CAPTURE = /([^:]+)Validation\Z/.freeze
 
     attr_reader :errors, :warnings
 

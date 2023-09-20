@@ -28,7 +28,7 @@ module RRA
       # works.
       class Target < RRA::CommandBase::PlotTarget
         def to_sheet
-          Sheet.new plot.title(name), plot.grid(name), { google: plot.google_options || {} }
+          RRA::GoogleDrive::Sheet.new plot.title(name), plot.grid(name), { google: plot.google_options || {} }
         end
       end
 
