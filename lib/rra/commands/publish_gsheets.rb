@@ -11,7 +11,7 @@ module RRA
     # works very similar to the RRA::Commands:Plot command. Note that there is no
     # rake integration in this command, as that function is irrelevent to the notion
     # of an 'export'.
-    class PublishGsheets < RRA::CommandBase
+    class PublishGsheets < RRA::Base::Command
       DEFAULT_SLEEP_BETWEEN_SHEETS = 5
 
       accepts_options OPTION_ALL,
@@ -23,10 +23,10 @@ module RRA
       # This class represents a Google 'sheet', built from a Plot, available for
       # export to google. And dispatches a build request. Typically, the name of
       # a sheet is identical to the name of its corresponding plot. And, takes
-      # the form of "#{year}-#{plotname}". See RRA::CommandBase::PlotTarget, from
+      # the form of "#{year}-#{plotname}". See RRA::Base::Command::PlotTarget, from
       # which this class inherits, for a better representation of how this class
       # works.
-      class Target < RRA::CommandBase::PlotTarget
+      class Target < RRA::Base::Command::PlotTarget
         def to_sheet
           RRA::GoogleDrive::Sheet.new plot.title(name), plot.grid(name), { google: plot.google_options || {} }
         end

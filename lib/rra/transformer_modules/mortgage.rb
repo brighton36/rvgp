@@ -84,14 +84,14 @@ module RRA
 
           intermediary_opts = { date: from_posting.date, from: intermediary_account, tags: from_posting.tags }
 
-          [RRA::TransformerBase::Posting.new(from_posting.line_number,
-                                             date: from_posting.date,
-                                             description: from_posting.description,
-                                             from: from_posting.from,
-                                             tags: from_posting.tags,
-                                             targets: [to: intermediary_account, commodity: total]),
+          [RRA::Base::Transformer::Posting.new(from_posting.line_number,
+                                               date: from_posting.date,
+                                               description: from_posting.description,
+                                               from: from_posting.from,
+                                               tags: from_posting.tags,
+                                               targets: [to: intermediary_account, commodity: total]),
            # Principal:
-           RRA::TransformerBase::Posting.new(
+           RRA::Base::Transformer::Posting.new(
              from_posting.line_number,
              intermediary_opts.merge({ description: format('%<label>s (#%<num>d) Principal',
                                                            label: label,
@@ -100,7 +100,7 @@ module RRA
            ),
 
            # Interest:
-           RRA::TransformerBase::Posting.new(
+           RRA::Base::Transformer::Posting.new(
              from_posting.line_number,
              intermediary_opts.merge({ description: format('%<label>s (#%<num>d) Interest',
                                                            label: label,
@@ -109,7 +109,7 @@ module RRA
            ),
 
            # Escrow:
-           RRA::TransformerBase::Posting.new(
+           RRA::Base::Transformer::Posting.new(
              from_posting.line_number,
              intermediary_opts.merge({ description: format('%<label>s (#%<num>d) Escrow',
                                                            label: label,

@@ -161,7 +161,7 @@ To better understand how your files, are processed by rra, here's a diagram of h
     JValidations("<br>📒 <b>Journal Validate</b><br><br>");
     SValidationInput("app/validations/*.rb<br>(<i>RRA::SystemValidationBase</i>)").->SValidations;
     JValidations-->SValidations("<br>📚 <b>System Validate</b><br><br>");
-    GridInput("app/grids/*.rb<br>(<i>RRA::GridBase</i>)").->GridBuild("<br>▦ <b>Grid Build</b><br><br>");
+    GridInput("app/grids/*.rb<br>(<i>RRA::Base::Grid</i>)").->GridBuild("<br>▦ <b>Grid Build</b><br><br>");
     SValidations-->GridBuild;
     GridBuild-->GridOutput("build/grids/*.csv");
     PlotInput("app/plots/*.yml").->PlotBuild("<br>📈 <b>Plot Build</b><br><br>");

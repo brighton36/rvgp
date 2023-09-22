@@ -7,7 +7,7 @@ module RRA
     # This class contains the handling of the 'reconcile' command. Note that
     # there is no rake integration in this command, as that function is irrelevent
     # to the notion of an 'export'.
-    class Reconcile < RRA::CommandBase
+    class Reconcile < RRA::Base::Command
       accepts_options OPTION_ALL, OPTION_LIST, %i[vsplit v]
 
       # There's a bug here where we scroll to the top of the file sometimes, on
@@ -59,10 +59,10 @@ module RRA
         end
       end
 
-      # This class represents a transformer. See RRA::CommandBase::TransformerTarget, for
+      # This class represents a transformer. See RRA::Base::Command::TransformerTarget, for
       # most of the logic that this class inherits. Typically, these targets take the form
       # of "#{year}-#{transformer_name}"
-      class Target < RRA::CommandBase::TransformerTarget
+      class Target < RRA::Base::Command::TransformerTarget
         VIMSCRIPT_TEMPLATE = <<-VIMSCRIPT
         edit %<output_file>s
         setl autoread

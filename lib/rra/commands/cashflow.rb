@@ -6,11 +6,11 @@ require_relative '../dashboard'
 module RRA
   module Commands
     # This class contains the logic necessary to display the 'cashflow' dashboard
-    class Cashflow < RRA::CommandBase
+    class Cashflow < RRA::Base::Command
       accepts_options OPTION_ALL, OPTION_LIST, [:date, :d, { has_value: 'DATE' }]
 
       # This class handles the target argument, passed on the cli
-      class Target < RRA::CommandBase::TargetBase
+      class Target < RRA::Base::Command::Target
         def self.all
           RRA::Commands::Cashflow.grids_by_targetname.keys.map { |s| new s }
         end

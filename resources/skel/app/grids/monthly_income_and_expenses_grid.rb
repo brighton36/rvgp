@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # This class writes the monthly income and expense numbers, by month
-class MonthlyIncomeAndExpensesGrid < RRA::GridBase
+class MonthlyIncomeAndExpensesGrid < RRA::Base::Grid
   grid 'income_and_expenses',
        'Generate Income & Expense Grids',
        'Income & Expense by month (%s)',

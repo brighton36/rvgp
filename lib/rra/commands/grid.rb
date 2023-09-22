@@ -5,7 +5,7 @@ module RRA
     # This class contains the handling of the 'grid' command and task. This
     # code provides the list of grids that are available in the application, and
     # dispatches requests to build these grids.
-    class Grid < RRA::CommandBase
+    class Grid < RRA::Base::Command
       accepts_options OPTION_ALL, OPTION_LIST
 
       include RakeTask
@@ -18,7 +18,7 @@ module RRA
 
       # This class represents a grid, available for building. In addition, the #.all
       # method, returns the list of available targets.
-      class Target < RRA::CommandBase::TargetBase
+      class Target < RRA::Base::Command::Target
         def initialize(grid_klass, starting_at, ending_at)
           @starting_at = starting_at
           @ending_at = ending_at

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # This class writes the cashflow numbers, by month
-class CashFlowGrid < RRA::GridBase
+class CashFlowGrid < RRA::Base::Grid
   grid 'cashflow', 'Generate Cashflow Grids', 'Cashflows by month (%s)',
        output_path_template: '%s-cashflow'
 

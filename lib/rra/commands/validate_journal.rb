@@ -3,17 +3,17 @@
 module RRA
   module Commands
     # This class contains dispatch logic for the 'validate_journal' command and task.
-    class ValidateJournal < RRA::CommandBase
+    class ValidateJournal < RRA::Base::Command
       accepts_options OPTION_ALL, OPTION_LIST
 
       include RakeTask
       rake_tasks :validate_journal
 
       # This class principally represents the journals, by way of  the transformer
-      # in which the journal is defined. See RRA::CommandBase::TransformerTarget, for
+      # in which the journal is defined. See RRA::Base::Command::TransformerTarget, for
       # most of the logic that this class inherits. Typically, these targets take
       # the form of "#{year}-#{transformer_name}"
-      class Target < RRA::CommandBase::TransformerTarget
+      class Target < RRA::Base::Command::TransformerTarget
         for_command :validate_journal
 
         def uptodate?

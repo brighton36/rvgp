@@ -7,7 +7,7 @@ module RRA
   module Transformers
     # This Transformer takes a CSV file, and produces a PTA journal, after applying
     # our transformation rules
-    class CsvTransformer < RRA::TransformerBase
+    class CsvTransformer < RRA::Base::Transformer
       attr_reader :fields_format, :csv_format, :invert_amount, :skip_lines, :trim_lines
 
       def initialize(yaml)
@@ -79,11 +79,11 @@ module RRA
 
             commodity.invert! if invert_amount
 
-            RRA::TransformerBase::Posting.new i + 1,
-                                              date: tx[:date],
-                                              description: tx[:description],
-                                              commodity: transform_commodity(commodity),
-                                              from: from
+            RRA::Base::Transformer::Posting.new i + 1,
+                                                date: tx[:date],
+                                                description: tx[:description],
+                                                commodity: transform_commodity(commodity),
+                                                from: from
           end
         end
       end

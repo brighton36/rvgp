@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'command_base'
+require_relative 'base/command'
 
 module RRA
   # Helper methods for requiring and initializing the rra commands. Additionally,
@@ -22,8 +22,8 @@ module RRA
         # handling here. The solution is not to have -d or --help in your
         # local commands. We don't detect that atm, but we may want to at some
         # point. For now, just, don't use these options
-        options, command_args = RRA::CommandBase::Option.remove_options_from_args(
-          [%i[help h], [:dir, :d, { has_value: true }]].map { |a| RRA::CommandBase::Option.new(*a) },
+        options, command_args = RRA::Base::Command::Option.remove_options_from_args(
+          [%i[help h], [:dir, :d, { has_value: true }]].map { |a| RRA::Base::Command::Option.new(*a) },
           args
         )
 

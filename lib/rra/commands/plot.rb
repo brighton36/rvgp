@@ -5,7 +5,7 @@ require_relative '../plot'
 module RRA
   module Commands
     # This class contains the handling of the 'plot' command and task.
-    class Plot < RRA::CommandBase
+    class Plot < RRA::Base::Command
       accepts_options OPTION_ALL, OPTION_LIST, %i[stdout s]
 
       include RakeTask
@@ -33,9 +33,9 @@ module RRA
 
       # This class represents a plot, available for building. And dispatches a build request.
       # Typically, the name of a plot takes the form of "#{year}-#{plotname}". See
-      # RRA::CommandBase::PlotTarget, from which this class inherits, for a better
+      # RRA::Base::Command::PlotTarget, from which this class inherits, for a better
       # representation of how this class works.
-      class Target < RRA::CommandBase::PlotTarget
+      class Target < RRA::Base::Command::PlotTarget
         def execute(options)
           if options[:stdout]
             puts plot.script(name)

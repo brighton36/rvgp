@@ -77,7 +77,7 @@ module RRA
 
     # @return [Array] An array, containing all the transformer objects, defined in the project
     def transformers
-      @transformers ||= TransformerBase.all project_directory
+      @transformers ||= RRA::Base::Transformer.all project_directory
     end
 
     # This method will insert all the project tasks, into a Rake object.

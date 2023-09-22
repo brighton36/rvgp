@@ -8,9 +8,9 @@ module RRA
   # throughout the RRA system.
   #
   # Thus far, the parent classes which are using this functionality, are:
-  #   RRA::CommandBase, RRA::GridBase, RRA::JournalValidationBase, and RRA::SystemValidationBase.
+  #   RRA::Base::Command, RRA::Base::Grid, RRA::Base::JournalValidation, and RRA::Base::SystemValidation.
   #
-  # This means that, for example, a class which inherits from RRA::CommandBase,
+  # This means that, for example, a class which inherits from RRA::Base::Command,
   # is added to the array of its siblings in RRA.commands. Similarly, there are
   # containers for RRA.grids, RRA.journal_validations, and RRA.system_validations.
   module DescendantRegistry

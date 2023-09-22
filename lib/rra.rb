@@ -3,7 +3,7 @@
 require_relative 'rra/yaml'
 require_relative 'rra/application'
 require_relative 'rra/commands'
-require_relative 'rra/transformer_base'
+require_relative 'rra/base/transformer'
 
 # NOTE: Transformers & modules may want to go into a registry system at
 # some point, akin to grids/validations.
@@ -13,13 +13,13 @@ require_relative 'rra/transformer_modules/mortgage'
 require_relative 'rra/transformer_modules/investment'
 require_relative 'rra/transformer_modules/international_atm'
 
-require_relative 'rra/validation_base'
+require_relative 'rra/base/validation'
 
 require_relative 'rra/journal'
 require_relative 'rra/pta_adapter/ledger'
 require_relative 'rra/pta_adapter/hledger'
 
-require_relative 'rra/grid_base'
+require_relative 'rra/base/grid'
 
 # Gem Paths / Resources:
 require_relative 'rra/gem'

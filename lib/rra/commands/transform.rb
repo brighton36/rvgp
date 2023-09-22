@@ -3,7 +3,7 @@
 module RRA
   module Commands
     # This class contains the dispatch logic of the 'transform' command and task.
-    class Transform < RRA::CommandBase
+    class Transform < RRA::Base::Command
       accepts_options OPTION_ALL, OPTION_LIST, %i[stdout s], %i[concise c]
 
       include RakeTask
@@ -22,10 +22,10 @@ module RRA
         options[:stdout] || options[:concise] ? execute_each_target : super
       end
 
-      # This class represents a transformer. See RRA::CommandBase::TransformerTarget, for
+      # This class represents a transformer. See RRA::Base::Command::TransformerTarget, for
       # most of the logic that this class inherits. Typically, these targets take the form
       # of "#{year}-#{transformer_name}"
-      class Target < RRA::CommandBase::TransformerTarget
+      class Target < RRA::Base::Command::TransformerTarget
         for_command :transform
 
         def description

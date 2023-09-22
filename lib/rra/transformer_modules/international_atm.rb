@@ -92,12 +92,12 @@ module RRA
                                                                              operation: :per_lot,
                                                                              right: remitted) }
 
-          RRA::TransformerBase::Posting.new from_posting.line_number,
-                                            date: from_posting.date,
-                                            description: from_posting.description,
-                                            from: from_posting.from,
-                                            tags: from_posting.tags,
-                                            targets: targets.reverse
+          RRA::Base::Transformer::Posting.new from_posting.line_number,
+                                              date: from_posting.date,
+                                              description: from_posting.description,
+                                              from: from_posting.from,
+                                              tags: from_posting.tags,
+                                              targets: targets.reverse
         end
       end
     end

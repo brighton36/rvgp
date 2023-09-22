@@ -6,7 +6,7 @@ require_relative '../fakers/fake_transformer'
 module RRA
   module Commands
     # This class handles the request to create a new RRA project.
-    class NewProject < RRA::CommandBase
+    class NewProject < RRA::Base::Command
       PROJECT_FILE = <<~END_OF_PROJECT_FILE
         # vim:filetype=ledger
 
