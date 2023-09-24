@@ -32,7 +32,7 @@ module RRA
       end
 
       # This class represents a plot, available for building. And dispatches a build request.
-      # Typically, the name of a plot takes the form of "#{year}-#{plotname}". See
+      # Typically, the name of a plot takes the form of "#\\{year}-#\\{plotname}". See
       # RRA::Base::Command::PlotTarget, from which this class inherits, for a better
       # representation of how this class works.
       class Target < RRA::Base::Command::PlotTarget

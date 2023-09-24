@@ -10,11 +10,17 @@ module RRA
     # by both the rra standalone bin, as well as the rake processes themselves.
     # This class manages colors, icons, indentation and thread syncronization
     # concerns, relating to status display.
+    # NOTE: This class doesn't know if it wants to be a logger or something else... Let's
+    # see where it ends up
+    #
+    # @attr_reader [Integer] tty_cols The width of the terminal, in characters - This number is calculated at the time of
+    #                                 Object instantiation.
     class StatusOutputRake
-      # This class doesn't know if it wants to be a logger or something else... Let's
-      # see where it ends up
       attr_reader :tty_cols
 
+      # Create a new STDOUT status output logger
+      # @param [Hash] opts what options to configure this registry with
+      # @option opts [Pastel] :pastel A pastel object to use, for formatting output
       def initialize(opts = {})
         @semaphore = Mutex.new
         @pastel = opts[:pastel] || Pastel.new
@@ -40,6 +46,16 @@ module RRA
         @truncated = I18n.t 'status.indicators.truncated'
       end
 
+      # This is the only public interface, at this time, for use in outputting status.
+      # This is the only method that RRA needs implemented, on a status output object, should
+      # you choose to write your own.
+      # @param [String] cmd The command that's emmitting this status message
+      # @param [String] desc The I18n key, appended to 'status.commands.', that contains the message you wish to output
+      # @yield [void] A block that contains the execution of this message, and which will return an execution status.
+      # @yieldreturn [Hash<Symbol, Array>] A hash, with the keys :errors, and :warnings, each of which contains a list of
+      #                                    errors and warnings that occurred, during the execution of this block. These
+      #                                    will be stylized and output to the user.
+      # @return [void]
       def info(cmd, desc, &block)
         icon, header, prefix = *%w[icon header prefix].map do |attr|
           I18n.t format('status.commands.%<cmd>s.%<attr>s', cmd: cmd.to_s, attr: attr)

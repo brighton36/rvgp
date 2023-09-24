@@ -11,7 +11,7 @@ module RRA
   # the main() entry point used by Rakefiles, and in turn, instigates the
   # equivalent entry points in various modules thereafter.
   #
-  # @attr_reader [String] project_directory The directory path, from which this application was initialized.
+  # @attr_reader [String] project_path The directory path, from which this application was initialized.
   # @attr_reader [RRA::Application::StatusOutputRake] logger The application logger. This is provided so that callers
   #                                             can output to the console. (Or wherever the output device is logging)
   # @attr_reader [RRA::Journal::Pricer] pricer This attribute contains the pricer that's used by the application. Price
@@ -20,17 +20,19 @@ module RRA
   # @attr_reader [RRA::Application::Config] config The application configuration, most of which is parsed from the
   #                                                config.yaml
   class Application
+    # This error is thrown when the project_path provided to {Application#initialize} doesn't exist, and/or is
+    # otherwise invalid.
     class InvalidProjectDir < StandardError; end
 
-    attr_reader :project_directory, :logger, :pricer, :config
+    attr_reader :project_path, :logger, :pricer, :config
 
     # Creates an instance of Application, given the files and structure of the provided project path.
-    # @param project_directory [String] The directory path, to an RRA project.
-    def initialize(project_directory)
-      raise InvalidProjectDir unless [project_directory, format('%s/app', project_directory)].all? { |f| Dir.exist? f }
+    # @param project_path [String] The path, to an RRA project directory.
+    def initialize(project_path)
+      raise InvalidProjectDir unless [project_path, format('%s/app', project_path)].all? { |f| Dir.exist? f }
 
-      @project_directory = project_directory
-      @config = RRA::Application::Config.new project_directory
+      @project_path = project_path
+      @config = RRA::Application::Config.new project_path
       @logger = RRA::Application::StatusOutputRake.new pastel: RRA.pastel
 
       if File.exist? config.prices_path
@@ -78,12 +80,13 @@ module RRA
 
     # @return [Array] An array, containing all the transformer objects, defined in the project
     def transformers
-      @transformers ||= RRA::Base::Transformer.all project_directory
+      @transformers ||= RRA::Base::Transformer.all project_path
     end
 
     # This method will insert all the project tasks, into a Rake object.
     # Typically, 'self' is that object, when calling from a Rakefile. (aka 'main')
     # @param rake_main [Object] The Rake object to attach RRA to.
+    # @return [void]
     def initialize_rake!(rake_main)
       require 'rake/clean'
 
@@ -92,7 +95,7 @@ module RRA
       # This removes clobber from the task list:
       Rake::Task['clobber'].clear_comments
 
-      project_tasks_dir = format('%s/tasks', project_directory)
+      project_tasks_dir = format('%s/tasks', project_path)
       Rake.add_rakelib project_tasks_dir if File.directory? project_tasks_dir
 
       RRA.commands.each do |command_klass|
@@ -118,6 +121,10 @@ module RRA
       end
     end
 
+    # This helper method will create the provided subdir inside the project's build/ directory, if that
+    # subdir doesn't already exist. In the case that this subdir already exists, the method terminates
+    # gracefully, without action.
+    # @return [void]
     def ensure_build_dir!(subdir)
       path = RRA.app.config.build_path subdir
       FileUtils.mkdir_p path unless File.directory? path
@@ -146,7 +153,7 @@ module RRA
     end
 
     def require_app_files!(subdir)
-      Dir.glob([project_directory, 'app', subdir, '*.rb'].join('/')).sort.each { |file| require file }
+      Dir.glob([project_path, 'app', subdir, '*.rb'].join('/')).sort.each { |file| require file }
     end
   end
 end

@@ -9,6 +9,10 @@ module RRA
       include RRA::Pta::AvailabilityHelper
       attr_reader :prices_path, :project_journal_path
 
+      # Given the provided project path, this object will parse and store the
+      # config/rra.yaml, as well as provide default values for otherwise unspecified attributes
+      # in this file.
+      # @param project_path [String] The path, to an RRA project directory.
       def initialize(project_path)
         @project_path = project_path
         @build_path = format('%s/build', project_path)
@@ -49,32 +53,51 @@ module RRA
         @grid_ending_at ||= default_grid_ending_at
       end
 
+      # Return the contents of the provided attr, from the project's config/rra.yaml
+      # @return [Object] the value corresponding to the provided attr
       def [](attr)
         @yaml[attr]
       end
 
+      # Returns a boolean indicating whether a value for the provided attr was specified in the project's
+      # config/rra.yaml
+      # @return [TrueClass, FalseClass] whether the key was specified
       def key?(attr)
         @yaml.key? attr
       end
 
+      # Returns the starting date, for all grids that will be generated in this project.
+      # @return [Date] when to commence grid building
       def grid_starting_at
         call_or_return_date @grid_starting_at
       end
 
+      # Returns the ending date, for all grids that will be generated in this project.
+      # @return [Date] when to finish grid building
       def grid_ending_at
         call_or_return_date @grid_ending_at
       end
 
+      # The years, for which we will be building grids
+      # @return [Array<Integer>] What years to expect in our build/grids directory (and their downstream targets)
       def grid_years
         grid_starting_at.year.upto(grid_ending_at.year)
       end
 
-      def project_path(subdirectory = nil)
-        subdirectory ? [@project_path, subdirectory].join('/') : @project_path
+      # Returns the full path, to a file or directory, in the project. If no relpath was provided, this
+      # method returns the full path to the project directory.
+      # @param relpath [optional, String] The relative path, to a filesystem object in the current project
+      # @return [String] The full path to the requested resource
+      def project_path(relpath = nil)
+        relpath ? [@project_path, relpath].join('/') : @project_path
       end
 
-      def build_path(subdirectory = nil)
-        subdirectory ? [@build_path, subdirectory].join('/') : @build_path
+      # Returns the full path, to a file or directory, in the project's build/ directory. If no relpath was provided,
+      # this method returns the full path to the project build directory.
+      # @param relpath [optional, String] The relative path, to a filesystem object in the current project
+      # @return [String] The full path to the requested resource
+      def build_path(relpath = nil)
+        relpath ? [@build_path, relpath].join('/') : @build_path
       end
 
       private

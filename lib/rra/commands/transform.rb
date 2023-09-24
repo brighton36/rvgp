@@ -24,7 +24,7 @@ module RRA
 
       # This class represents a transformer. See RRA::Base::Command::TransformerTarget, for
       # most of the logic that this class inherits. Typically, these targets take the form
-      # of "#{year}-#{transformer_name}"
+      # of "#\\{year}-#\\{transformer_name}"
       class Target < RRA::Base::Command::TransformerTarget
         for_command :transform
 

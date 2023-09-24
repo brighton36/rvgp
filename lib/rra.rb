@@ -46,4 +46,17 @@ module RRA
   def self.pastel
     @pastel ||= Pastel.new enabled: $stdout.tty?
   end
+
+  # @!attribute [r] self.commands
+  #   Contains an array of all available objects, with parent of type {RRA::Base::Command}.
+  #   @return [Array<RRA::Base::Command>] the commands that are available in this project
+  # @!attribute [r] self.grids
+  #   Contains an array of all available objects, with parent of type {RRA::Base::Grid}.
+  #   @return [Array<RRA::Base::Grid>] the grids that are available in this project
+  # @!attribute [r] self.journal_validations
+  #   Contains an array of all available objects, with parent of type {RRA::Base::JournalValidation}.
+  #   @return [Array<RRA::Base::JournalValidation>] the journal validations that are available in this project
+  # @!attribute [r] self.system_validations
+  #   Contains an array of all available objects, with parent of type {RRA::Base::SystemValidation}.
+  #   @return [Array<RRA::Base::SystemValidation>] the system validations that are available in this project
 end

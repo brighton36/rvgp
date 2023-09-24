@@ -23,7 +23,7 @@ module RRA
       # This class represents a Google 'sheet', built from a Plot, available for
       # export to google. And dispatches a build request. Typically, the name of
       # a sheet is identical to the name of its corresponding plot. And, takes
-      # the form of "#{year}-#{plotname}". See RRA::Base::Command::PlotTarget, from
+      # the form of "#\\{year}-#\\{plotname}". See RRA::Base::Command::PlotTarget, from
       # which this class inherits, for a better representation of how this class
       # works.
       class Target < RRA::Base::Command::PlotTarget

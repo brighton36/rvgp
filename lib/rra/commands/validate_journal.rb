@@ -12,7 +12,7 @@ module RRA
       # This class principally represents the journals, by way of  the transformer
       # in which the journal is defined. See RRA::Base::Command::TransformerTarget, for
       # most of the logic that this class inherits. Typically, these targets take
-      # the form of "#{year}-#{transformer_name}"
+      # the form of "#\\{year}-#\\{transformer_name}"
       class Target < RRA::Base::Command::TransformerTarget
         for_command :validate_journal
 
