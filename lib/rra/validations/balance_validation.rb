@@ -14,10 +14,10 @@ module RRA
           cite_balances = transformer.balances.map do |d, expected_balance_s|
             expected_balance = expected_balance_s.to_commodity
 
-            balances_on_day = pta_adapter.balance transformer.from,
-                                                  depth: 1,
-                                                  end: d.to_s,
-                                                  file: RRA.app.config.project_journal_path
+            balances_on_day = pta.balance transformer.from,
+                                          depth: 1,
+                                          end: d.to_s,
+                                          file: RRA.app.config.project_journal_path
 
             balances_found = balances_on_day.accounts.map(&:amounts).flatten.find_all do |amount|
               amount.code == expected_balance.code

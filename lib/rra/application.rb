@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative 'status_output'
-require_relative 'config'
+require_relative 'application/status_output'
+require_relative 'application/config'
 
 module RRA
   # The main application class, by which all projects are defined. This class
@@ -12,12 +12,13 @@ module RRA
   # equivalent entry points in various modules thereafter.
   #
   # @attr_reader [String] project_directory The directory path, from which this application was initialized.
-  # @attr_reader [RRA::StatusOutputRake] logger The application logger. This is provided so that callers can output
-  #                                             to the console. (Or wherever the output device is logging)
-  # @attr_reader [RRA::Pricer] pricer This attribute contains the pricer that's used by the application. Price
-  #                                   data is automatically loaded from config.prices_path (typically
-  #                                   'journals/prices.db')
-  # @attr_reader [RRA::Config] config The application configuration, most of which is parsed from the config.yaml
+  # @attr_reader [RRA::Application::StatusOutputRake] logger The application logger. This is provided so that callers
+  #                                             can output to the console. (Or wherever the output device is logging)
+  # @attr_reader [RRA::Journal::Pricer] pricer This attribute contains the pricer that's used by the application. Price
+  #                                            data is automatically loaded from config.prices_path (typically
+  #                                            'journals/prices.db')
+  # @attr_reader [RRA::Application::Config] config The application configuration, most of which is parsed from the
+  #                                                config.yaml
   class Application
     class InvalidProjectDir < StandardError; end
 
@@ -29,11 +30,11 @@ module RRA
       raise InvalidProjectDir unless [project_directory, format('%s/app', project_directory)].all? { |f| Dir.exist? f }
 
       @project_directory = project_directory
-      @config = RRA::Config.new project_directory
-      @logger = StatusOutputRake.new pastel: RRA.pastel
+      @config = RRA::Application::Config.new project_directory
+      @logger = RRA::Application::StatusOutputRake.new pastel: RRA.pastel
 
       if File.exist? config.prices_path
-        @pricer = RRA::Pricer.new(
+        @pricer = RRA::Journal::Pricer.new(
           File.read(config.prices_path),
           # This 'addresses' a pernicious bug that will likely affect you. And
           # I don't have an easy solution, as, I sort of blame ledger for this.

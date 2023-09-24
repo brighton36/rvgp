@@ -2,13 +2,13 @@
 
 module RRA
   # A base class, for use by plain text accounting adapters. Presumably for use with
-  # hledger and ledger. This class contains abstractions and code shared by all PtaAdapter's.
-  class PtaAdapter
+  # hledger and ledger. This class contains abstractions and code shared by all Pta's.
+  class Pta
     # This module is intended for use in clasess that wish to provide #ledger, #hledger,
-    # and #pta_adapter methods, to instances.
+    # and #pta methods, to instances.
     module AvailabilityHelper
-      %w[ledger hledger pta_adapter].each do |attr|
-        define_method(attr) { RRA::PtaAdapter.send attr }
+      %w[ledger hledger pta].each do |attr|
+        define_method(attr) { RRA::Pta.send attr }
       end
     end
 
@@ -34,7 +34,7 @@ module RRA
       end
     end
 
-    class BalanceAccount < RRA::PtaAdapter::ReaderBase
+    class BalanceAccount < RRA::Pta::ReaderBase
       readers :fullname, :amounts
     end
 
@@ -61,7 +61,7 @@ module RRA
       def commodities_sum(commodities, code)
         currency = RRA::Journal::Currency.from_code_or_symbol code
 
-        pricer = options[:pricer] || RRA::Pricer.new
+        pricer = options[:pricer] || RRA::Journal::Pricer.new
         # There's a whole section on default valuation behavior here :
         # https://hledger.org/hledger.html#valuation
         date = options[:price_date] || Date.today
@@ -72,9 +72,9 @@ module RRA
           next if a.quantity.zero?
 
           a.alphabetic_code == currency.alphabetic_code ? a : pricer.convert(date.to_time, a, code)
-        rescue RRA::Pricer::NoPriceError
+        rescue RRA::Journal::Pricer::NoPriceError
           # This seems to be what we want...
-          raise RRA::Pricer::NoPriceError
+          raise RRA::Journal::Pricer::NoPriceError
         end.compact
 
         # The case of [].sum will return an integer 0, which, isn't quite what
@@ -186,28 +186,28 @@ module RRA
 
     class << self
       def ledger
-        RRA::Ledger.new
+        Ledger.new
       end
 
       def hledger
-        RRA::HLedger.new
+        HLedger.new
       end
 
-      def pta_adapter
-        @pta_adapter ||= if @pta_adapter_driver
-                           send @pta_adapter_driver
-                         elsif ledger.present?
-                           ledger
-                         elsif hledger.present?
-                           hledger
-                         else
-                           raise StandardError, 'No pta adapter specified, or detected, on system'
-                         end
+      def pta
+        @pta ||= if @pta_adapter
+                   send @pta_adapter
+                 elsif ledger.present?
+                   ledger
+                 elsif hledger.present?
+                   hledger
+                 else
+                   raise StandardError, 'No pta adapter specified, or detected, on system'
+                 end
       end
 
       def pta_adapter=(driver)
-        @pta_adapter = nil
-        @pta_adapter_driver = driver.to_sym
+        @pta = nil
+        @pta_adapter = driver.to_sym
       end
     end
   end

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
 require_relative '../plot'
-require_relative '../google-drive/sheet'
-require_relative '../google-drive/output_google_sheets'
-require_relative '../google-drive/output_csv'
+require_relative '../plot/google-drive/sheet'
+require_relative '../plot/google-drive/output_google_sheets'
+require_relative '../plot/google-drive/output_csv'
 
 module RRA
   module Commands

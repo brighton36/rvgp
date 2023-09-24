@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../../rra'
-require_relative '../descendant_registry'
+require_relative '../application/descendant_registry'
 
 module RRA
   module Base
@@ -151,7 +151,7 @@ module RRA
         end
       end
 
-      include RRA::DescendantRegistry
+      include RRA::Application::DescendantRegistry
 
       register_descendants RRA, :commands
 

@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require_relative '../descendant_registry'
+require_relative '../application/descendant_registry'
 
 module RRA
   module Base
     # The base class, from which all Journal and System validations inherit. This
     # class contains the code shared by all validations.
     class Validation
-      include RRA::PtaAdapter::AvailabilityHelper
+      include RRA::Pta::AvailabilityHelper
 
       NAME_CAPTURE = /([^:]+)Validation\Z/.freeze
 
@@ -43,7 +43,7 @@ module RRA
     # This base class is intended for use by inheritors, and contains most of the
     # logic needed, to implement the validation of a journal file
     class JournalValidation < Validation
-      include RRA::DescendantRegistry
+      include RRA::Application::DescendantRegistry
 
       register_descendants RRA, :journal_validations, name_capture: NAME_CAPTURE
 
@@ -58,7 +58,7 @@ module RRA
       def validate_no_transactions(with_error_msg, *args)
         ledger_opts = args.last.is_a?(Hash) ? args.pop : {}
 
-        results = pta_adapter.register(*args, { file: transformer.output_file }.merge(ledger_opts))
+        results = pta.register(*args, { file: transformer.output_file }.merge(ledger_opts))
 
         transactions = block_given? ? yield(results.transactions) : results.transactions
 
@@ -70,7 +70,7 @@ module RRA
       end
 
       def validate_no_balance(with_error_msg, account)
-        results = pta_adapter.balance account, file: transformer.output_file
+        results = pta.balance account, file: transformer.output_file
 
         error_citations = results.accounts.map do |ra|
           ra.amounts.map { |commodity| [ra.fullname, RRA.pastel.red('━'), commodity.to_s].join(' ') }
@@ -85,7 +85,7 @@ module RRA
     # This base class is intended for use by inheritors, and contains most of the
     # logic needed, to implement the validation of a system file
     class SystemValidation < Validation
-      include RRA::DescendantRegistry
+      include RRA::Application::DescendantRegistry
 
       task_names = ->(registry) { registry.names.map { |name| format('validate_system:%s', name) } }
       register_descendants RRA, :system_validations,

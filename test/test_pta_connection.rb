@@ -6,13 +6,13 @@ require 'minitest/autorun'
 
 require_relative '../lib/rra'
 
-[RRA::Ledger, RRA::HLedger].each do |pta_klass|
+[RRA::Pta::Ledger, RRA::Pta::HLedger].each do |pta_klass|
   describe pta_klass do
     subject { pta_klass.new }
 
     describe "#{pta_klass}#adapter_name" do
       it 'should return the appropriate symbol' do
-        value(subject.adapter_name).must_equal subject.is_a?(RRA::HLedger) ? :hledger : :ledger
+        value(subject.adapter_name).must_equal subject.is_a?(RRA::Pta::HLedger) ? :hledger : :ledger
       end
     end
 
@@ -261,9 +261,9 @@ require_relative '../lib/rra'
         register = subject.register 'Personal:Assets:AcmeBank:Savings', related: true, from_s: journal
 
         # We just use hledger here, rather than maintain two versions of our csv_rows truth table:
-        csv_rows = CSV.parse(RRA::HLedger.new.command('register',
-                                                      'Personal:Assets:AcmeBank:Savings',
-                                                      from_s: journal, related: true, 'output-format': 'csv'),
+        csv_rows = CSV.parse(RRA::Pta::HLedger.new.command('register',
+                                                           'Personal:Assets:AcmeBank:Savings',
+                                                           from_s: journal, related: true, 'output-format': 'csv'),
                              headers: true)
 
         assert_equal csv_rows.length, register.transactions.length
@@ -366,7 +366,7 @@ require_relative '../lib/rra'
         transactions = subject.register(
           'Personal:Assets:Cash',
           monthly: true,
-          pricer: RRA::Pricer.new(<<~PRICES),
+          pricer: RRA::Journal::Pricer.new(<<~PRICES),
             P 2023-05-01 HNL $0.040504
             P 2023-06-01 CLP $0.0012
           PRICES
@@ -537,7 +537,7 @@ describe 'pta adapter errata' do
 
       # Hledger just works, and these tests are here for posterity. Asserting that hledger works as expected
       [args, args_with_fix].each do |a|
-        transactions = RRA::HLedger.new.register(*a).transactions
+        transactions = RRA::Pta::HLedger.new.register(*a).transactions
         value(transactions.length).must_equal 1
         value(transactions[0].payee).must_be_nil
         value(transactions[0].postings.length).must_equal 1
@@ -545,7 +545,7 @@ describe 'pta adapter errata' do
       end
 
       # These specs just define the error, through our expectations of how it manefests:
-      transactions = RRA::Ledger.new.register(*args).transactions
+      transactions = RRA::Pta::Ledger.new.register(*args).transactions
       value(transactions.length).must_equal 1
       value(transactions[0].payee).must_equal '- 23-Jul-31'
       value(transactions[0].postings.length).must_equal 2
@@ -553,7 +553,7 @@ describe 'pta adapter errata' do
       value(transactions[0].postings[1].amounts.map(&:to_s)).must_equal ['$ 12.34']
 
       # This is the fix:
-      transactions = RRA::Ledger.new.register(*args_with_fix).transactions
+      transactions = RRA::Pta::Ledger.new.register(*args_with_fix).transactions
       value(transactions.length).must_equal 1
       value(transactions[0].payee).must_equal '- 23-Jul-31'
       value(transactions[0].postings.length).must_equal 1

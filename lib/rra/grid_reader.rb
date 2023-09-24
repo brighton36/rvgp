@@ -6,8 +6,8 @@ module RRA
   # This class provides a number of utility functions to query, and merge grids
   # that have been built. The primary purpose of these tools, is to decrease
   # the overhead that would otherwise exist, if we were to operate directly on
-  # the pta_adapter output, every time we referenced this data. As well as to
-  # maintain auditability for this data, in the project build.
+  # the pta output, every time we referenced this data. As well as to maintain
+  # auditability for this data, in the project build.
   class GridReader
     # NOTE: I'm not exactly sure what this class wants to be just yet...
     # Let's see if we end up using it for graphing... It might just be a 'Spreadsheet'

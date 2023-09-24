@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'gnuplot'
+require_relative 'plot/gnuplot'
 
 module RRA
   # This class assembles grids into a series of plots, using a plot specification
@@ -127,7 +127,7 @@ module RRA
 
     def gnuplot(name)
       @gnuplots ||= {}
-      @gnuplots[name] ||= RRA::Gnuplot::Plot.new title(name), grid(name), gnuplot_options
+      @gnuplots[name] ||= RRA::Plot::Gnuplot::Plot.new title(name), grid(name), gnuplot_options
     end
 
     def script(name)

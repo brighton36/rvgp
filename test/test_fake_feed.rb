@@ -193,7 +193,7 @@ class TestFakeFeed < Minitest::Test
   private
 
   def account_by_month(acct, journal_s, accrue_by = :total_in)
-    ledger = RRA::Ledger.new
+    ledger = RRA::Pta::Ledger.new
     ledger.register(acct, monthly: true, from_s: journal_s)
           .transactions.map do |tx|
             assert_equal 1, tx.postings.length

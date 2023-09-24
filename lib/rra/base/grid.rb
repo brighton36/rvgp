@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'csv'
-require_relative '../descendant_registry'
+require_relative '../application/descendant_registry'
 require_relative '../utilities'
 
 module RRA
@@ -16,8 +16,8 @@ module RRA
     # as well as code to detect and produce the annual segmentation of grids, and
     # multiple-sheet segmentation of grids.
     class Grid
-      include RRA::DescendantRegistry
-      include RRA::PtaAdapter::AvailabilityHelper
+      include RRA::Application::DescendantRegistry
+      include RRA::Pta::AvailabilityHelper
       include RRA::Utilities
 
       register_descendants RRA, :grids, accessors: {
@@ -154,7 +154,7 @@ module RRA
           opts[:hledger_opts][:end] = ending_at.strftime('%Y-%m-%d')
         end
 
-        pta_adapter.register(*args, opts).transactions.inject(initial) do |ret, tx|
+        pta.register(*args, opts).transactions.inject(initial) do |ret, tx|
           tx.postings.reduce(ret) do |sum, posting|
             block.call sum, tx.date, posting
           end
@@ -171,7 +171,7 @@ module RRA
 
       class << self
         include RRA::Utilities
-        include RRA::PtaAdapter::AvailabilityHelper
+        include RRA::Pta::AvailabilityHelper
 
         attr_reader :name, :description, :output_path_template
 
@@ -187,7 +187,7 @@ module RRA
           # But, if we start using this before the journals are built, we're going to
           # need to clear this cache, thereafter. So, maybe we want to take a parameter
           # here, or figure something out then, to prevent problems.
-          @dependency_paths ||= pta_adapter.files(file: RRA.app.config.project_journal_path)
+          @dependency_paths ||= pta.files(file: RRA.app.config.project_journal_path)
         end
 
         def uptodate?(year)

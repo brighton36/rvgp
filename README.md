@@ -130,10 +130,10 @@ In the root of this project, is your 'main' journal, alongside the Rakefile, and
 Drilling into the app folder, we see the following sub-folders:
 
 * **app/transformers** This folder contains yaml files, which are used to transform your feeds, into pta journals. These yaml files support an extensive featureset to 'match entries', and then tag and categorize those matches. The output of this transform, is stored in the build/journals folder, once executed.
-* **app/validations** This folder contains ruby files, inside which, are tests that ensure validity of the output, for the above transformers. These ruby files contain classes which inherit from either the RRA::SystemValidationBase, or, the RRA::JournalValidationBase, depending on whether they validate the system as a whole (Perhaps, checking for any transactions tagged 'vacation', but which aren't also tagged with a 'location'). Or, whether they are specifically designed for a given transformer's output file. There is no build output on these files. Validations either trigger an warning on the console, or abort a build from continuing (with an error on the console).
+* **app/validations** This folder contains ruby files, inside which, are tests that ensure validity of the output, for the above transformers. These ruby files contain classes which inherit from either the RRA::Base::SystemValidation, or, the RRA::Base::JournalValidation, depending on whether they validate the system as a whole (Perhaps, checking for any transactions tagged 'vacation', but which aren't also tagged with a 'location'). Or, whether they are specifically designed for a given transformer's output file. There is no build output on these files. Validations either trigger an warning on the console, or abort a build from continuing (with an error on the console).
 * **app/grids** This folder contains ruby files, containing classes which build 'grids'. Grids, are csv files, that contain calculated outputs, based on your journals. These grids can be used for many purposes, but, probably should be considered 'excel sheets' that are later plotted, or referenced by a command elsewhere. Typically, these grids are composed of 'hledger monthly' queries. However, they can just as easily be generated independent of your journals. Which is useful for tracking 'business projections' and financial models that you wrote yourself. The output of these grids, are stored in your build/grids folder.
 * **app/plots** This folder contains the yaml files which contain the gnuplot and google settings that draw your plots. These settings determine what will gpi files are generated in your build/plots folder.
-* **app/commands** This folder contains any additional commands you wish to extend the rra app with. And which are then suitable for insertion into the rake workflow. These files are ruby files, containing classes which inherit from the RRA::CommandBase object.
+* **app/commands** This folder contains any additional commands you wish to extend the rra app with. And which are then suitable for insertion into the rake workflow. These files are ruby files, containing classes which inherit from the RRA::Base::Command object.
 
 These directories contain the bulk of your workload, in your rra projects. These components will be further documented further down in this README. In the meantime, it may help to illustrate the typical workflow cycle, that rra executes using these files.
 
@@ -157,9 +157,9 @@ To better understand how your files, are processed by rra, here's a diagram of h
       JournalBuild-->JournalOutput("build/journals/*.journal");
     end
     JournalOutput-->JValidations;
-    JValidationInput("app/validations/*.rb<br>(<i>RRA::JournalValidationBase</i>)").->JValidations;
+    JValidationInput("app/validations/*.rb<br>(<i>RRA::Base::JournalValidation</i>)").->JValidations;
     JValidations("<br>📒 <b>Journal Validate</b><br><br>");
-    SValidationInput("app/validations/*.rb<br>(<i>RRA::SystemValidationBase</i>)").->SValidations;
+    SValidationInput("app/validations/*.rb<br>(<i>RRA::Base::SystemValidation</i>)").->SValidations;
     JValidations-->SValidations("<br>📚 <b>System Validate</b><br><br>");
     GridInput("app/grids/*.rb<br>(<i>RRA::Base::Grid</i>)").->GridBuild("<br>▦ <b>Grid Build</b><br><br>");
     SValidations-->GridBuild;

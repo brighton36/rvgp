@@ -68,7 +68,7 @@ module RRA
           end
         end
 
-        logger = StatusOutputRake.new pastel: RRA.pastel
+        logger = RRA::Application::StatusOutputRake.new pastel: RRA.pastel
         %i[project_directory bank_feeds transformers].each do |step|
           logger.info self.class.name, I18n.t(format('commands.new_project.initialize.%s', step)) do
             send format('initialize_%s', step).to_sym
