@@ -4,13 +4,23 @@ require 'open3'
 
 module RRA
   class Plot
+    # This module contains the code needed to produce Gnuplot .gpi files, from a grid, and
+    # styling options.
     module Gnuplot
       # Palette's are loaded from a template, and contain logic related to coloring
       # base elements (fonts/background/line-colors/etc), as well as relating to
       # series/element colors in the plot.
       class Palette
-        attr_reader :base_colors
-
+        # @param [Hash] opts The options to configure this palette with
+        # @option opts [Hash<Symbol, String>] :base The base colors for this plot. Currently, the following base colors
+        #                                           are supported: :title_rgb, :background_rgb, :font_rgb, :grid_rgb,
+        #                                           :axis_rgb, :key_text_rgb . This option expects keys to be one of the
+        #                                           supported colors, and values to be in the 'standard' html color
+        #                                           format, resembling "#rrggbb" (with rr, gg, and bb being a
+        #                                           hexadecimal color code)
+        #
+        # @option opts [Array<String>] :series An array of colors, in the 'standard' html color format. There is no
+        #                                      limit to the size of this array.
         def initialize(opts = {})
           @series_colors = opts[:series]
           @base_colors = opts[:base]
@@ -18,19 +28,30 @@ module RRA
           @last_series_direction = 1
         end
 
+        # Return the current series color. And, increments the 'current' color pointer, so that a subsequent call to
+        # this method returns 'the next color', and continues the cycle. Should there be no
+        # further series colors available, at the time of advance, the 'current' color
+        # moves back to the first element in the provided :series colors.
+        # @return [String] The html color code of the color, before we advanced the series
         def series_next!
           @last_series_color += @last_series_direction
           @series_colors[@last_series_color % @series_colors.length]
         end
 
+        # @!visibility private
         def respond_to_missing?(name, _include_private = false)
           @base_colors.key? name
         end
 
+        # Unhandled methods, are assumed to be base_color requests. And, commensurately, the :base option
+        # in the constructor is used to satisfy any such methods
+        # @return [String] An html color code, for the requested base color
         def method_missing(name)
           @base_colors.key?(name) ? base_color(name) : super(name)
         end
 
+        # Returns the base colors, currently supported, that were supplied in the {#initialze} base: option
+        # @return [Hash<Symbol, String>] An html color code, for the requested base color
         def base_to_h
           # We'll probably want to expand this more at some point...
           { title_rgb: title, background_rgb: background, font_rgb: font,
@@ -59,11 +80,19 @@ module RRA
       class ChartBuilder
         ONE_MONTH_IN_SECONDS = 2_592_000 # 30 days
 
-        # TODO: At some point, we probably want to support inverting the key order.
-        #       which, as best I can tell, will involve writing a 'fake' chart,
-        #       that's not displayed. But which will create a key, which is
-        #       displayed, in the order we want
+        # Base class, for a 2D Gnuplot
+        # @param [Hash] opts options to configure this chart
+        # @option opts [Symbol] :domain This option specifies the 'type' of the domain. Currently, the only supported
+        #                               type is :monthly
+        # @option opts [Integer,Date] :xrange_start The plot domain origin, either the number 1, or a date
+        # @option opts [Date] :xrange_end The end of the plot domain
+        # @option opts [Hash<Symbol, String>] :axis Axis labels. At the moment, :bottom and :left are supported keys.
+        # @param [RRA::Plot::Gnuplot::Plot] gnuplot A Plot to attach this Chart to
         def initialize(opts, gnuplot)
+          # TODO: At some point, we probably want to support inverting the key order.
+          #       which, as best I can tell, will involve writing a 'fake' chart,
+          #       that's not displayed. But which will create a key, which is
+          #       displayed, in the order we want
           @gnuplot = gnuplot
 
           if opts[:domain]
@@ -92,16 +121,25 @@ module RRA
           gnuplot.set 'ylabel', opts[:axis][:left] if opts[:axis] && opts[:axis][:left]
         end
 
+        # Returns a enumerator, for use by {Plot#plot_command}, when building charts. Mostly,
+        # this method is what determines if the series are started from one, going up to numcols. Or, are started
+        # from num_cols, and go down to one.
+        # @return [Enumerator] An enumerator to progress through the chart's series
+        def series_range(num_cols)
+          reverse_series_range? ? (num_cols - 1).downto(1) : 1.upto(num_cols - 1)
+        end
+
+        # Returns the column number, for use by {Plot#plot_command}, when building charts. In this class,
+        # that number is merely num + 1. This method gets more interesting in inheriting charts.
+        # @return [Integer] Returns the gnuplot formatted series_num, for the series at position num.
         def format_num(num)
           num + 1
         end
 
+        private
+
         def reverse_series_range?
           @reverse_series_range || false
-        end
-
-        def series_range(num_cols)
-          reverse_series_range? ? (num_cols - 1).downto(1) : 1.upto(num_cols - 1)
         end
 
         def format_xrange(opts)
@@ -116,8 +154,6 @@ module RRA
         def xrange?(opts)
           %i[xrange_start xrange_end].any? { |attr| opts[attr] }
         end
-
-        private
 
         def reverse_series_colors!
           @gnuplot.palette.reverse_series_colors! @gnuplot.num_cols - 1

@@ -3,9 +3,22 @@
 module RRA
   module Validations
     # This validation asserts that the ledger-reported balance, matches a provided
-    # balance, on a given day. Presumably, this provisional balance, comes from a
-    # bank statement.
+    # balance, on a given day. These balances, should be stipulated in a section
+    # of your transformer, that looks like this:
+    # ```
+    #    balances:
+    #    '2022-01-01': $ 105.63
+    #    '2022-09-01': $ 300.29
+    #    '2022-10-01': $ 400.33
+    # ```
+    # These balances are expected to come from a bank statement, and this validation
+    # ensures that rra is matching the records of your financial institution
     class BalanceValidation < RRA::Base::JournalValidation
+      # If there are no checkpoints in the 'balances' line of the transformer, this
+      # fires a warning. If there are checkpoints, then, we scan the register to
+      # ensure that the balance of the transformer.from, on the checkpoint date,
+      # matches the ledger/hledger balance, on that date. (and if it doesnt,
+      # fires an error)
       def validate
         if transformer.balances.nil? || transformer.balances.empty?
           warning! 'No balance checkpoints found.'

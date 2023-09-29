@@ -20,6 +20,22 @@ module RRA
     # I also think we need some adjustments here to cover all parsing cases. But,
     # for now this works well enough, again mostly because we're not using most
     # of these code paths... Lets see if/how this evolves.
+    #
+    # @attr_reader [String] left The 'left' component of the complex commodity
+    # @attr_reader [String] right The 'right' component of the complex commodity
+    # @attr_reader [Symbol] operation The 'operation' component of the complex commodity, either :right_expression,
+    #                                 :left_expression, :per_unit, or :per_lot
+    # @attr_reader [Date] left_date The 'left_date' component of the complex commodity
+    # @attr_reader [String] left_lot The 'left_lot' component of the complex commodity
+    # @attr_reader [Symbol] left_lot_operation The 'left_lot_operation' component of the complex commodity, either
+    #                                          :per_unit, or :per_lot
+    # @attr_reader [TrueClass, FalseClass] left_lot_is_equal The 'left_lot_is_equal' component of the complex
+    #                                                        commodity
+    # @attr_reader [String] left_expression The 'left_expression' component of the complex commodity
+    # @attr_reader [String] right_expression The 'right_expression' component of the complex commodity
+    # @attr_reader [String] left_lambda The 'left_lambda' component of the complex commodity
+    # @attr_reader [TrueClass, FalseClass] left_is_equal The 'left_is_equal' component of the complex commodity
+    # @attr_reader [TrueClass, FalseClass] right_is_equal The 'right_is_equal' component of the complex commodity
     class ComplexCommodity
       LOT_MATCH = /\A(\{+) *(=?) *([^}]+)\}+(.*)\Z/.freeze
       LAMBDA_MATCH = /\A\(\((.+)\)\)(.*)\Z/.freeze
@@ -35,7 +51,8 @@ module RRA
       ATTRIBUTES = %i[left right operation left_date left_lot left_lot_operation left_lot_is_equal left_expression
                       right_expression left_lambda left_is_equal right_is_equal].freeze
 
-      attr_reader(*ATTRIBUTES)
+      # @!visibility protected
+      attr_reader(*ATTRIBUTES) # :nodoc:
 
       class Error < StandardError; end
 

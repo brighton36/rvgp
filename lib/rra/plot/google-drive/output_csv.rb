@@ -9,9 +9,15 @@ module RRA
       # writes the sheets that would have otherwise been published to google - into a
       # local directory, with csv files representing the Google sheet. This is mostly
       # a debugging and diagnostic function.
+      # @attr_reader [String] destination The destination path, provided in the constructor
       class ExportLocalCsvs
         attr_accessor :destination
 
+        # Output google-intentioned spreadsheet sheets, to csvs in a directory
+        # @param [Hash] options The parameters governing this export
+        # @option options [String] :format What format, to output the csvs in. Currently, The only supported value is
+        #                                  'csv'.
+        # @option options [String] :destination The path to a folder, to export sheets into
         def initialize(options)
           unless [(options[:format] == 'csv'), File.directory?(options[:destination])].all?
             raise StandardError, 'Invalid Options, missing :destination'
@@ -20,6 +26,9 @@ module RRA
           @destination = options[:destination]
         end
 
+        # Ouput the provided sheet, into the destination path, as a csv
+        # @param [RRA::Plot::GoogleDrive::Sheet] sheet The options, and data, for this sheet
+        # @return [void]
         def sheet(sheet)
           shortname = sheet.title.tr('^a-zA-Z0-9', '_').gsub(/_+/, '_').downcase.chomp('_')
 

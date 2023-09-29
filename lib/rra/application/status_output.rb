@@ -13,8 +13,8 @@ module RRA
     # NOTE: This class doesn't know if it wants to be a logger or something else... Let's
     # see where it ends up
     #
-    # @attr_reader [Integer] tty_cols The width of the terminal, in characters - This number is calculated at the time of
-    #                                 Object instantiation.
+    # @attr_reader [Integer] tty_cols The width of the terminal, in characters - This number is calculated at the time
+    #                                 of Object instantiation.
     class StatusOutputRake
       attr_reader :tty_cols
 
@@ -52,9 +52,9 @@ module RRA
       # @param [String] cmd The command that's emmitting this status message
       # @param [String] desc The I18n key, appended to 'status.commands.', that contains the message you wish to output
       # @yield [void] A block that contains the execution of this message, and which will return an execution status.
-      # @yieldreturn [Hash<Symbol, Array>] A hash, with the keys :errors, and :warnings, each of which contains a list of
-      #                                    errors and warnings that occurred, during the execution of this block. These
-      #                                    will be stylized and output to the user.
+      # @yieldreturn [Hash<Symbol, Array>] A hash, with the keys :errors, and :warnings, each of which contains a list
+      #                                    of errors and warnings that occurred, during the execution of this block.
+      #                                    These will be stylized and output to the user.
       # @return [void]
       def info(cmd, desc, &block)
         icon, header, prefix = *%w[icon header prefix].map do |attr|

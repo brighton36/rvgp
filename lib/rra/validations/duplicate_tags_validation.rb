@@ -5,6 +5,9 @@ module RRA
     # This class implements a journal validation that ensures a given transfer, hasn't
     # been tagged more than once, with the same tag.
     class DuplicateTagsValidation < RRA::Base::JournalValidation
+      # Reviews every transfer, and post, to ensure that there are no tags occurring more than once, in
+      # any given entry. Unlike most of the validations in RRA, this one doesn't use ledger or hledger
+      # to validate. This validation parses the file itself, in ruby, and ensures based on the contents.
       def validate
         journal = RRA::Journal.parse File.read(transformer.output_file)
         dupe_messages = []

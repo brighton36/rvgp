@@ -75,7 +75,6 @@ module RRA
       # This module defines the parent's class methods, which are attached to a parent
       # class, at the time it includes the DescendantRegistry
       module ClassMethods
-
         # This method is the main entrypoint for all of the descendent registry features. This method
         # installs a registry, into the provided namespace, given the provided options
         # @param [Object] in_klass This is class, under which, this registry will be created

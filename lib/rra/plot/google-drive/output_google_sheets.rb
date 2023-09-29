@@ -7,6 +7,7 @@ require 'google/apis/sheets_v4'
 
 module RRA
   class Plot
+    # This module contains the classes which support our 'Publish to Google' features.
     module GoogleDrive
       # This class works as a driver, to the plot subsystem. And, exports plots too a
       # google sheets document.
@@ -31,9 +32,12 @@ module RRA
       # The empty values in these files, should be populated with the values you secured
       # following the medium link above. The only exception here, might be that refresh_token.
       # Which, I think gets written by the googleauth library, automatically.
+      # @attr_reader [String] current_sheet_id The id of the most recently created sheet, as provided by Google
+      # @attr_reader [String] spreadsheet_url The url to this Sheet, which can be used to access the sheet, by the user.
       class ExportSheets
         # The required parameter, :secrets_file, wasn't supplied
         class MissingSecretsFile < StandardError
+          # The error message we're outputing
           MSG_FORMAT = 'Missing required parameter :secrets_file'
 
           def initialize
@@ -43,6 +47,7 @@ module RRA
 
         # The the contents of the :secrets_file, was missing one or more required parameters
         class MissingSecretsParams < StandardError
+          # The error message we're outputing
           MSG_FORMAT = 'Config file is missing one or more of the required parameters: ' \
                        ':client_id, :project_id, :client_secret, :token_path, :application_name'
 
@@ -51,20 +56,30 @@ module RRA
           end
         end
 
+        # This is just a shorthand we're using, to simply the sheets_v4 implementation
         SV4 = Google::Apis::SheetsV4
 
+        # Dates are expected to be provided wrt to their relative offset from this date
         LOTUS_EPOCH = Date.new 1899, 12, 30
 
+        # The coloring schemes, used by our sheets. This constant... needs some work
         COLOR_SCHEMES = [
           # Pink:  TODO : maybe remove this, or put into a palettes file/option
           [233, 29, 99, 255, 255, 255, 253, 220, 232]
         ].freeze
 
-        SCOPE = Google::Apis::SheetsV4::AUTH_SPREADSHEETS
+        # Our OAuth base_url
         OOB_URI = 'urn:ietf:wg:oauth:2.0:oob'
 
         attr_reader :current_sheet_id, :spreadsheet_url
 
+        # Create a Spreadsheet, in a Google Drive.
+        # @param [Hash] options The parameters governing this Spreadsheet
+        # @option options [String] :secrets_file The path to a yaml file, containing the secrets used to login to this
+        #                                        drive.
+        # @option options [String] :title The title of this spreadsheet
+        # @option options [TrueClass,FalseClass] :log_http_requests a flag to indicate whether we want to debug the http
+        #                                                           session involved in the creation of this spreadsheet
         def initialize(options)
           raise MissingSecretsFile unless options.key? :secrets_file
 
@@ -101,8 +116,59 @@ module RRA
           @now = Time.now
         end
 
+        # Add the provided sheet, to the Spreadsheet document
+        # @param [RRA::Plot::GoogleDrive::Sheet] sheet The options, and data, for this sheet
+        # @return [void]
+        def sheet(sheet)
+          raise StandardError, 'Too many columns...' if sheet.columns.length > 26
+          raise StandardError, 'No header...' if sheet.columns.empty?
+
+          # Create a sheet, or update the sheet 0 title:
+          if current_sheet_id.nil?
+            update_sheet_title! 0, sheet.title
+          else
+            add_sheet! sheet.title
+          end
+
+          # Now that we have a title and sheet id, we can insert the data:
+          update_spreadsheet_value! sheet.title, [sheet.columns] + sheet.rows
+
+          # Format the sheet:
+          batch_update_spreadsheet! [
+            # Set the Date column:
+            repeat_cell(
+              create_range(1, 0, sheet.rows.count + 1),
+              'userEnteredFormat.numberFormat',
+              { userEnteredFormat: { numberFormat: { type: 'DATE', pattern: 'mm/dd/yy' } } }
+            ),
+            # Set the Money columns:
+            repeat_cell(
+              create_range(1, 1, sheet.rows.count + 1, sheet.columns.count),
+              'userEnteredFormat.numberFormat',
+              { userEnteredFormat: { numberFormat: { type: 'CURRENCY', pattern: '"$"#,##0.00' } } }
+            ),
+            # Format the header row text:
+            repeat_cell(
+              create_range(0, 0, 1, sheet.columns.count),
+              'userEnteredFormat(textFormat,horizontalAlignment)',
+              { userEnteredFormat: { textFormat: { bold: true }, horizontalAlignment: 'CENTER' } }
+            ),
+            # Color-band the rows:
+            band_rows(sheet.rows.count + 1, sheet.columns.count),
+            # Resize the series columns:
+            update_column_width(1, sheet.columns.count, 70)
+          ], skip_serialization: true
+
+          # Add a chart!
+          add_chart! sheet
+        end
+
+        private
+
         def authorize
-          authorizer = Google::Auth::UserAuthorizer.new @client_id, SCOPE, @token_store
+          authorizer = Google::Auth::UserAuthorizer.new(@client_id,
+                                                        Google::Apis::SheetsV4::AUTH_SPREADSHEETS,
+                                                        @token_store)
           user_id = 'default'
           credentials = authorizer.get_credentials user_id
           if credentials.nil?
@@ -273,50 +339,6 @@ module RRA
             skip_serialization ? request_body.to_h.to_json : request_body,
             options: { skip_serialization: skip_serialization }
           )
-        end
-
-        def sheet(sheet)
-          raise StandardError, 'Too many columns...' if sheet.columns.length > 26
-          raise StandardError, 'No header...' if sheet.columns.empty?
-
-          # Create a sheet, or update the sheet 0 title:
-          if current_sheet_id.nil?
-            update_sheet_title! 0, sheet.title
-          else
-            add_sheet! sheet.title
-          end
-
-          # Now that we have a title and sheet id, we can insert the data:
-          update_spreadsheet_value! sheet.title, [sheet.columns] + sheet.rows
-
-          # Format the sheet:
-          batch_update_spreadsheet! [
-            # Set the Date column:
-            repeat_cell(
-              create_range(1, 0, sheet.rows.count + 1),
-              'userEnteredFormat.numberFormat',
-              { userEnteredFormat: { numberFormat: { type: 'DATE', pattern: 'mm/dd/yy' } } }
-            ),
-            # Set the Money columns:
-            repeat_cell(
-              create_range(1, 1, sheet.rows.count + 1, sheet.columns.count),
-              'userEnteredFormat.numberFormat',
-              { userEnteredFormat: { numberFormat: { type: 'CURRENCY', pattern: '"$"#,##0.00' } } }
-            ),
-            # Format the header row text:
-            repeat_cell(
-              create_range(0, 0, 1, sheet.columns.count),
-              'userEnteredFormat(textFormat,horizontalAlignment)',
-              { userEnteredFormat: { textFormat: { bold: true }, horizontalAlignment: 'CENTER' } }
-            ),
-            # Color-band the rows:
-            band_rows(sheet.rows.count + 1, sheet.columns.count),
-            # Resize the series columns:
-            update_column_width(1, sheet.columns.count, 70)
-          ], skip_serialization: true
-
-          # Add a chart!
-          add_chart! sheet
         end
 
         def add_chart!(sheet)

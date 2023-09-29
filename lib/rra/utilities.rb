@@ -6,6 +6,9 @@ module RRA
   module Utilities
     # This returns each month in a series from the first date, to the last, in the
     # provided array of dates
+    # @param [Array<Date>] *args One or more date, that will be used to determine the range of months,
+    #                            to construct a range from.
+    # @return [Array<Date>] An array, containing a Date, set to the first of every month, in the provided range.
     def months_through_dates(*args)
       dates = args.flatten.uniq.sort
 
@@ -20,6 +23,10 @@ module RRA
       ret
     end
 
+    # Convert the provided string, into a Regexp. Note that the the ixm suffixes are supported, unlike
+    # ruby's Regexp.new(str) method
+    # @param [String] str A string, in the 'standard' regexp format: '/Running (?:to|at) the Park/i'
+    # @return [Regexp] The conversion to a useable regexp, for the provided string
     def string_to_regex(str)
       if %r{\A/(.*)/([imx]?[imx]?[imx]?)\Z}.match str
         Regexp.new(::Regexp.last_match(1), ::Regexp.last_match(2).chars.map do |c|
