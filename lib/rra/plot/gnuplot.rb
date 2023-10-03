@@ -80,7 +80,7 @@ module RRA
       class ChartBuilder
         ONE_MONTH_IN_SECONDS = 2_592_000 # 30 days
 
-        # Base class, for a 2D Gnuplot
+        # Create a chart
         # @param [Hash] opts options to configure this chart
         # @option opts [Symbol] :domain This option specifies the 'type' of the domain. Currently, the only supported
         #                               type is :monthly
@@ -129,11 +129,11 @@ module RRA
           reverse_series_range? ? (num_cols - 1).downto(1) : 1.upto(num_cols - 1)
         end
 
-        # Returns the column number, for use by {Plot#plot_command}, when building charts. In this class,
-        # that number is merely num + 1. This method gets more interesting in inheriting charts.
-        # @return [Integer] Returns the gnuplot formatted series_num, for the series at position num.
+        # Returns the column number specifier, a string, for use by {Plot#plot_command}, when building charts.
+        # In some charts, this is as simple as num + 1. In others, this line can contain more complex gnuplot code.
+        # @return [String] Returns the gnuplot formatted series_num, for the series at position num.
         def format_num(num)
-          num + 1
+          (num + 1).to_s
         end
 
         private
@@ -163,11 +163,32 @@ module RRA
       # This Chart element contains the logic necessary to render Integrals
       # (shaded areas, under a line), onto the plot canvas.
       class AreaChart < ChartBuilder
+        # (see ChartBuilder#initialize)
+        # @option opts [TrueClass,FalseClass] :is_stacked Whether the series on this chart are offset from the origin,
+        #                                                 or are offset from each other (aka 'stacked on top of each
+        #                                                 other')
         def initialize(opts, gnuplot)
           super opts, gnuplot
           @reverse_series_range = opts[:is_stacked]
           reverse_series_colors! if reverse_series_range?
         end
+
+        # The gnuplot data specifier components, for series n
+        # @param _ [Integer] Series number
+        # @return [Hash<Symbol, Object>] :using and :with strings, for use by gnuplot
+        def series(_)
+          { using: [1, using_data],
+            with: "filledcurves x1 fillcolor '%<rgb>s'" }
+        end
+
+        # The chart types we support, intended for use in the chart_type parameter of your plot yaml.
+        # This class supports: 'area'
+        # @return [Array<String>] Supported chart types.
+        def self.types
+          %w[area]
+        end
+
+        private
 
         def using_data
           if reverse_series_range?
@@ -176,20 +197,19 @@ module RRA
             '(valid(%<num>s) ? column(%<num>s) : 0.0)'
           end
         end
-
-        def series(_)
-          { using: [1, using_data],
-            with: "filledcurves x1 fillcolor '%<rgb>s'" }
-        end
-
-        def self.types
-          %w[area]
-        end
       end
 
-      # This Chart element contains the logic used to render bars, and/or lines,
+      # This Chart element contains the logic used to render histograms (bars) along with lines,
       # onto the plot canvas
       class ColumnAndLineChart < ChartBuilder
+        # (see ChartBuilder#initialize)
+        # @option opts [TrueClass, FalseClass] :is_clustered (false) A flag indicating whether to cluster (true) or
+        #                                                    row-stack (false) the bar series.
+        # @option opts [Symbol] :columns_rendered_as There are two methods that can be used to render columns
+        #                                            (:histograms & :boxes). The :boxes method supports time-format
+        #                                            domains. While :histograms supports non-reversed series ranges.
+        # @option opts [Hash<String, Symbol>] :series_types A hash, indexed by series name, whose value is either
+        #                                                   :column, or :line.
         def initialize(opts, gnuplot)
           super opts, gnuplot
           @is_clustered = opts[:is_clustered]
@@ -199,9 +219,6 @@ module RRA
           @series_types = {}
           @series_types = opts[:series_types].transform_keys(&:to_s) if opts[:series_types]
 
-          # There are two methods that can be used to render columns (:histograms & :boxes)
-          # The :boxes method supports time-format domains. While :histograms supports
-          # non-reversed series ranges.
           case @columns_rendered_as
           when :histograms
             gnuplot.set 'style', format('histogram %s', clustered? ? 'clustered' : 'rowstacked')
@@ -224,10 +241,15 @@ module RRA
           end
         end
 
+        # Returns the value of the :is_clusted initialization parameter.
+        # @return [TrueClass, FalseClass] Whether or not this chart is clustered
         def clustered?
           @is_clustered
         end
 
+        # The gnuplot data specifier components, for series n
+        # @param num [Integer] Series number
+        # @return [Hash<Symbol, Object>] :using and :with strings, for use by gnuplot
         def series(num)
           type = series_type num
           using = [using(type)]
@@ -237,15 +259,26 @@ module RRA
           { using: using, with: with(type) }
         end
 
-        def self.types
-          %w[COMBO column_and_lines column lines]
-        end
-
+        # Given the provided column number, return either :column, or :line, depending on whether this column
+        # has a value, as specified in the initialization parameter :series_types
+        # @return [Symbol] Either :column, or :line
         def series_type(num)
           title = @gnuplot.series_name(num)
           @series_types.key?(title) ? @series_types[title].downcase.to_sym : :column
         end
 
+        # (see ChartBuilder#series_range)
+        def series_range(num_cols)
+          ret = super num_cols
+          return ret unless @columns_rendered_as == :boxes
+
+          # We want the lines to draw over the columns. This achieves that.
+          # It's possible that you want lines behind the columns. If so, add
+          # an option to the class and submit a pr..
+          ret.sort_by { |n| series_type(n) == :column ? 0 : 1 }
+        end
+
+        # (see ChartBuilder#format_num)
         def format_num(num)
           if reverse_series_range? && series_type(num) == :column
             columns_for_sum = num.downto(1).map do |n|
@@ -258,14 +291,11 @@ module RRA
           end
         end
 
-        def series_range(num_cols)
-          ret = super num_cols
-          return ret unless @columns_rendered_as == :boxes
-
-          # We want the lines to draw over the columns. This achieves that.
-          # It's possible that you want lines behind the columns. If so, add
-          # an option to the class and submit a pr..
-          ret.sort_by { |n| series_type(n) == :column ? 0 : 1 }
+        # The chart types we support, intended for use in the chart_type parameter of your plot yaml.
+        # This class supports: COMBO column_and_lines column lines.
+        # @return [Array<String>] Supported chart types.
+        def self.types
+          %w[COMBO column_and_lines column lines]
         end
 
         private
@@ -286,19 +316,45 @@ module RRA
         end
       end
 
-      # This class generates a gnuplot file. Either to string, or, the filesystem
-      #
-      # NOTE: We assume that the first row in the dataset, is a header row. And,
-      #       that the first column, is the series label
+      # This class represents, and generates, a gnuplot gpi file. Either to string, or, to the filesystem.
+      # This class will typically work with classes derived from {RRA::Plot::Gnuplot::ChartBuilder}, and
+      # an instance of this class is provided as a parameter to the #initialize method of a ChartBuilder.
+      # @attr_reader [Array<String>] additional_lines Arbitrary lines, presumably of gnuplot code, that are appended to
+      #                                               the generated gpi, after the settings, and before the plot
+      #                                               commands(s).
+      # @attr_reader [Hash[String, String]] settings A hash of setting to value pairs, whech are transcribed (via the
+      #                                              'set' directive) to the plot
+      # @attr_reader [Hash[Symbol, Object]] template A hash containing a :header string, and a :colors {Hash}. These
+      #                                              objects are used to construct the aesthetics of the generated gpi.
+      #                                              For more details on what options are supported in the :colors key,
+      #                                              see the colors section of:
+      #                                              {https://github.com/brighton36/rra/blob/main/resources/gnuplot/default.yml default.yml}
+      # @attr_reader [RRA::Plot::Gnuplot::ChartBuilder] element An instance of {Plot::ELEMENTS}, to which plot directive
+      #                                                         generation is delegated.
+      # @attr_reader [Array<Array<String>>] dataset A grid, whose first row contains the headers, and in which each
+      #                                             additional row's first element, is a keystone.
       class Plot
         # These are the gnuplot elements, that we currently support:
         ELEMENTS = [AreaChart, ColumnAndLineChart].freeze
+        # These attributes were pulled from the gnuplot gem, and indicate which #set key's require string quoting.
+        # This implementation isn't very good, but, was copied out of the Gnuplot gem
         SET_QUOTED = %w[title output xlabel x2label ylabel y2label clabel cblabel zlabel].freeze
+        # This is a string formatting specifier, used to composed a plot directive, to gnuplot
         PLOT_COMMAND_LINE = ['%<using>s', 'title %<title>s', 'with %<with>s'].compact.join(" \\\n    ").freeze
 
         attr_accessor :additional_lines
         attr_reader :settings, :template, :element, :dataset
 
+        # Create a plot
+        # @param [String] title The title of this plot
+        # @param [Array<Array<String>>] dataset A grid, whose first row contains the headers, and in which each
+        #                                       additional row's first element, is a keystone.
+        # @param [Hash] opts options to configure this plot, and its {element}. Unrecognized options, in this
+        #                    parameter, are delegated to the specified {chart_type} for further handling.
+        # @option opts [Symbol] :additional_lines ([]) see {additional_lines}
+        # @option opts [Symbol] :template see {template}
+        # @option opts [String] :chart_type A string, that is matched against .types of available ELEMENTS, and
+        #                                   used to initialize an instance of a matched class, to create our {element}
         def initialize(title, dataset, opts = {})
           @title = title
           @dataset = dataset
@@ -312,6 +368,8 @@ module RRA
           @element = element_klass.new opts, self
         end
 
+        # Assembles a gpi file's contents, and returns them as a string
+        # @return [String] the generated gpi file
         def script
           vars = { title: @title }.merge palette.base_to_h
 
@@ -322,6 +380,9 @@ module RRA
            plot_command, "\n"].flatten.join
         end
 
+        # Runs the gnuplot command, feeding the contents of {script} to it's stdin and returns the output.
+        # raises StandardError, citing errors, if gnuplot returns errors.
+        # @return [String] the output of gnuplot, with some selective squelching of output
         def execute!(persist: true)
           output, errors, status = Open3.capture3 Gnuplot.gnuplot(persist), stdin_data: script
 
@@ -331,38 +392,55 @@ module RRA
 
           unless status.success? || !errors.empty?
             raise StandardError,
-                  format('ledger exited non-zero (%<status>s): %<errors>s',
-                         status: status.exitstatus, errors: errors.join("\n"))
+                  format('gnuplot exited non-zero (%<status>s): %<errors>s',
+                         status: status.exitstatus,
+                         errors: errors.join("\n"))
           end
 
           output
         end
 
+        # Transcribes a 'set' directive, into the generated plot, with the given key as the set variable name,
+        # and the provided value, as that set's value. Some values (See {SET_QUOTED}) are interpolated. Others
+        # are merely transcribed directly as provided, without escaping.
+        # @param [String] key The gnuplot variable you wish to set
+        # @param [String] value The value to set to, if any
+        # @return [void]
         def set(key, value = nil)
           quoted_value = value && SET_QUOTED.include?(key) ? quote_value(value) : value
           @settings << [:set, key, quoted_value].compact
+          nil
         end
 
+        # Transcribes an 'unset' directive, into the generated plot, with the given key as the unset variable name.
+        # @param [String] key The gnuplot variable you wish to unset
+        # @return [void]
         def unset(key)
           @settings << [:unset, key]
+          nil
         end
 
         # Returns column n of dataset, not including the header row
+        # @param [Integer] num The column number to return
+        # @return [Array<String>] The column that was found, from top to bottom
         def column(num)
           dataset[1...].map { |row| row[num] }
         end
 
         # Returns the header row, at position num
+        # @param [Integer] num The series number to query
+        # @return [String] The name of the series, at row num
         def series_name(num)
           dataset[0][num]
         end
 
-        # Returns the number of columns in the dataset, including the series_label
+        # Returns the number of columns in the dataset, including the keystone
+        # @return [Integer] the length of dataset[0]
         def num_cols
           dataset[0].length
         end
 
-        # The current palette that we're operating off of
+        # The current {Palette} instance that we're using for our color queries
         def palette
           @palette ||= Palette.new @template[:colors]
         end
@@ -392,7 +470,6 @@ module RRA
         end
 
         def quote_value(value)
-          # TODO: this is a crappy encoder. pulled from the gnuplot gem. make it reasonable
           value =~ /^["'].*['"]$/ ? value : "\"#{value}\""
         end
       end

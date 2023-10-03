@@ -3,14 +3,68 @@
 require_relative 'plot/gnuplot'
 
 module RRA
-  # This class assembles grids into a series of plots, using a plot specification
-  # yaml. Once a grid is assembled, it's dispatched to a driver (google or gnuplot)
+  # This class assembles grids into a series of plots, given a plot specification
+  # yaml. Once a grid is assembled, it's dispatched to a driver ({GoogleDrive} or {Gnuplot})
   # for rendering.
+  # Here's an example plot specification, included in the default project build as
+  # {https://github.com/brighton36/rra/blob/main/resources/skel/app/plots/wealth-growth.yml wealth-growth.yml}, as
+  # created by the new_project command:
+  #   title: "Wealth Growth (%{year})"
+  #   glob: "%{year}-wealth-growth.csv"
+  #   grid_hacks:
+  #     store_cell: !!proc >
+  #       (cell) ? cell.to_f.abs : nil
+  #   google:
+  #     chart_type: area
+  #     axis:
+  #       left: "Amount"
+  #       bottom: "Date"
+  #   gnuplot:
+  #     chart_type: area
+  #     domain: monthly
+  #     axis:
+  #       left: "Amount"
+  #       bottom: "Date"
+  #     additional_lines: |+
+  #       set xtics scale 0 rotate by 45 offset -1.4,-1.4
+  #       set key title ' '
+  #       set style fill transparent solid 0.7 border
+  #
+  # The yaml file is required to have :title and :glob parameters. Additionally,
+  # the following parameter groups are supported: :grid_hacks, :gnuplot, and :google.
+  #
+  # The :gnuplot section of this file, is merged with the contents of
+  # {https://github.com/brighton36/rra/blob/main/resources/gnuplot/default.yml default.yml}, and passed to the {RRA::Plot::Gnuplot}
+  # constructor. See the {RRA::Plot::Gnuplot::Plot#initialize} method for more details on what parameters are supported
+  # in this section. NOTE: Depending on the kind of chart being specified, some initialize options are specific to the
+  # chart being built, and those options will be documented in the constructor for that specific chart. ie:
+  # {RRA::Plot::Gnuplot::AreaChart#initialize} or {RRA::Plot::Gnuplot::ColumnAndLineChart#initialize}.
+  #
+  # The :google section of this file, is provided to {RRA::Plot::GoogleDrive::Sheet#initialize}. See this method for
+  # details on supported options.
+  #
+  # The :grid_hacks section of this file, contains miscellaneous hacks to the dataset. These include: :keystone,
+  # :store_cell, :select_rows, :sort_rows_by, :sort_columns_by, :truncate_rows, :switch_rows_columns, and
+  # :truncate_columns. These options are documented in: {RRA::GridReader#initialize} and {RRA::GridReader#to_grid}.
+  #
+  # @attr_reader [String] path A path to the location of the input yaml, as provided to #initialize
+  # @attr_reader [RRA::Yaml] yaml The yaml object, containing the parameters of this plot
+  # @attr_reader [String] glob A string containing wildcards, used to match input grids in the filesystem. This
+  #                            parameter is expected to be found inside the yaml[:glob], and will generally look
+  #                            something like: "%\{year}-wealth-growth.csv" or
+  #                            "%\{year}-property-incomes-%\{property}.csv".
+  #                            The variables which are supported, include 'the year' of a plot, as well as whatever
+  #                            variables are defined in a plot's glob_variants ('property', as was the case
+  #                            above.) glob_variants are output by grids, and detected in the filenames those grids
+  #                            produce by the {RRA::Plot.glob_variants} method.
   class Plot
-    attr_reader :path, :yaml, :glob, :sort_by_rows, :truncate_rows,
-                :switch_rows_columns
+    attr_reader :path, :yaml, :glob
 
+    # The required keys, expected to exist in the plot yaml
     REQUIRED_FIELDS = %i[glob title].freeze
+
+    # The path to rra's 'default' include file search path. Any '!!include' directives encountered in the plot yaml,
+    # will search this location for targets.
     GNUPLOT_RESOURCES_PATH = [RRA::Gem.root, '/resources/gnuplot'].join
 
     # This exception is raised when a provided yaml file, is missing required
@@ -24,7 +78,7 @@ module RRA
     end
 
     # This exception is raised when a provided yaml file, stipulates an invalid
-    # glob attribute
+    # {glob} attribute
     class InvalidYamlGlob < StandardError
       MSG_FORMAT = 'Plot file %<path>s is missing a required \'year\' parameter in glob'
 
@@ -33,6 +87,8 @@ module RRA
       end
     end
 
+    # Create a plot, from a specification yaml
+    # @param [String] path The path to a specification yaml
     def initialize(path)
       @path = path
 
@@ -71,47 +127,31 @@ module RRA
     def grid(variant_name)
       @grid ||= {}
       @grid[variant_name] ||= begin
-        # TODO: All of this probably needs to be wrapped into the GridReader.
-
         gopts = {}
-        rvopts = {}
+        rvopts = {
+          store_cell: if grid_hacks.key?(:store_cell)
+                        ->(cell) { grid_hacks[:store_cell].call cell: cell }
+                      else
+                        ->(cell) { cell ? cell.to_f : nil }
+                      end
+        }
 
         # Grid Reader Options:
-        rvopts[:series_label] = grid_hacks[:keystone] if grid_hacks.key? :keystone
-
-        rvopts[:store_cell] = if grid_hacks.key?(:store_cell)
-                                lambda do |cell|
-                                  grid_hacks[:store_cell].call cell: cell
-                                end
-                              else
-                                lambda do |cell|
-                                  cell ? cell.to_f : nil
-                                end
-                              end
+        rvopts[:keystone] = grid_hacks[:keystone] if grid_hacks.key? :keystone
 
         if grid_hacks.key? :select_rows
-          rvopts[:select_rows] = lambda do |name, data|
-            grid_hacks[:select_rows].call name: name, data: data
-          end
+          rvopts[:select_rows] = ->(name, data) { grid_hacks[:select_rows].call name: name, data: data }
         end
 
-        # Grid Options
-        if grid_hacks.key? :sort_rows_by
-          gopts[:sort_by_rows] = lambda do |row|
-            grid_hacks[:sort_rows_by].call row: row
-          end
-        end
+        # to_grid Options
+        gopts[:truncate_rows] = grid_hacks[:truncate_rows].to_i if grid_hacks.key? :truncate_rows
+        gopts[:truncate_columns] = grid_hacks[:truncate_columns].to_i if grid_hacks.key? :truncate_columns
+        gopts[:switch_rows_columns] = grid_hacks[:switch_rows_columns] if grid_hacks.key? :switch_rows_columns
+        gopts[:sort_rows_by] = ->(row) { grid_hacks[:sort_rows_by].call row: row } if grid_hacks.key? :sort_rows_by
 
         if grid_hacks.key? :sort_columns_by
-          gopts[:sort_by_cols] = lambda do |column|
-            grid_hacks[:sort_columns_by].call column: column
-          end
+          gopts[:sort_cols_by] = ->(column) { grid_hacks[:sort_columns_by].call column: column }
         end
-
-        gopts[:truncate_rows] = grid_hacks[:truncate_rows].to_i if grid_hacks.key? :truncate_rows
-        gopts[:switch_rows_columns] = grid_hacks[:switch_rows_columns] if grid_hacks.key? :switch_rows_columns
-        # TODO: gopts should probably switch to :truncate_columns, and then we can tighten these 3 lines up
-        gopts[:truncate_cols] = grid_hacks[:truncate_columns].to_i if grid_hacks.key? :truncate_columns
 
         RRA::GridReader.new(variant_files(variant_name), rvopts).to_grid(gopts)
       end

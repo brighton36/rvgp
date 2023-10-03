@@ -12,7 +12,7 @@ module RRA
     # NOTE: I'm not exactly sure what this class wants to be just yet...
     # Let's see if we end up using it for graphing... It might just be a 'Spreadsheet'
     # and we may want/need to move the summary columns into here
-    attr_reader :headers, :data, :series_label
+    attr_reader :headers, :data, :keystone
 
     def initialize(from_files, options = {})
       @headers = []
@@ -24,7 +24,7 @@ module RRA
         headers = csv.headers
 
         # We assume the first column of the row, is the series name
-        @series_label = headers.shift
+        @keystone = headers.shift
 
         selected_headers = if options[:select_columns]
                              headers.select do |header|
@@ -38,7 +38,7 @@ module RRA
 
         rows.each do |row|
           series_data = row.to_h
-          series_name = series_data.delete @series_label
+          series_name = series_data.delete @keystone
           if options.key? :store_cell
             series_data.each do |col, cell|
               next unless !options.key?(:select_columns) || selected_headers.include?(col)
@@ -54,16 +54,16 @@ module RRA
       end
 
       # This needs to be assigned after we've processed the csv's
-      @series_label = options[:series_label] if options.key? :series_label
+      @keystone = options[:keystone] if options.key? :keystone
     end
 
     def to_grid(opts = {})
       # First we'll collect the header row, possibly sorted :
-      grid_columns = if opts[:sort_by_cols]
-                       # We collect the data under the column, and feed that into sort_by_cols
+      grid_columns = if opts[:sort_cols_by]
+                       # We collect the data under the column, and feed that into sort_cols_by
                        headers.map do |col|
                          [col] + data.map { |_, values| values[col] }
-                       end.sort_by(&opts[:sort_by_cols]).map(&:first)
+                       end.sort_by(&opts[:sort_cols_by]).map(&:first)
                      else
                        headers
                      end
@@ -72,10 +72,10 @@ module RRA
       grid = data.map { |series, values| [series] + grid_columns.map { |col| values[col] } }
 
       # Sort those rows, if necessesary:
-      grid.sort_by!(&opts[:sort_by_rows]) if opts[:sort_by_rows]
+      grid.sort_by!(&opts[:sort_rows_by]) if opts[:sort_rows_by]
 
       # Affix the header row to the top of the grid. Now it's assembled.
-      grid.unshift [series_label] + grid_columns
+      grid.unshift [keystone] + grid_columns
 
       # Do we Truncate Rows?
       if opts[:truncate_rows] && grid.length > opts[:truncate_rows]
@@ -105,11 +105,11 @@ module RRA
       end
 
       # Do we Truncate Columns?
-      if opts[:truncate_cols] && grid[0].length > opts[:truncate_cols]
+      if opts[:truncate_columns] && grid[0].length > opts[:truncate_columns]
         # Go through each row, pop off the excess cells, and sum them onto the end
         grid.each_with_index do |row, i|
           # The plus one is to make room for the 'Other' column
-          chop_length = row.length - opts[:truncate_cols] + 1
+          chop_length = row.length - opts[:truncate_columns] + 1
 
           chopped_cols = row.pop chop_length
           truncate_cell = if i.zero?
