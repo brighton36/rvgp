@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../grid_reader'
+require_relative '../utilities/grid_query'
 require_relative '../dashboard'
 
 module RRA
@@ -74,7 +74,7 @@ module RRA
         @dashboards ||= targets.map do |target|
           RRA::Dashboard.new(
             target.name,
-            RRA::GridReader.new(
+            RRA::Utilities::GridQuery.new(
               self.class.grids_by_targetname[target.name],
               store_cell: lambda { |cell|
                 cell ? RRA::Journal::Commodity.from_symbol_and_amount('$', cell) : cell

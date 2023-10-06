@@ -45,7 +45,8 @@ module RRA
   #
   # The :grid_hacks section of this file, contains miscellaneous hacks to the dataset. These include: :keystone,
   # :store_cell, :select_rows, :sort_rows_by, :sort_columns_by, :truncate_rows, :switch_rows_columns, and
-  # :truncate_columns. These options are documented in: {RRA::GridReader#initialize} and {RRA::GridReader#to_grid}.
+  # :truncate_columns. These options are documented in: {RRA::Utilities::GridQuery#initialize} and
+  # {RRA::Utilities::GridQuery#to_grid}.
   #
   # @attr_reader [String] path A path to the location of the input yaml, as provided to #initialize
   # @attr_reader [RRA::Yaml] yaml The yaml object, containing the parameters of this plot
@@ -70,6 +71,7 @@ module RRA
     # This exception is raised when a provided yaml file, is missing required
     # attributes.
     class MissingYamlAttribute < StandardError
+      # The citation, for this error
       MSG_FORMAT = 'Missing one or more required fields in %<path>s: %<fields>s'
 
       def initialize(path, fields)
@@ -80,6 +82,7 @@ module RRA
     # This exception is raised when a provided yaml file, stipulates an invalid
     # {glob} attribute
     class InvalidYamlGlob < StandardError
+      # The citation, for this error
       MSG_FORMAT = 'Plot file %<path>s is missing a required \'year\' parameter in glob'
 
       def initialize(path)
@@ -108,22 +111,42 @@ module RRA
       @title = yaml[:title] if yaml.key? :title
     end
 
+    # In the case that a name is provided, limit the return to the variant of the provided :name.
+    # If no name is provided, all variants in this plot are returned. Variants are determined
+    # by the yaml parameter :glob, as applied to the grids found in the build/grids/* path.
+    # @param [String] name (nil) Limit the return to this variant, if set
+    # @return [Hash<Symbol, Object>] The hash will return name, :pairs, and :files keys,
+    #                                that contain the variant details.
     def variants(name = nil)
       name ? @variants.find { |v| v[:name] == name } : @variants
     end
 
+    # This method returns only the :files parameter, of the {#variants} return.
+    # @param [String] variant_name (nil) Limit the return to this variant, if set
+    # @return [Array<String>] An array of grid paths
     def variant_files(variant_name)
       variants(variant_name)[:files]
     end
 
+    # The plot title, of the given variant
+    # @param [String] variant_name The :name of the variant you're looking to title
+    # @return [String] The title of the plot
     def title(variant_name)
       @title % variants(variant_name)[:pairs]
     end
 
+    # Generate an output file path, for the given variant. Typically this is a .csv grid, in the build/grids
+    # subdirectory of your project folder.
+    # @param [String] name The :name of the variant you're looking for
+    # @param [String] ext The file extension you wish to append, to the return
+    # @return [String] The path to the output file, of the plot
     def output_file(name, ext)
       RRA.app.config.build_path format('plots/%<name>s.%<ext>s', name: name, ext: ext)
     end
 
+    # Generate and return, a plot grid, for the given variant.
+    # @param [String] variant_name The :name of the variant you're looking for
+    # @return [Array<Array<Object>>] The grid, as an array of arrays.
     def grid(variant_name)
       @grid ||= {}
       @grid[variant_name] ||= begin
@@ -153,40 +176,69 @@ module RRA
           gopts[:sort_cols_by] = ->(column) { grid_hacks[:sort_columns_by].call column: column }
         end
 
-        RRA::GridReader.new(variant_files(variant_name), rvopts).to_grid(gopts)
+        RRA::Utilities::GridQuery.new(variant_files(variant_name), rvopts).to_grid(gopts)
       end
     end
 
+    # Return the column titles, on the plot for a given variant
+    # @param [String] variant_name The :name of the variant you're looking for
+    # @return [Array<String>] An array of strings, representing the column titles
     def column_titles(variant_name)
       grid(variant_name)[0]
     end
 
+    # Return the portion of the grid, containing series labels, and their data.
+    # @param [String] variant_name The :name of the variant you're looking for
+    # @return [Array<Array<Object>>] The portion of the grid, that contains series data
     def series(variant_name)
       grid(variant_name)[1..]
     end
 
+    # Return the google plot options, from the yaml of this plot.
+    # @return [Hash] The contents of the google: section of this plot's yml
+    def google_options
+      @google_options = yaml[:google] if yaml.key? :google
+    end
+
+    # Return the gnuplot object, for a given variant
+    # @param [String] name The :name of the variant you're looking for
+    # @return [RRA::Plot::Gnuplot::Plot] The gnuplot
     def gnuplot(name)
       @gnuplots ||= {}
       @gnuplots[name] ||= RRA::Plot::Gnuplot::Plot.new title(name), grid(name), gnuplot_options
     end
 
+    # Return the rendered gnuplot code, for a given variant
+    # @param [String] name The :name of the variant you're looking for
+    # @return [String] The gnuplot code that represents this variant
     def script(name)
       gnuplot(name).script
     end
 
+    # Execute the rendered gnuplot code, for a given variant. Typically, this opens a gnuplot
+    # window.
+    # @param [String] name The :name of the variant you're looking for
+    # @return [void]
     def show(name)
       gnuplot(name).execute!
     end
 
+    # Write the gnuplot code, for a given variant, to the :output_file
+    # @param [String] name The :name of the variant you're looking for
+    # @return [void]
     def write!(name)
       File.write output_file(name, 'gpi'), gnuplot(name).script
     end
 
-    # This returns what plot variants are possible, given the glob, against the
-    # provided files.
+    # This returns what plot variants are possible, given a glob, when matched against the
+    # provided file names.
     # If pair_values contains key: value combinations, then, any of the returned
     # variants will be sorted under the key:value provided . (Its really just meant
-    # for year: 'all'}  atm..)
+    # for year: 'all',  atm..)
+    # @param [String] glob A string that matches 'variables' in the form of \{variablename\} specifiers
+    # @param [Array<String>] corpus An array of file paths. The paths are matched against the glob, and
+    #                               separated based on the variables found, in their names.
+    # @return [Array<Hash<Symbol,Object>>] An array of Hashes, containing :name, :pairs, and :files components
     def self.glob_variants(glob, corpus, pair_values = {})
       variant_names = glob.scan(/%\{([^ }]+)/).flatten.map(&:to_sym)
 
@@ -215,12 +267,11 @@ module RRA
       end.compact
     end
 
+    # Return all the plot objects, initialized from the yaml files in the plot_directory_path
+    # @param [String] plot_directory_path A path to search, for (plot) yml files
+    # @return [Array<RRA::Plot>] An array of the plots, available in the provided directory
     def self.all(plot_directory_path)
       Dir.glob(format('%s/*.yml', plot_directory_path)).map { |path| new path }
-    end
-
-    def google_options
-      @google_options = yaml[:google] if yaml.key? :google
     end
 
     private
