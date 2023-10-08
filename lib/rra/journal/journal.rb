@@ -1,31 +1,51 @@
 # frozen_string_literal: true
 
 module RRA
-  # This class, and it's subclasses, principally deal with the parsing of pta
-  # journals, and their elements. This class itself, really only offers the one
-  # method, .parse, to parse a pta journal's contents.
+  # This class parses a pta journal, and offers that journal in its constitutent
+  # parts. See the {Journal.parse} for the typical entry point, into this class.
+  # This class itself, really only offers the one method, .parse, to parse a pta
+  # journal's contents. Most of the functionality in this class, is provided
+  # by the classes contained within it.
+  # @attr_reader [Array<RRA::Journal::Posting>] postings The postings that were encountered in this journal
   class Journal
+    # @!visibility private
     MSG_MISSING_POSTING_SEPARATOR = 'Missing a blank line before line %d: %s'
+    # @!visibility private
     MSG_UNRECOGNIZED_HEADER = 'Unrecognized posting header at line %d: %s'
+    # @!visibility private
     MSG_INVALID_DATE = 'Invalid posting date at line %d: %s'
+    # @!visibility private
     MSG_UNEXPECTED_TRANSFER = 'Unexpected transfer at line %d: %s'
+    # @!visibility private
     MSG_UNEXPECTED_TAG = 'Unexpected tag at line %d: %s'
+    # @!visibility private
     MSG_UNEXPECTED_LINE = 'Unexpected at line %d: %s'
+    # @!visibility private
     MSG_INVALID_TRANSFER_COMMODITY = 'Unparseable or unimplemented commodity-parse in transfer at line %d: %s'
+    # @!visibility private
     MSG_INVALID_POSTING = 'Invalid Posting at separator line %d: %s'
+    # @!visibility private
     MSG_TOO_MANY_SEMICOLONS = 'Too many semicolons at line %d. Are these comments? %s'
+    # @!visibility private
     MSG_UNPARSEABLE_TRANSFER = 'Something is wrong with this transfer at line %d: %s'
 
     attr :postings
 
+    # Declare and initialize this Journal.
+    # @param [Array[RRA::Journal::Posting]] postings An array of postings that this instance represents
     def initialize(postings)
       @postings = postings
     end
 
+    # Unparse this journal, and return the parsed objects in their serialized form.
+    # @return [String] A pta journal. Presumably, the same one we were initialized from
     def to_s
       @postings.map(&:to_ledger).join "\n\n"
     end
 
+    # Given a pta journal, already read from the filesystem, return a parsed representation of its contents.
+    # @param [String] contents A pta journal, as a string
+    # @return [RRA::Journal] The parsed representation of the provided string
     def self.parse(contents)
       postings = []
 

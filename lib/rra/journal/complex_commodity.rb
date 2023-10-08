@@ -3,14 +3,27 @@
 module RRA
   class Journal
     # These 'complex currency' specifications appear to be mostly for non-register
-    # and non-balance reports. Which, we really don't use. I'm not entirely sure
-    # the parsing rules make sense. And some of the rules in the documentation even
-    # seem a bit inconsistent (see complex expressions vs comments).
+    # and non-balance reports. The ledger manual labels these 'Cost Expressions'.
+    # We really don't use these much, and I'm not entirely sure the parsing rules
+    # make sense. Some of the rules in the documentation even seem a bit
+    # inconsistent (compare complex expressions vs comments).
     #
-    # We ended up needing most of this to run a dupe-tag check. And to ensure that
-    # we're able to mostly-validate the syntax of the journals. We don't actually
-    # use many code paths here, otherwise. (Though we do use it to serialize
-    # currency conversion in the file_transform_investment.rb)
+    # Here's some examples of Complex Commodities:
+    #  10 AAPL @@ $500.00
+    #  10 AAPL @ ($500.00 / 10)
+    #  (5 AAPL * 2) @ ($500.00 / 10)
+    #  1000 AAPL (@) $1
+    #  -10 AAPL {{$500.00}} @@ $750.00
+    #  10 AAPL {=$50.00}
+    #  -5 AAPL {$50.00} [2012-04-10] @@ $375.00
+    #  -5 AAPL {$50.00} [2012-04-10] (Oh my!) @@ $375.00
+    #  -5 AAPL {$50.00} ((ten_dollars)) @@ $375.00
+    #  -5 AAPL {$50.00} ((s, d, t -> market($10, date, t))) @@ $375.00
+    #
+    # We ended up needing most of this class to run {RRA::Validations::DuplicateTagsValidation}.
+    # And, to ensure that we're able to mostly-validate the syntax of the journals. We don't actually
+    # use many code paths here, otherwise. (Though we do use it to serialize currency conversion in
+    # the file_transform_investment.rb)
     #
     # I'm not entirely sure what attribute names to use. We could go with intent
     # position, or with class. Either path seems to introduce exceptions. Possibly
@@ -21,8 +34,8 @@ module RRA
     # for now this works well enough, again mostly because we're not using most
     # of these code paths... Lets see if/how this evolves.
     #
-    # @attr_reader [String] left The 'left' component of the complex commodity
-    # @attr_reader [String] right The 'right' component of the complex commodity
+    # @attr_reader [RRA::Commodity::Journal] left The 'left' component of the complex commodity
+    # @attr_reader [RRA::Commodity::Journal] right The 'right' component of the complex commodity
     # @attr_reader [Symbol] operation The 'operation' component of the complex commodity, either :right_expression,
     #                                 :left_expression, :per_unit, or :per_lot
     # @attr_reader [Date] left_date The 'left_date' component of the complex commodity
@@ -37,32 +50,58 @@ module RRA
     # @attr_reader [TrueClass, FalseClass] left_is_equal The 'left_is_equal' component of the complex commodity
     # @attr_reader [TrueClass, FalseClass] right_is_equal The 'right_is_equal' component of the complex commodity
     class ComplexCommodity
+      # @!visibility private
       LOT_MATCH = /\A(\{+) *(=?) *([^}]+)\}+(.*)\Z/.freeze
+      # @!visibility private
       LAMBDA_MATCH = /\A\(\((.+)\)\)(.*)\Z/.freeze
+      # @!visibility private
       OP_MATCH = /\A(@{1,2})(.*)\Z/.freeze
+      # @!visibility private
       WHITESPACE_MATCH = /\A[ \t]+(.*)\Z/.freeze
+      # @!visibility private
       EQUAL_MATCH = /\A=(.*)\Z/.freeze
 
+      # @!visibility private
       DATE_MATCH = /\A\[(\d{4})-(\d{1,2})-(\d{1,2})\](.*)\Z/.freeze
+      # @!visibility private
       COMMENT_MATCH = /\A\(([^)]+)\)(.*)\Z/.freeze
+      # @!visibility private
       MSG_TOO_MANY = 'Too many %s in ComplexCommodity::from_s. Against: %s'
+      # @!visibility private
       MSG_UNPARSEABLE = 'The ComplexCommodity::from_s "%s" appears to be unparseable'
 
+      # @!visibility private
       ATTRIBUTES = %i[left right operation left_date left_lot left_lot_operation left_lot_is_equal left_expression
                       right_expression left_lambda left_is_equal right_is_equal].freeze
 
-      # @!visibility protected
-      attr_reader(*ATTRIBUTES) # :nodoc:
+      # This is written this way, to prevent yard from triggering an Undocumentable ATTRIBUTES warning.
+      send(:attr_reader, *ATTRIBUTES)
 
+      # Raised on a parse error
       class Error < StandardError; end
 
+      # Create a complex commodity, from constituent parts
+      # @param [Hash] opts The parts of this complex commodity
+      # @option opts [String] code see {Commodity#code}
+      # @option opts [RRA::Journal::Commodity] left see {ComplexCommodity#left}
+      # @option opts [RRA::Journal::Commodity] right see {ComplexCommodity#right}
+      # @option opts [Symbol] operation see {ComplexCommodity#operation}
+      # @option opts [Date] left_date see {ComplexCommodity#left_date}
+      # @option opts [String] left_lot see {ComplexCommodity#left_lot}
+      # @option opts [Symbol] left_lot_operation see {ComplexCommodity#left_lot_operation}
+      # @option opts [TrueClass, FalseClass] left_lot_is_equal see {ComplexCommodity#left_lot_is_equal}
+      # @option opts [String] left_expression see {ComplexCommodity#left_expression}
+      # @option opts [String] right_expression see {ComplexCommodity#right_expression}
+      # @option opts [String] left_lambda see {ComplexCommodity#left_lambda}
+      # @option opts [TrueClass, FalseClass] left_is_equal see {ComplexCommodity#left_is_equal}
+      # @option opts [TrueClass, FalseClass] right_is_equal see {ComplexCommodity#right_is_equal}
       def initialize(opts = {})
         ATTRIBUTES.select { |attr| opts.key? attr }.each do |attr|
           instance_variable_set("@#{attr}".to_sym, opts[attr])
         end
       end
 
-      # For now, we simply delegate these messages to the left commodity. This path
+      # For now, we simply delegate these messages to the :left commodity. This path
       # is only in use in the transformer, which, determines whether the commodity
       # is income or expense. (and/or inverts the amount) It's conceivable that we
       # may want to test the right commodity at some point here, and determine if
@@ -71,11 +110,14 @@ module RRA
         left.positive?
       end
 
+      # For now, we simply delegate this message to the :left commodity.
       def invert!
         left.invert!
         self
       end
 
+      # De-parse this ComplexCommodity, back into its string representation
+      # @return [String]
       def to_s
         [left_is_equal ? '=' : nil,
          left ? left.to_s : nil,
@@ -94,6 +136,9 @@ module RRA
          right_expression ? format('(%s)', right_expression.to_s) : nil].compact.join(' ')
       end
 
+      # Given a string, in one of the supported formats, construct and return a commodity representation.
+      # @param [String] string The commodity, as would be found in a PTA journal
+      # @return [RRA::Journal::ComplexCommodity]
       def self.from_s(string)
         tmp = string.dup
         opts = {}
@@ -148,6 +193,7 @@ module RRA
         new opts
       end
 
+      # @!visibility private
       def self.to_operator(from_s)
         case from_s
         when /\A[@{]\Z/ then :per_unit

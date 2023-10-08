@@ -6,8 +6,10 @@ module RRA
   module Utilities
     # This returns each month in a series from the first date, to the last, in the
     # provided array of dates
-    # @param [Array<Date>] *args One or more date, that will be used to determine the range of months,
-    #                            to construct a range from.
+    # @overload months_through_dates(date, ...)
+    #   @param [Array<Date>] date A date, that will be used to calculate the range of months to construct a range from.
+    #   @param [Array<Date>] ... More dates. This method will automatically select the max and min from the sample
+    #                            provided.
     # @return [Array<Date>] An array, containing a Date, set to the first of every month, in the provided range.
     def months_through_dates(*args)
       dates = args.flatten.uniq.sort

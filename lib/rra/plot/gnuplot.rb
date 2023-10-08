@@ -7,7 +7,7 @@ module RRA
     # This module contains the code needed to produce Gnuplot .gpi files, from a grid, and
     # styling options.
     module Gnuplot
-      # Palette's are loaded from a template, and contain logic related to coloring
+      # Palette(s) are loaded from a template, and contain logic related to coloring
       # base elements (fonts/background/line-colors/etc), as well as relating to
       # series/element colors in the plot.
       class Palette
@@ -50,7 +50,7 @@ module RRA
           @base_colors.key?(name) ? base_color(name) : super(name)
         end
 
-        # Returns the base colors, currently supported, that were supplied in the {#initialze} base: option
+        # Returns the base colors, currently supported, that were supplied in the {#initialize} base: option
         # @return [Hash<Symbol, String>] An html color code, for the requested base color
         def base_to_h
           # We'll probably want to expand this more at some point...
@@ -324,7 +324,7 @@ module RRA
       #                                               commands(s).
       # @attr_reader [Hash[String, String]] settings A hash of setting to value pairs, whech are transcribed (via the
       #                                              'set' directive) to the plot
-      # @attr_reader [Hash[Symbol, Object]] template A hash containing a :header string, and a :colors {Hash}. These
+      # @attr_reader [Hash[Symbol, Object]] template A hash containing a :header string, and a :colors Hash. These
       #                                              objects are used to construct the aesthetics of the generated gpi.
       #                                              For more details on what options are supported in the :colors key,
       #                                              see the colors section of:
@@ -350,7 +350,7 @@ module RRA
         # @param [Array<Array<String>>] dataset A grid, whose first row contains the headers, and in which each
         #                                       additional row's first element, is a keystone.
         # @param [Hash] opts options to configure this plot, and its {element}. Unrecognized options, in this
-        #                    parameter, are delegated to the specified {chart_type} for further handling.
+        #                    parameter, are delegated to the specified :chart_type for further handling.
         # @option opts [Symbol] :additional_lines ([]) see {additional_lines}
         # @option opts [Symbol] :template see {template}
         # @option opts [String] :chart_type A string, that is matched against .types of available ELEMENTS, and

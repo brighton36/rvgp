@@ -52,8 +52,8 @@ module RRA
   # @attr_reader [RRA::Yaml] yaml The yaml object, containing the parameters of this plot
   # @attr_reader [String] glob A string containing wildcards, used to match input grids in the filesystem. This
   #                            parameter is expected to be found inside the yaml[:glob], and will generally look
-  #                            something like: "%\{year}-wealth-growth.csv" or
-  #                            "%\{year}-property-incomes-%\{property}.csv".
+  #                            something like: "%\\{year}-wealth-growth.csv" or
+  #                            "%\\{year}-property-incomes-%\\{property}.csv".
   #                            The variables which are supported, include 'the year' of a plot, as well as whatever
   #                            variables are defined in a plot's glob_variants ('property', as was the case
   #                            above.) glob_variants are output by grids, and detected in the filenames those grids
@@ -71,7 +71,7 @@ module RRA
     # This exception is raised when a provided yaml file, is missing required
     # attributes.
     class MissingYamlAttribute < StandardError
-      # The citation, for this error
+      # @!visibility private
       MSG_FORMAT = 'Missing one or more required fields in %<path>s: %<fields>s'
 
       def initialize(path, fields)
@@ -82,7 +82,7 @@ module RRA
     # This exception is raised when a provided yaml file, stipulates an invalid
     # {glob} attribute
     class InvalidYamlGlob < StandardError
-      # The citation, for this error
+      # @!visibility private
       MSG_FORMAT = 'Plot file %<path>s is missing a required \'year\' parameter in glob'
 
       def initialize(path)
@@ -235,7 +235,7 @@ module RRA
     # If pair_values contains key: value combinations, then, any of the returned
     # variants will be sorted under the key:value provided . (Its really just meant
     # for year: 'all',  atm..)
-    # @param [String] glob A string that matches 'variables' in the form of \{variablename\} specifiers
+    # @param [String] glob A string that matches 'variables' in the form of \\{variablename} specifiers
     # @param [Array<String>] corpus An array of file paths. The paths are matched against the glob, and
     #                               separated based on the variables found, in their names.
     # @return [Array<Hash<Symbol,Object>>] An array of Hashes, containing :name, :pairs, and :files components
