@@ -88,7 +88,7 @@ module RRA
               }
             ),
             { pastel: RRA.pastel,
-              series_column_name: I18n.t('commands.cashflow.account'),
+              series_column_label: I18n.t('commands.cashflow.account'),
               format_data_cell: ->(cell) { cell&.to_s commatize: true, precision: 2 },
               columns_ordered_by: ->(a, b) { [b, a].map { |d| Date.strptime d, '%m-%y' }.reduce :<=> },
               summaries: [

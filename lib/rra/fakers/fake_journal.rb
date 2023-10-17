@@ -3,8 +3,10 @@
 require_relative 'faker_helpers'
 
 module RRA
+  # This module encapsulate various faker objects that we use (mostly) in our test cases.
+  # The new_project command uses some of these classes as well.
   module Fakers
-    # Contains faker implementations that produce pta journals
+    # Contains faker implementation(s) that produce pta journals
     class FakeJournal < Faker::Base
       class << self
         include FakerHelpers

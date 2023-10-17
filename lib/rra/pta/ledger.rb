@@ -9,17 +9,21 @@ require_relative '../journal/pricer'
 
 module RRA
   class Pta
-    # A plain text accounting adapter implementatin, for the 'ledger' pta command.
-    # This class conforms the query and output interfaces to ledger, in a more ruby-like
-    # syntax.
+    # A plain text accounting adapter implementation, for the 'ledger' pta command.
+    # This class conforms the ledger query, and output, interfaces in a ruby-like
+    # syntax, and with structured ruby objects as outputs.
+    #
+    # For a more detailed example of these queries in action, take a look at the
+    # {https://github.com/brighton36/rra/blob/main/test/test_pta_adapter.rb test/test_pta_adapter.rb}
     class Ledger < RRA::Pta
+      # @!visibility private
       BIN_PATH = '/usr/bin/ledger'
 
       module Output
         # The base class from which RRA::Pta::Ledger's specific xml-based outputs inherit.
         class XmlBase
           # A commodity, as reported in the ledger xml meta-output
-          class Commodity < RRA::Pta::ReaderBase
+          class Commodity < RRA::Base::Reader
             readers :symbol, :date, :price
           end
 
@@ -141,15 +145,20 @@ module RRA
         end
       end
 
-      def balance(*args)
-        args, opts = args_and_opts(*args)
-
-        RRA::Pta::Ledger::Output::Balance.new command('xml', *args, opts)
-      end
-
-      # The behavior between hledger and ledger are rather different here. This behavior
-      # strikes a balance between compatibility and features. The latter of which, ledger
-      # seems to excel at.
+      # Return the tags that were found, given the specified journal path, and filters.
+      #
+      # The behavior between hledger and ledger are rather different here. Ledger has a slightly different
+      # featureset than HLedger, regarding tags. As such, while the return format is the same between implementations.
+      # The results for a given query won't be identical between pta implementations. Mostly, these results differ
+      # when a \\{values: true} option is supplied. In that case, ledger will return tags in a series of keys and
+      # values, separated by a colon, one per line. hledger, in that case, will only return the tag values themselves,
+      # without denotating their key.
+      #
+      # This method will simply parse the output of ledger, and return that.
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      #                             details
+      # @return [Array<String>] An array of the lines returned by ledger, split into strings. In most cases, this
+      #                         could also be described as simply 'an array of the filtered tags'.
       def tags(*args)
         args, opts = args_and_opts(*args)
 
@@ -162,6 +171,74 @@ module RRA
         for_tag ? tags.map { |tag| ::Regexp.last_match(1) if /\A#{for_tag}: *(.*)/.match tag }.compact : tags
       end
 
+      # Return the files that were encountered, when parsing the provided arguments.
+      # The output of this method should be identical, regardless of the Pta Adapter that resolves the request.
+      #
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      #                             details
+      # @return [Array<String>] An array of paths that were referenced when fetching data in provided arguments.
+      def files(*args)
+        args, opts = args_and_opts(*args)
+
+        # TODO: This should get its own error class...
+        raise StandardError, "Unexpected argument(s) : #{args.inspect}" unless args.empty?
+
+        stats(*args, opts)['Files these postings came from'].tap do |ret|
+          ret.unshift opts[:file] if opts.key?(:file) && !ret.include?(opts[:file])
+        end
+      end
+
+      # Returns the newest transaction, retured in set of transactions filtered with the provided arguments.
+      # This method is mostly a wrapper around \\{#register} with the \\{tail: 1} option passed to that method. This
+      # method may produce counterintutive results, if you override the sort: option.
+      #
+      # NOTE: For almost any case you think you want to use this method, {#newest_transaction_date} is probably
+      # more efficient. Particularly since this method has accelerated implementation in its {RRA::Pta::Hledger}
+      # counterpart
+      #
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      #                             details.
+      # @return [RRA::Pta::RegisterTransaction] The newest transaction in the set
+      def newest_transaction(*args)
+        args, opts = args_and_opts(*args)
+        first_transaction(*args, opts.merge(sort: 'date', tail: 1))
+      end
+
+      # Returns the oldest transaction, retured in set of transactions filtered with the provided arguments.
+      # This method is mostly a wrapper around {RRA::Pta::Ledger#register} with the \\{head: 1} option passed to that
+      # method. This method may produce counterintutive results, if you override the sort: option.
+      #
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      #                             details.
+      # @return [RRA::Pta::RegisterTransaction] The oldest transaction in the set
+      def oldest_transaction(*args)
+        args, opts = args_and_opts(*args)
+        first_transaction(*args, opts.merge(sort: 'date', head: 1))
+      end
+
+      # Returns the value of the 'Time Period' key, of the #{RRA::Pta#stats} method. This method is a fast query to
+      # resolve.
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      #                             details.
+      # @return [Date] The date of the newest transaction found in your files.
+      def newest_transaction_date(*args)
+        Date.strptime ::Regexp.last_match(1), '%y-%b-%d' if /to ([^ ]+)/.match stats(*args)['Time period']
+      end
+
+      # Run the 'ledger balance' command, and return it's output.
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      #                             details.
+      # @return [RRA::Pta::Ledger::Output::Balance] A parsed, hierarchial, representation of the output
+      def balance(*args)
+        args, opts = args_and_opts(*args)
+
+        RRA::Pta::Ledger::Output::Balance.new command('xml', *args, opts)
+      end
+
+      # Run the 'ledger register' command, and return it's output.
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      #                             details.
+      # @return [RRA::Pta::Ledger::Output::Register] A parsed, hierarchial, representation of the output
       def register(*args)
         args, opts = args_and_opts(*args)
 
@@ -177,30 +254,7 @@ module RRA
                                                translate_meta_accounts: translate_meta_accounts
       end
 
-      def files(*args)
-        args, opts = args_and_opts(*args)
-
-        # TODO: This should get its own error class...
-        raise StandardError, "Unexpected argument(s) : #{args.inspect}" unless args.empty?
-
-        stats(*args, opts)['Files these postings came from'].tap do |ret|
-          ret.unshift opts[:file] if opts.key?(:file) && !ret.include?(opts[:file])
-        end
-      end
-
-      def newest_transaction(*args)
-        args, opts = args_and_opts(*args)
-        first_transaction(*args, opts.merge(sort: 'date', tail: 1))
-      end
-
-      def oldest_transaction(*args)
-        args, opts = args_and_opts(*args)
-        first_transaction(*args, opts.merge(sort: 'date', head: 1))
-      end
-
-      def newest_transaction_date(*args)
-        Date.strptime ::Regexp.last_match(1), '%y-%b-%d' if /to ([^ ]+)/.match stats(*args)['Time period']
-      end
+      private
 
       def first_transaction(*args)
         reg = register(*args)

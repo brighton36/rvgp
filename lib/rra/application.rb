@@ -38,31 +38,8 @@ module RRA
       if File.exist? config.prices_path
         @pricer = RRA::Journal::Pricer.new(
           File.read(config.prices_path),
-          # This 'addresses' a pernicious bug that will likely affect you. And
-          # I don't have an easy solution, as, I sort of blame ledger for this.
-          # The problem will manifest itself in the form of grids that output
-          # differently, depending on what grids were built in the process.
-          #
-          # So, If, say, we're only building 2022 grids. But, a clean build
-          # would have built 2021 grids, before instigating the 2022 grid
-          # build - then, we would see different outputs in the 2022-only build.
-          #
-          # The reason for this, is that there doesn't appear to be any way of
-          # accounting for all historical currency conversions in ledger's output.
-          # The data coming out of ledger only includes currency conversions in
-          # the output date range. This will sometimes cause weird discrepencies
-          # in the totals between a 2021-2022 run, vs a 2022-only run.
-          #
-          # The only solution I could think of, at this time, was to burp on
-          # any occurence, where, a conversion, wasn't already in the prices.db
-          # That way, an operator (you) can simply add the outputted burp, into
-          # the prices.db file. This will ensure consistency in all grids,
-          # regardless of the ranges you run them.
-          #
-          # NOTE: This feature is currently unimplemnted in hledger. And, I have no
-          # solution planned there at this time.
-          #
-          # If you have a better idea, or some way to ensure consistency in... PR's welcome!
+          # See the documentation in RRA::Journal::Pricer#initialize, to better understand what's happening here.
+          # And, Note that this functionality is only supported when ledger is the pta adapter.
           before_price_add: lambda { |time, from_alpha, to|
             puts [
               RRA.pastel.yellow(I18n.t('error.warning')),

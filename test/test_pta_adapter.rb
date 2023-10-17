@@ -494,6 +494,18 @@ require_relative '../lib/rra'
           %w[blue green indigo orange red violet yellow]
         )
         value(subject.tags('vacation', from_s: journal, values: true)).must_equal %w[Argentina Germany Hawaii Japan]
+
+        value(subject.tags(values: true, from_s: journal)).must_equal(
+          # See the note on #tags to understand the ethos here, and why we can't/won't conform the output between pta
+          # adapter implementations on this query
+          if subject.ledger?
+            ['business', 'color: blue', 'color: green', 'color: indigo', 'color: orange', 'color: red', 'color: violet',
+             'color: yellow', 'medical', 'vacation: Argentina', 'vacation: Germany', 'vacation: Hawaii',
+             'vacation: Japan']
+          else
+            %w[Argentina Germany Hawaii Japan blue green indigo orange red violet yellow]
+          end
+        )
       end
     end
   end

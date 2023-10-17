@@ -13,6 +13,7 @@ module RRA
         # This error is thrown when there is a mismatch between two parameter arrays, passed to
         # a function, whose lengths are required to match.
         class ParameterLengthError < StandardError
+          # @!visibility private
           MSG_FORMAT = 'Expected %<expected>s elements in %<parameter>s, but found %<found>s'
 
           def initialize(parameter, expected, found)
@@ -20,9 +21,13 @@ module RRA
           end
         end
 
+        # @!visibility private
         DEFAULT_LENGTH_IN_DAYS = 365 / 4
+        # @!visibility private
         DEFAULT_POST_COUNT = 300
+        # @!visibility private
         FEED_COLUMNS = ['Date', 'Type', 'Description', 'Withdrawal (-)', 'Deposit (+)', 'RunningBalance'].freeze
+        # @!visibility private
         DEFAULT_CURRENCY = RRA::Journal::Currency.from_code_or_symbol('$')
 
         # Generates a basic csv feed string, that resembles thos

@@ -9,6 +9,7 @@ module RRA
       class << self
         include FakerHelpers
 
+        # @!visibility private
         DEFAULT_FORMAT = <<~FORMAT_TEMPLATE
           csv_headers: true
           reverse_order: true
@@ -21,6 +22,7 @@ module RRA
             description: !!proc row['Description']
         FORMAT_TEMPLATE
 
+        # @!visibility private
         BASIC_CHECKING_FEED = <<~FEED_TEMPLATE
           from: "%<from>s"
           label: "%<label>s"
