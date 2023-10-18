@@ -2,6 +2,7 @@
 
 module RRA
   module Commands
+    # @!visibility private
     # This class contains the handling of the 'grid' command and task. This
     # code provides the list of grids that are available in the application, and
     # dispatches requests to build these grids.
@@ -11,14 +12,17 @@ module RRA
       include RakeTask
       rake_tasks :grid
 
+      # @!visibility private
       def execute!(&block)
         RRA.app.ensure_build_dir! 'grids'
         super(&block)
       end
 
+      # @!visibility private
       # This class represents a grid, available for building. In addition, the #.all
       # method, returns the list of available targets.
       class Target < RRA::Base::Command::Target
+        # @!visibility private
         def initialize(grid_klass, starting_at, ending_at)
           @starting_at = starting_at
           @ending_at = ending_at
@@ -26,18 +30,22 @@ module RRA
           super [year, grid_klass.name.tr('_', '-')].join('-'), grid_klass.status_name(year)
         end
 
+        # @!visibility private
         def description
           I18n.t 'commands.grid.target_description', description: @grid_klass.description, year: year
         end
 
+        # @!visibility private
         def uptodate?
           @grid_klass.uptodate? year
         end
 
+        # @!visibility private
         def execute(_options)
           @grid_klass.new(@starting_at, @ending_at).to_file!
         end
 
+        # @!visibility private
         def self.all
           starting_at = RRA.app.config.grid_starting_at
           ending_at = RRA.app.config.grid_ending_at

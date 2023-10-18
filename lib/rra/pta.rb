@@ -38,6 +38,7 @@ module RRA
     # @attr_reader amounts [Array<RRA::Journal::Commodity>] The commodities in this account, as reported by balance
     class BalanceAccount < RRA::Base::Reader
       readers :fullname, :amounts
+      # TODO: Implement and test the :pricer here
     end
 
     # This class stores the Transaction details, as produced by the register method of a pta adapter
@@ -137,8 +138,8 @@ module RRA
     #
     # While args and options are largely fed straight to the pta command, for processing, we support the following
     # options, which, are removed from the arguments, and handled in this method.
-    # - *:from_s* (String)- If a string is provided here, it's fed to the STDIN of the pta adapter. And "-f -" is added to
-    #   the program's arguments. This instructs the command to treat STDIN as a journal.
+    # - *:from_s* (String)- If a string is provided here, it's fed to the STDIN of the pta adapter. And "-f -" is added
+    #   to the program's arguments. This instructs the command to treat STDIN as a journal.
     #
     # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
     #                             details

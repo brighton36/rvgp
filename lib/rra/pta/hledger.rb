@@ -18,11 +18,20 @@ module RRA
       # @!visibility private
       BIN_PATH = '/usr/bin/hledger'
 
+      # This module contains intermediary parsing objects, used to represent the output of hledger in
+      # a structured and hierarchial format.
       module Output
-        # The base class from which RRA::Pta::HLedger's specific json-based outputs inherit.
+        # This is a base class from which RRA::Pta::HLedger's outputs inherit. This class mostly just provides
+        # helpers for dealing with the json output that hledger produces.
+        # @attr_reader [Json] json a parsed representation of the output from hledger
+        # @attr_reader [RRA::Journal::Pricer] pricer A price exchanger, to use for any currency exchange lookups
         class JsonBase
           attr_reader :json, :pricer
 
+          # Declare the class, and initialize with the relevant options
+          # @param [String] json The json that was produced by hledger, to construct this object
+          # @param [Hash] options Additional options
+          # @option options [RRA::Journal::Pricer] :pricer see {RRA::Pta::Ledger::Output::XmlBase#pricer}
           def initialize(json, options)
             @pricer = options[:pricer] || RRA::Journal::Pricer.new
             @json = JSON.parse json, symbolize_names: true
@@ -44,10 +53,18 @@ module RRA
           end
         end
 
-        # An json output parsing implementation for balance queries to ledger
+        # An json parser, to structure the output of balance queries to hledger. This object exists, as
+        # a return value, from the {RRA::Pta::HLedger#balance} method
+        # @attr_reader [RRA::Pta::BalanceAccount] accounts The accounts, and their components, that were
+        #                                                  returned by hledger.
+        # @attr_reader [Array<RRA::Journal::Commodity>] summary_amounts The sum amounts, at the end of the account
+        #                                                               output.
         class Balance < JsonBase
           attr_reader :accounts, :summary_amounts
 
+          # Declare the registry, and initialize with the relevant options
+          # @param [String] json see {RRA::Pta::HLedger::Output::JsonBase#initialize}
+          # @param [Hash] options see {RRA::Pta::HLedger::Output::JsonBase#initialize}
           def initialize(json, options = {})
             super json, options
 
@@ -65,10 +82,16 @@ module RRA
           end
         end
 
-        # An json output parsing implementation for register queries to ledger
+        # An json parser, to structure the output of register queries to ledger. This object exists, as
+        # a return value, from the {RRA::Pta::HLedger#register} method
+        # @attr_reader [RRA::Pta::RegisterTransaction] transactions The transactions, and their components, that were
+        #                                                           returned by ledger.
         class Register < JsonBase
           attr_reader :transactions
 
+          # Declare the registry, and initialize with the relevant options
+          # @param [String] json see {RRA::Pta::HLedger::Output::JsonBase#initialize}
+          # @param [Hash] options see {RRA::Pta::HLedger::Output::JsonBase#initialize}
           def initialize(json, options = {})
             super json, options
 
@@ -191,6 +214,11 @@ module RRA
       end
 
       # Run the 'hledger register' command, and return it's output.
+      #
+      # This method also supports the following options, for additional handling:
+      # - *:pricer* (RRA::Journal::Pricer) - If provided, this option will use the specified pricer object when
+      #   calculating exchange rates.
+      #
       # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
       #                             details.
       # @return [RRA::Pta::HLedger::Output::Register] A parsed, hierarchial, representation of the output
@@ -198,10 +226,8 @@ module RRA
         args, opts = args_and_opts(*args)
 
         pricer = opts.delete :pricer
-        # TODO: Do we really need this? probably..
-        # translate_meta_accounts = opts[:empty]
 
-        # TODO: Provide translate_meta_accounts: translate_meta_accounts here (?)
+        # TODO: Provide and Test translate_meta_accounts here
         RRA::Pta::HLedger::Output::Register.new command('register', *args, { 'output-format': 'json' }.merge(opts)),
                                                 monthly: (opts[:monthly] == true),
                                                 pricer: pricer

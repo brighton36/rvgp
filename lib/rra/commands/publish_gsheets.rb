@@ -7,11 +7,13 @@ require_relative '../plot/google-drive/output_csv'
 
 module RRA
   module Commands
+    # @!visibility private
     # This class contains the handling of the 'publish_gsheets' command. This class
     # works very similar to the RRA::Commands:Plot command. Note that there is no
     # rake integration in this command, as that function is irrelevent to the notion
     # of an 'export'.
     class PublishGsheets < RRA::Base::Command
+      # @!visibility private
       DEFAULT_SLEEP_BETWEEN_SHEETS = 5
 
       accepts_options OPTION_ALL,
@@ -20,6 +22,7 @@ module RRA
                       [:title,  :t, { has_value: 'TITLE' }],
                       [:sleep,  :s, { has_value: 'N' }]
 
+      # @!visibility private
       # This class represents a Google 'sheet', built from a Plot, available for
       # export to google. And dispatches a build request. Typically, the name of
       # a sheet is identical to the name of its corresponding plot. And, takes
@@ -27,11 +30,13 @@ module RRA
       # which this class inherits, for a better representation of how this class
       # works.
       class Target < RRA::Base::Command::PlotTarget
+        # @!visibility private
         def to_sheet
           RRA::GoogleDrive::Sheet.new plot.title(name), plot.grid(name), { google: plot.google_options || {} }
         end
       end
 
+      # @!visibility private
       def initialize(*args)
         super(*args)
 
@@ -51,6 +56,7 @@ module RRA
         end
       end
 
+      # @!visibility private
       def execute!
         output = if options.key?(:csvdir)
                    RRA::GoogleDrive::ExportLocalCsvs.new(destination: options[:csvdir], format: 'csv')

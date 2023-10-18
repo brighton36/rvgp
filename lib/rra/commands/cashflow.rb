@@ -5,17 +5,21 @@ require_relative '../dashboard'
 
 module RRA
   module Commands
+    # @!visibility private
     # This class contains the logic necessary to display the 'cashflow' dashboard
     class Cashflow < RRA::Base::Command
       accepts_options OPTION_ALL, OPTION_LIST, [:date, :d, { has_value: 'DATE' }]
 
+      # @!visibility private
       # This class handles the target argument, passed on the cli
       class Target < RRA::Base::Command::Target
+        # @!visibility private
         def self.all
           RRA::Commands::Cashflow.grids_by_targetname.keys.map { |s| new s }
         end
       end
 
+      # @!visibility private
       def initialize(*args)
         super(*args)
 
@@ -32,6 +36,7 @@ module RRA
         end
       end
 
+      # @!visibility private
       def execute!
         puts dashboards.map { |dashboard|
           dashboard.to_s(
@@ -49,10 +54,12 @@ module RRA
         }.join("\n\n")
       end
 
+      # @!visibility private
       def self.cashflow_grid_files
         Dir.glob RRA.app.config.build_path('grids/*-cashflow-*.csv')
       end
 
+      # @!visibility private
       def self.grids_by_targetname
         @grids_by_targetname ||= cashflow_grid_files.each_with_object({}) do |file, sum|
           unless /([^-]+)\.csv\Z/.match file

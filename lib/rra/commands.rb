@@ -3,11 +3,26 @@
 require_relative 'base/command'
 
 module RRA
-  # Helper methods for requiring and initializing the rra commands. Additionally,
-  # this module provides for finding and including any application-defined
-  # commands that may be present. Additionally, support for dispatching commands to the
-  # expected handler objects, is provided by the #dispatch! method. Additionally,
-  # the implementation of #help! is offered.
+  # This module contains the implementation of each task in the rake process.
+  # However, these commands aren't documented yet. And, may never be. They're
+  # mostly not useful for any api purpose. Documentation for each of these
+  # commands is available via `rra --help`.
+  #
+  # However, these files are really useful examples to review, if you want to
+  # create rake tasks and/or custom rra commands in your projects. Take a look
+  # at the source code, for easy implementations that you can follow:
+  # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/cashflow.rb cashflow.rb}
+  # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/grid.rb grid.rb}
+  # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/new_project.rb new_project.rb}
+  # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/plot.rb plot.rb}
+  # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/publish_gsheets.rb publish_gsheets.rb}
+  # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/reconcile.rb reconcile.rb}
+  # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/transform.rb transform.rb}
+  # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/validate_journal.rb validate_journal.rb}
+  # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/validate_system.rb validate_system.rb}
+  #
+  # The 'new_project.rb is a bit of a special case, due to it being the only command that's available in the
+  # absensce of a 'current project'. And, as such, might not be the best example to emulate...
   module Commands
     class << self
       def require_files!

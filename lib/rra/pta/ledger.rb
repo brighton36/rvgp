@@ -19,16 +19,34 @@ module RRA
       # @!visibility private
       BIN_PATH = '/usr/bin/ledger'
 
+      # This module contains intermediary parsing objects, used to represent the output of ledger in
+      # a structured and hierarchial format.
       module Output
-        # The base class from which RRA::Pta::Ledger's specific xml-based outputs inherit.
+        # This is a base class from which RRA::Pta::Ledger's outputs inherit. It mostly just provides
+        # helpers for dealing with the xml output that ledger produces.
+        # @attr_reader [Nokogiri::XML] doc The document that was produced by ledger, to construct this object
+        # @attr_reader [Array<RRA::Pta::Ledger::Output::XmlBase::Commodity>] commodities The exchange rates that
+        #              were reportedly encountered, in the output of ledger.
+        # @attr_reader [RRA::Journal::Pricer] pricer A price exchanger, to use for any currency exchange lookups
         class XmlBase
-          # A commodity, as reported in the ledger xml meta-output
+          # A commodity, as defined by ledger's xml meta-output. This is largely for the purpose of
+          # tracking exchange rates that were automatically deduced by ledger during the parsing
+          # of a journal. And, which, are stored in the {RRA::Pta:::Ledger::Output::XmlBase#commodities}
+          # collection. hledger does not have this feature.
+          #
+          # @attr_reader [String] symbol A three letter currency code
+          # @attr_reader [Time] date The datetime when this commodity was declared or deduced
+          # @attr_reader [RRA::Journal::Commodity] price The exchange price
           class Commodity < RRA::Base::Reader
             readers :symbol, :date, :price
           end
 
-          attr_reader :doc, :commodities, :pricer, :options
+          attr_reader :doc, :commodities, :pricer
 
+          # Declare the registry, and initialize with the relevant options
+          # @param [String] xml The xml document this object is composed from
+          # @param [Hash] options Additional options
+          # @option options [RRA::Journal::Pricer] :pricer see {RRA::Pta::Ledger::Output::XmlBase#pricer}
           def initialize(xml, options)
             @doc = Nokogiri::XML xml, &:noblanks
             @pricer = options[:pricer] || RRA::Journal::Pricer.new
@@ -50,10 +68,16 @@ module RRA
           end
         end
 
-        # An Xml output parsing implementation for balance queries to ledger
+        # An xml parser, to structure the output of balance queries to ledger. This object exists, as
+        # a return value, from the {RRA::Pta::Ledger#balance} method
+        # @attr_reader [RRA::Pta::BalanceAccount] accounts The accounts, and their components, that were
+        #                                                  returned by ledger.
         class Balance < XmlBase
           attr_reader :accounts
 
+          # Declare the registry, and initialize with the relevant options
+          # @param [String] xml see {RRA::Pta::Ledger::Output::XmlBase#initialize}
+          # @param [Hash] options see {RRA::Pta::Ledger::Output::XmlBase#initialize}
           def initialize(xml, options = {})
             super xml, options
 
@@ -87,10 +111,16 @@ module RRA
           end
         end
 
-        # An Xml output parsing implementation for register queries to ledger
+        # An xml parser, to structure the output of register queries to ledger. This object exists, as
+        # a return value, from the {RRA::Pta::Ledger#register} method
+        # @attr_reader [RRA::Pta::RegisterTransaction] transactions The transactions, and their components, that were
+        #                                                           returned by ledger.
         class Register < XmlBase
           attr_reader :transactions
 
+          # Declare the registry, and initialize with the relevant options
+          # @param [String] xml see {RRA::Pta::Ledger::Output::XmlBase#initialize}
+          # @param [Hash] options see {RRA::Pta::Ledger::Output::XmlBase#initialize}
           def initialize(xml, options = {})
             super xml, options
 
@@ -236,6 +266,16 @@ module RRA
       end
 
       # Run the 'ledger register' command, and return it's output.
+      #
+      # This method also supports the following options, for additional handling:
+      # - *:pricer* (RRA::Journal::Pricer) - If provided, this option will use the specified pricer object when
+      #   calculating exchange rates.
+      # - *:empty* (TrueClass, FalseClass) - If false, we'll remove any accounts and totals, that have
+      #   quantities of zero.
+      # - *:translate_meta_accounts* (TrueClass, FalseClass) - If true, we'll convert accounts of name '<None>' to nil,
+      #   and '<Total>' to :total. This is mostly to useful when trying to preserve uniform behaviors between pta
+      #   adapters. (hledger seems to offer us nil, in cases where ledger offers us '<None>')
+      #
       # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
       #                             details.
       # @return [RRA::Pta::Ledger::Output::Register] A parsed, hierarchial, representation of the output

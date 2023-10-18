@@ -5,8 +5,10 @@ require_relative '../fakers/fake_transformer'
 
 module RRA
   module Commands
+    # @!visibility private
     # This class handles the request to create a new RRA project.
     class NewProject < RRA::Base::Command
+      # @!visibility private
       PROJECT_FILE = <<~END_OF_PROJECT_FILE
         # vim:filetype=ledger
 
@@ -21,6 +23,7 @@ module RRA
         # End:
       END_OF_PROJECT_FILE
 
+      # @!visibility private
       OPENING_BALANCES_FILE = <<~END_OF_BALANCES_FILE
         2017/12/31 Opening Balances
           Personal:Liabilities:AmericanExpress              %<liabilities>s
@@ -31,10 +34,12 @@ module RRA
           Personal:Equity:Opening Balances:AcmeBank
       END_OF_BALANCES_FILE
 
+      # @!visibility private
       YEARS_IN_NEW_PROJECT = 5
 
       attr_reader :errors, :app_dir, :project_name
 
+      # @!visibility private
       # We don't call super, mostly because this command needs to run in absence
       # of an initialized project directory. This makes this command unique
       # amongst the rest of the commands....
@@ -44,6 +49,7 @@ module RRA
         @errors << I18n.t('commands.new_project.errors.missing_app_dir') unless @app_dir && !@app_dir.empty?
       end
 
+      # @!visibility private
       def execute!
         confirm_operation = I18n.t('commands.new_project.confirm_operation')
         # Let's make sure we don't accidently overwrite anything

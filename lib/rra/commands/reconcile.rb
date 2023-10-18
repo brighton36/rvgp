@@ -4,6 +4,7 @@ require 'tempfile'
 
 module RRA
   module Commands
+    # @!visibility private
     # This class contains the handling of the 'reconcile' command. Note that
     # there is no rake integration in this command, as that function is irrelevent
     # to the notion of an 'export'.
@@ -12,6 +13,7 @@ module RRA
 
       # There's a bug here where we scroll to the top of the file sometimes, on
       # reload. Not sure what to do about that...
+      # @!visibility private
       VIMSCRIPT_HEADER = <<-VIMSCRIPT
         let $LANG='en_US.utf-8'
 
@@ -40,6 +42,7 @@ module RRA
         endfunction
       VIMSCRIPT
 
+      # @!visibility private
       def initialize(*args)
         super(*args)
 
@@ -48,6 +51,7 @@ module RRA
         end
       end
 
+      # @!visibility private
       def execute!
         Tempfile.create 'reconcile.vim' do |file|
           file.write [format(VIMSCRIPT_HEADER, rra_path: $PROGRAM_NAME),
@@ -59,10 +63,12 @@ module RRA
         end
       end
 
+      # @!visibility private
       # This class represents a transformer. See RRA::Base::Command::TransformerTarget, for
       # most of the logic that this class inherits. Typically, these targets take the form
       # of "#\\{year}-#\\{transformer_name}"
       class Target < RRA::Base::Command::TransformerTarget
+        # @!visibility private
         VIMSCRIPT_TEMPLATE = <<-VIMSCRIPT
         edit %<output_file>s
         setl autoread
@@ -74,6 +80,7 @@ module RRA
         autocmd BufWritePost * silent call ExecuteTransform()
         VIMSCRIPT
 
+        # @!visibility private
         def to_vimscript(is_vsplit)
           # NOTE: I guess we don't need to escape these paths, so long as there arent
           #       any \n's in the path name... I guess
