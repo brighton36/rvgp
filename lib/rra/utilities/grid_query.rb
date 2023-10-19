@@ -4,17 +4,36 @@ require 'csv'
 
 module RRA
   module Utilities
-    # This class provides a number of utility functions to query, and merge grids
+    # This class provides a number of utility functions to query, and merge, grids
     # that have been built. The primary purpose of these tools, is to decrease
     # the overhead that would otherwise exist, if we were to operate directly on
     # the pta output, every time we referenced this data. As well as to maintain
     # auditability for this data, in the project build.
+    # @attr_reader [Array<String>] headers The first row of a grid, without the keystone included
+    # @attr_reader [Hash<String,Hash<String,Object>>] data A hash whose key is the series name, whose value is a hash of
+    #                                                      headername to value pairs
+    # @attr_reader [String] keystone The cell in the upper-left of the grid. Often this cell is used as a superordinate
+    #                                label for the series below it.
     class GridQuery
       # NOTE: I'm not exactly sure what this class wants to be just yet...
       # Let's see if we end up using it for graphing... It might just be a 'Spreadsheet'
       # and we may want/need to move the summary columns into here
       attr_reader :headers, :data, :keystone
 
+      # Setup a GridQuery
+      # @param [Array<String>] from_files An array of paths, to grid files
+      # @param [Hash] options Additional options
+      # @option options [String] keystone see {RRA::Utilities::GridQuery#keystone}
+      # @option options [Proc] store_cell  This proc is provided one parameter, a data cell. The return value of this
+      #                                    proc is then stored in :data, in lieu of the parameter.
+      # @option options [Proc] select_columns This proc is provided two parameters, a header (String), and the cells
+      #                                       underneath it in the grid (Array<Object>). If this proc returns true,
+      #                                       that column is stored in :data. If this proc returns false, that column
+      #                                       is not retained in this query.
+      # @option options [Proc] select_rows This proc is provided two parameters, a series_name (String), and the cells
+      #                                    to the right of it in the grid (Array<Object>). If this proc returns true,
+      #                                    that column is stored in :data. If this proc returns false, that column
+      #                                    is not retained in this query.
       def initialize(from_files, options = {})
         @headers = []
         @data = {}
@@ -57,6 +76,27 @@ module RRA
         @keystone = options[:keystone] if options.key? :keystone
       end
 
+      # Returns the results of a query.
+      # @param [Hash] opts Additional options
+      # @option opts [Proc] sort_cols_by Columns are sorted by the value returned by this proc. This proc is provided
+      #                                  the grid :headers, and this proc is handled according to the rules of
+      #                                  Enumerable#sort_by.
+      # @option opts [Proc] sort_rows_by Rows are sorted by the value returned by this proc. This proc is provided
+      #                                  each row in this grid, with the series_name of the row at position zero.
+      #                                  This proc is handled according to the rules of Enumerable#sort_by.
+      # @option opts [Integer] truncate_columns Restrict the total number of columns to a maximum this number
+      # @option opts [Integer] truncate_rows Restrict the total number of rows to a maximum this number
+      # @option opts [String] truncate_remainder_row If the columns are truncated, the 'chopped' columns are summed into
+      #                                              'the last column'. The value of this option, is used as  the label
+      #                                              for that column. Candidly... this feature makes a lot of
+      #                                              assumptions, and probably needs a bit more refinement.
+      # @option opts [TrueClass,FalseClass] switch_rows_columns Rotates the grid, so that series labels and headers are
+      #                                     swapped. All data is preserved under/adjacent to the same series label and
+      #                                     header, in the returned grid. Google offers this option in its GUI, but
+      #                                     doesn't seem to support it via the API. So, we can just do that ourselves
+      #                                     here.
+      # @return [Array<Array<Object>>] A grid of cells, composed of the provided grids, and transformed by the given
+      #                                parameters.
       def to_grid(opts = {})
         # First we'll collect the header row, possibly sorted :
         if opts[:sort_cols_by]

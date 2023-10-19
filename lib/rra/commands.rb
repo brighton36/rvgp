@@ -25,10 +25,12 @@ module RRA
   # absensce of a 'current project'. And, as such, might not be the best example to emulate...
   module Commands
     class << self
+      # @!visibility private
       def require_files!
         Dir.glob([File.dirname(__FILE__), 'commands', '*.rb'].join('/')).sort.each { |file| require file }
       end
 
+      # @!visibility private
       def dispatch!(*args)
         # Let's start parsing args:
 
@@ -89,6 +91,7 @@ module RRA
         dispatch_klass RRA.commands.find { |klass| klass.name == command_name }, command_args
       end
 
+      # @!visibility private
       def help!
         # Find the widest option's width, and use that for alignment.
         widest_option = RRA.commands.map { |cmd| cmd.options.map(&:long) }.flatten.max.length
