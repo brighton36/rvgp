@@ -7,9 +7,9 @@ module RRA
     # of your transformer, that looks like this:
     # ```
     #    balances:
-    #    '2022-01-01': $ 105.63
-    #    '2022-09-01': $ 300.29
-    #    '2022-10-01': $ 400.33
+    #      '2022-01-01': $ 105.63
+    #      '2022-09-01': $ 300.29
+    #      '2022-10-01': $ 400.33
     # ```
     # These balances are expected to come from a bank statement, and this validation
     # ensures that rra is matching the records of your financial institution

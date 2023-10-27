@@ -43,7 +43,7 @@ module RRA
 
           attr_reader :doc, :commodities, :pricer
 
-          # Declare the registry, and initialize with the relevant options
+          # Declare the class, and initialize with the relevant options
           # @param [String] xml The xml document this object is composed from
           # @param [Hash] options Additional options
           # @option options [RRA::Journal::Pricer] :pricer see {RRA::Pta::Ledger::Output::XmlBase#pricer}
