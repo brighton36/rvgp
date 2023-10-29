@@ -195,12 +195,11 @@ module RRA
         error! with_error_msg, error_citations unless error_citations.empty?
       end
 
-      # This helper method will supply the provided arguments to pta.balance. And if there are any balances
-      # returned, the supplied error message will be added to our :errors colection, citing the balances
-      # that were encountered.
+      # This helper method will supply the provided account to pta.balance. And if there is a balance returned,
+      # the supplied error message will be added to our :errors colection, citing the balance that was encountered.
       # @param [String] with_error_msg A description of the error that corresponds to the returned balances.
-      # @param [Array<Object>] args These arguments are supplied directly to {RRA::Pta::AvailabilityHelper#pta}'s
-      #                             #balance method
+      # @param [Array<String>] account This arguments is supplied directly to {RRA::Pta::AvailabilityHelper#pta}'s
+      #                                #balance method
       def validate_no_balance(with_error_msg, account)
         results = pta.balance account, file: transformer.output_file
 

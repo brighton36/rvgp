@@ -4,9 +4,161 @@ require_relative '../utilities'
 
 module RRA
   module Base
+    # Transformers are a cornerstone of the RRA build, and an integral part of your project. Transformers, take an input
+    # file (Either a csv file or a journal file), and transform them into a reconciled pta journal. This class
+    # implements most of the functionality needed to make that happen.
+    #
+    # Transformers take two files as input. Firstly, it takes an aforementioned input file. But, secondly, it takes a
+    # yaml file with transformation directives. What follows is a guide on those directives.
+    #
+    # Most of your time spent in these files, will be spent adding rules to the income and expense sections (see
+    # the 'Defining income and expense sections'). However, in order to get the transformer far enough into the parsing
+    # logic to get to that section, you'll need to understand the general structure of these files.
+    #
+    # = The General Structure of Transformer Yaml's
+    # Transformer yaml files are expected to be found in the app/transformer directory. Typically with a four-digit year
+    # as the start of its filename, and a yml extension. Here's a simple example transformer directory:
+    #   ~/ledger> lsd -1 app/transformers/
+    #    2022-business-checking.yml
+    #    2023-business-checking.yml
+    #    2022-personal-checking.yml
+    #    2023-personal-checking.yml
+    #    2022-personal-saving.yml
+    #    2023-personal-saving.yml
+    #    2022-personal-amex.yml
+    #    2023-personal-amex.yml
+    # In this example directory, we can see eight transformers defined, on each of the years 2022 and 2023, for each of
+    # the accounts: business-checking, personal-checking, personal-saving, and personal-amex. Each of these files will
+    # reference a separate input. Each of this files will produce a journal, with a corresponding name in
+    # build/journals.
+    #
+    # All transformer files, are required to have a :label, :output, :input, :from, :income, and :expense key defined.
+    # Here's an example of a transformer, with all of these sections present. Let's take a look at the
+    # '2023-personal-checking.yml' transformer, from above:
+    #   from: "Personal:Assets:AcmeBank:Checking"
+    #   label: "Personal AcmeBank:Checking (2023)"
+    #   input: 2023-personal-basic-checking.csv
+    #   output: 2023-personal-basic-checking.journal
+    #   format:
+    #     csv_headers: true
+    #     fields:
+    #       date: !!proc Date.strptime(row['Date'], '%m/%d/%Y')
+    #       amount: !!proc >
+    #         withdrawal, deposit = row[3..4].collect {|a| a.to_commodity unless a.empty?};
+    #         ( deposit ? deposit.invert! : withdrawal ).quantity_as_s
+    #       description: !!proc row['Description']
+    #   income:
+    #     - match: /.*/
+    #       to: Personal:Income:Unknown
+    #   expense:
+    #     - match: /.*/
+    #       to: Personal:Expenses:Unknown
+    # This file has a number of fairly obvious fields, and some not-so obvious fields. Let's take a look at these fields
+    # one by one:
+    #
+    # - *from* [String] - This is the pta account, that the transformer will ascribe as it's default source of funds.
+    # - *label* [String] - This a label for the transformer, that is mostly just used for status output on the cli.
+    # - *input* [String] - The filename/path to the input to this file. Typically this is a csv file, located in the
+    #   project's 'feeds' directory.
+    # - *output* [String] - The filename to output in the project's 'build/journals' directory.
+    # - *format* [Hash] - This section defines the logic used to decode a csv into fields. Typically, this section is
+    #   shared between multiple transformers by way of an 'include' directive, to a file in your
+    #   config/ directory. More on this below.<br><br>
+    #   Note the use of the !!proc directive. These values are explained in the 'Special yaml features'
+    #   section.
+    # - *income* [Array<Hash>] - This collection matches one or more income entries in the input file, and reconciles them to
+    #   an output entry.
+    # - *expense* [Array<Hash>] - This collection matches one or more expense entries in the input file, and reconciles them
+    #   to an output entry.
+    #
+    # Income and expenses are nearly identical in their rules and features, and are further explained in the 'Defining
+    # income and expense sections' below.
+    #
+    # In addition to these basic parameters, the following parameters are also supported in the root of your transformer
+    # file:
+    # - *transform_commodities* [Hash] - This directive can be used to convert commodities in the format specified by
+    #   its keys, to the commodity specified in its values. For example, the following will ensure that all USD values
+    #   encountered in the input file, are transcribed as '$' in the output files:
+    #     transform_commodities:
+    #       USD: '$'
+    # - *balances* [Hash] - This feature raises an error, if the balance of the :from account on a given date(key)
+    #   doesn't match the provided value. Here's an example of what this looks like in a transformer:
+    #     balances:
+    #       '2023-01-15': $ 2345.67
+    #       '2023-06-15': $ 3456,78
+    #   This feature is mostly implemented by the {RRA::Validations::BalanceValidation}, and is provided as a fail-safe,
+    #   in which you can input the balance reported by the statements from your financial institution, and ensure your
+    #   build is consistent with the expectation of that institution.
+    # - *disable_checks* [Array<String>] - This declaration can be used to disable one or more of your journal validations. This
+    #   is described in greater depth in the {RRA::Base::Validation} documentation. Here's a sample of this feature,
+    #   which can be used to disable the balances section that was explained above:
+    #     disable_checks:
+    #       - balance
+    # - *tag_accounts* [Array<Hash>] - This feature is preliminary, and subject to change. The gist of this feature, is that
+    #   it offers a second pass, after the income/expense rules have applied. This pass enables additional tags to be
+    #   applied to a posting, based on how that posting was transformed in the first pass. I'm not sure I like how this
+    #   feature came out, so, I'm disinclined to document it for now. If there's an interest in this feature, I can
+    #   stabilize it's support, and better document it.
+    #
+    # = Understanding 'format' parameters
+    # The format section applies rules to the parsing of the input file. And, as such, some of these parameters are
+    # specific to the format of the input file. These rules are typically specific to a financial instution's specific
+    # output formatting. And, as such, are typically shared between multiple transformer files in the form of an
+    # !!include directive (see below).
+    #
+    # == CSV specific format parameters
+    # The parameters are specific to .csv input files.
+    # - *fields* [Hash<String, Proc>] - This field is required for csv's. This hash contains a map of field names, to !!proc's.
+    #   The supported (required) field keys are: date, amount, and description. The values for each of these keys
+    #   is evaluated (in ruby), and provided a single parameter, 'row' which contains a row as returned from ruby's
+    #   CSV.parse method. The example project, supplied by the new_project command, contains an easy implementation
+    #   of this feature in action.
+    # - *invert_amount* [bool] (default: false) - Whether to call the {RRA::Journal::Commodity#invert!} on every
+    #   amount that's encountered in the input file
+    # - *csv_headers* [bool] (default: false) - Whether or not the first row of the input file, contains column headers
+    #   for the rows that follow.
+    # - *skip_lines* [Integer, String] - This option will direct the transformer to skip over lines at the beginning of
+    #   the input file. This can be specified either as a number, which indicates the number of lines to ignore. Or,
+    #   alternatively, this can be specified as a RegExp (provided in the form of a yaml string). In which case, the
+    #   transformer will begin to parse one character after the end of the regular expression match.
+    # - *trim_lines* [Integer, String] - This option will direct the transformer to skip over lines at the end of
+    #   the input file. This can be specified either as a number, which indicates the number of lines to trim. Or,
+    #   alternatively, this can be specified as a RegExp (provided in the form of a yaml string). In which case, the
+    #   transformer will trim the file up to one character to the left of the regular expression match.
+    #
+    # == CSV and Journal file parameters
+    # These parameters are available to both .journal as well as .csv files.
+    # - *default_currency* [String] (default: '$') - A currency to default amount's to, if a currency isn't specified
+    # - *reverse_order* [bool] (default: false) - Whether to output transactions in the opposite order of how they were
+    #   encoded in the input file.
+    # - *cash_back* - TODO
+    #
+    # = Defining income and expense sections
+    # TODO
+    #
+    # = Special yaml features
+    # - TODO: !!include
+    # - TODO: !!proc
+    #
+    # TODO
     # This class implements most of the transformer logic. And, exists as the base
     # class from which input-specific transformers inherit (RRA:Transformers:CsvTransformer,
     # RRA:Transformers:JournalTransformer)
+    # @attr_reader [TODO] label
+    # @attr_reader [TODO] file
+    # @attr_reader [TODO] output_file
+    # @attr_reader [TODO] input_file
+    # @attr_reader [TODO] starts_on
+    # @attr_reader [TODO] balances
+    # @attr_reader [TODO] disable_checks,
+    # @attr_reader [TODO] from
+    # @attr_reader [TODO] income_rules
+    # @attr_reader [TODO] expense_rules
+    # @attr_reader [TODO] tag_accounts
+    # @attr_reader [TODO] cash_back
+    # @attr_reader [TODO] cash_back_to,
+    # @attr_reader [TODO] reverse_order
+    # @attr_reader [TODO] default_currency
     class Transformer
       include RRA::Utilities
 
@@ -83,7 +235,6 @@ module RRA
         @from = yaml[:from]
         @income_rules = yaml[:income]
         @expense_rules = yaml[:expense]
-        @default_currency = yaml[:default_currency] || '$'
         @transform_commodities = yaml[:transform_commodities] || {}
         @balances = yaml[:balances]
         @disable_checks = yaml.key?(:disable_checks) ? yaml[:disable_checks].map(&:to_sym) : []
@@ -97,6 +248,7 @@ module RRA
         end
 
         if yaml.key? :format
+          @default_currency = yaml[:format][:default_currency] || '$'
           @reverse_order = yaml[:format][:reverse_order] if yaml[:format].key? :reverse_order
 
           if yaml[:format].key?(:cash_back)
