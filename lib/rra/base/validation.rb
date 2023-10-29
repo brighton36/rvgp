@@ -15,7 +15,9 @@ module RRA
     # This Base class contains some common helpers for use in your validations, regardless of whether its a system or
     # journal validation. Here are the differences between these two validation classes:
     #
-    # *JournalValidation* - Validate the output of a transform <br>
+    # =Journal Validations
+    # Validate the output of one transformer at a time<br>
+    #
     # These validations are run immediately after the transform task, and before system validations
     # are run. Each instance of these validations is applied to a transformers output file (typically located in
     # build/journal). And by default, any journal validations that are defined in a project's app/validations are
@@ -33,49 +35,95 @@ module RRA
     # {https://github.com/brighton36/rra/blob/main/lib/rra/validations/balance_validation.rb balance_validation.rb}
     # follow.
     #
-    # *SystemValidation* - Validate the entire, finished, journal output for the project <br>
+    # =System Validations
+    # Validate the entire, finished, journal output for the project <br>
+    #
     # Unlike Journal validations, these Validations are run without a target, and are expected to generate warnings and
     # errors based on the state of queries spanning multiple journals.
     #
     # There are no example SystemValidations included in the distribution of rra. However, here's an easy one, to serve
-    # as reference. Here's an easy system validation, that ensures Transfers between accounts are always credited and
+    # as reference. This validation ensures Transfers between accounts are always credited and
     # debited on both sides:
     #  class TransferAccountValidation < RRA::Base::SystemValidation
     #    STATUS_LABEL = 'Unbalanced inter-account transfers'
     #    DESCRIPTION = "Ensure that debits and credits through Transfer accounts, complete without remainders"
     #
     #    def validate
-    #      warnings = pta.balance('Transfers').accounts.collect do |account|
-    #        account.amounts.collect do |amount|
+    #      warnings = pta.balance('Transfers').accounts.map do |account|
+    #        account.amounts.map do |amount|
     #          [ account.fullname, RRA.pastel.yellow('━'), amount.to_s(commatize: true) ].join(' ')
     #        end
     #      end.compact.flatten
     #
-    #      warning! 'Unbalanced Transfer%s Encountered' % [(warnings.length > 1) ? 's' : ''], warnings if warnings.length > 0
+    #      warning! 'Unbalanced Transfer Encountered', warnings if warnings.length > 0
     #    end
     #  end
     #
-    # TODO: Explain the spirit of this thing
-    # TODO: Note the constants
+    # The above validation works, if you assign transfers between accounts like so:
+    #   ; This is how a Credit Card Payment looks in my Checking account, the source of funds:
+    #   2023-01-25 Payment to American Express card ending in 1234
+    #     Transfers:PersonalChecking_PersonalAmex    $ 10000.00
+    #     Personal:Assets:AcmeBank:Checking
     #
-    # *NOTE* For either type of validation, most/all of the integration functionality is provided by way of the
+    #   ; This is how a Credit Card Payment looks in my Amex account, the destination of funds:
+    #   2023-01-25 Payment Thank You - Web
+    #     Transfers:PersonalChecking_PersonalAmex    $ -10000.00
+    #     Personal:Liabilities:AmericanExpress
+    #
+    # In this format of transfering money, if either the first or second transfer was omitted, the
+    # TransferAccountValidation will alert you that money has gone missing somewhere at the bank, and/or is taking
+    # longer to complete, than you expected.
+    #
+    # =Summary of Differences
+    # SystemValidations are largely identical to JournalValidations, with, the following exceptions:
+    #
+    # *Priority*
+    # Journal validations are run sooner in the rake process. Just after transformations have completed. System
+    # validations run immediately after all Journal validations have completed.
+    #
+    # *Input*
+    # Journal validations have one input, accessible via its {RRA::Base::JournalValidation#transformer}. System
+    # validations have no preconfigured inputs at all. Journal Validations support a disable_checks attribute in the
+    # transformer yaml, and system validations have no such directive.
+    #
+    # *Labeling*
+    # With Journal validations, tasks are labeled automatically by rra, based on their class name. System validations
+    # are expected to define a STATUS_LABEL and DESCRIPTION constant, in order to arrive at these labels.
+    #
+    # Note that for either type of validation, most/all of the integration functionality is provided by way of the
     # {RRA::Base::Validation#error!} and {RRA::Base::Validation#warning!} methods, instigated in the class'
     # validate method.
     #
-    # @attr_reader [Array<String>] errors TODO
-    # @attr_reader [Array<String>] warnings TODO
+    # =Error and Warning formatting
+    # The format of errors and warnings are a bit peculiar, and probably need a bit more polish to the interface.
+    # Nonetheless, it's not complicated. Here's the way it works, for both collections:
+    # - The formatting of :errors and :warnings is identical. These collections contain a hierarchy of errors, which
+    #   is used to display fatal and non-fatal output to the console.
+    # - Every element of these collections are expected to be a two element Array. The first element of which is to
+    #   be a string containing the topmost error/warning. The second element of this Array is optional. If present,
+    #   this second element is expected to be an Array of Strings, which are subordinate to the message in the first
+    #   element.
+    #
+    # @attr_reader [Array<String,Array<String>>] errors Errors encountered by this validation. See the above note on
+    #                                                   'Error and Warning formatting'
+    # @attr_reader [Array<String,Array<String>>] warnings Warnings encountered by this validation. See the above note on
+    #                                                     'Error and Warning formatting'
     class Validation
       include RRA::Pta::AvailabilityHelper
 
+      # @!visibility private
       NAME_CAPTURE = /([^:]+)Validation\Z/.freeze
 
       attr_reader :errors, :warnings
 
-      def initialize(*_args)
+      # Create a new Validation
+      def initialize
         @errors = []
         @warnings = []
       end
 
+      # Returns true if there are no warnings or errors present in this validation's instance. Otherwise, returns false.
+      # @return [TrueClass, FalseClass] whether this validation has passed
       def valid?
         @errors = []
         @warnings = []
@@ -90,18 +138,28 @@ module RRA
       end
 
       # @!visibility public
-      def error!(*args)
-        @errors << format_error_or_warning(*args)
+      # Add an error to our {RRA::Base::Validation#errors} collection. The format of this error is expected to match the
+      # formatting indicated in the 'Error and Warning formatting' above.
+      # @param msg [String] A description of the error.
+      # @param citations [Array<String>] Supporting details, subordinate error citations, denotated 'below' the :msg
+      def error!(msg, citations = nil)
+        @errors << format_error_or_warning(msg, citations)
       end
 
       # @!visibility public
-      def warning!(*args)
-        @warnings << format_error_or_warning(*args)
+      # Add a warning to our {RRA::Base::Validation#warnings} collection. The format of this warning is expected to
+      # match the formatting indicated in the 'Error and Warning formatting' above.
+      # @param msg [String] A description of the warning.
+      # @param citations [Array<String>] Supporting details, subordinate warning citations, denotated 'below' the :msg
+      def warning!(msg, citations = nil)
+        @warnings << format_error_or_warning(msg, citations)
       end
     end
 
-    # This base class is intended for use by inheritors, and contains most of the
-    # logic needed, to implement the validation of a journal file
+    # A base class, from which your journal validations should inherit. For more information on validations, and your
+    # options, see the documentation notes on {RRA::Base::JournalValidation}.
+    # @attr_reader [RRA::Transformers::CsvTransformer,RRA::Transformers::JournalTransformer] transformer
+    #   The transformer whose output will be inspected by this journal validation instance.
     class JournalValidation < Validation
       include RRA::Application::DescendantRegistry
 
@@ -109,12 +167,20 @@ module RRA
 
       attr_reader :transformer
 
-      # TODO: This default, should maybe come from RRA.app..
+      # Create a new Journal Validation
+      # @param [RRA::Transformers::CsvTransformer,RRA::Transformers::JournalTransformer] transformer
+      #    see {RRA::Base::JournalValidation#transformer}
       def initialize(transformer)
-        super
+        super()
         @transformer = transformer
       end
 
+      # This helper method will supply the provided arguments to pta.register. And if there are any transactions
+      # returned, the supplied error message will be added to our :errors colection, citing the transactions
+      # that were encountered.
+      # @param [String] with_error_msg A description of the error that corresponds to the returned transactions.
+      # @param [Array<Object>] args These arguments are supplied directly to {RRA::Pta::AvailabilityHelper#pta}'s
+      #                             #register method
       def validate_no_transactions(with_error_msg, *args)
         ledger_opts = args.last.is_a?(Hash) ? args.pop : {}
 
@@ -129,6 +195,12 @@ module RRA
         error! with_error_msg, error_citations unless error_citations.empty?
       end
 
+      # This helper method will supply the provided arguments to pta.balance. And if there are any balances
+      # returned, the supplied error message will be added to our :errors colection, citing the balances
+      # that were encountered.
+      # @param [String] with_error_msg A description of the error that corresponds to the returned balances.
+      # @param [Array<Object>] args These arguments are supplied directly to {RRA::Pta::AvailabilityHelper#pta}'s
+      #                             #balance method
       def validate_no_balance(with_error_msg, account)
         results = pta.balance account, file: transformer.output_file
 
@@ -142,8 +214,8 @@ module RRA
       end
     end
 
-    # This base class is intended for use by inheritors, and contains most of the
-    # logic needed, to implement the validation of a system file
+    # A base class, from which your system validations should inherit. For more information on validations, and your
+    # options, see the documentation notes on {RRA::Base::JournalValidation}.
     class SystemValidation < Validation
       include RRA::Application::DescendantRegistry
 
@@ -152,10 +224,12 @@ module RRA
                            name_capture: NAME_CAPTURE,
                            accessors: { task_names: task_names }
 
+      # @!visibility private
       def mark_validated!
         FileUtils.touch self.class.build_validation_file_path
       end
 
+      # @!visibility private
       def self.validated?
         FileUtils.uptodate? build_validation_file_path, [
           RRA.app.config.build_path('journals/*.journal'),
@@ -163,14 +237,17 @@ module RRA
         ].map { |glob| Dir.glob glob }.flatten
       end
 
+      # @!visibility private
       def self.status_label
         const_get :STATUS_LABEL
       end
 
+      # @!visibility private
       def self.description
         const_get :DESCRIPTION
       end
 
+      # @!visibility private
       def self.build_validation_file_path
         RRA.app.config.build_path(format('journals/system-validation-%s.valid', name.to_s))
       end
