@@ -5,8 +5,6 @@ require_relative '../journal'
 
 module RRA
   module Transformers
-    # This Transformer takes a CSV file, and produces a PTA journal, after applying
-    # our transformation rules
     class CsvTransformer < RRA::Base::Transformer
       attr_reader :fields_format, :csv_format, :invert_amount, :skip_lines, :trim_lines
 
@@ -67,6 +65,7 @@ module RRA
           rows.collect.with_index do |csv_row, i|
             # Set the object values, return the transformed row:
             tx = fields_format.collect do |field, formatter|
+              # TODO: I think we can stick formatter as a key, if it's a string, or int
               [field.to_sym, formatter.respond_to?(:call) ? formatter.call(row: csv_row) : csv_row[field]]
             end.compact.to_h
 

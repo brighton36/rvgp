@@ -4,7 +4,6 @@ require_relative '../journal'
 
 module RRA
   module Transformers
-    # This class handles the transformation of a pta journal, input file, into a pta output file
     class JournalTransformer < RRA::Base::Transformer
       attr_reader :accounts
 

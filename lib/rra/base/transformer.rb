@@ -21,12 +21,12 @@ module RRA
     #   ~/ledger> lsd -1 app/transformers/
     #    2022-business-checking.yml
     #    2023-business-checking.yml
+    #    2022-personal-amex.yml
+    #    2023-personal-amex.yml
     #    2022-personal-checking.yml
     #    2023-personal-checking.yml
     #    2022-personal-saving.yml
     #    2023-personal-saving.yml
-    #    2022-personal-amex.yml
-    #    2023-personal-amex.yml
     # In this example directory, we can see eight transformers defined, on each of the years 2022 and 2023, for each of
     # the accounts: business-checking, personal-checking, personal-saving, and personal-amex. Each of these files will
     # reference a separate input. Each of this files will produce a journal, with a corresponding name in
@@ -43,9 +43,7 @@ module RRA
     #     csv_headers: true
     #     fields:
     #       date: !!proc Date.strptime(row['Date'], '%m/%d/%Y')
-    #       amount: !!proc >
-    #         withdrawal, deposit = row[3..4].collect {|a| a.to_commodity unless a.empty?};
-    #         ( deposit ? deposit.invert! : withdrawal ).quantity_as_s
+    #       amount: !!proc row['Amount']
     #       description: !!proc row['Description']
     #   income:
     #     - match: /.*/
@@ -61,15 +59,17 @@ module RRA
     # - *input* [String] - The filename/path to the input to this file. Typically this is a csv file, located in the
     #   project's 'feeds' directory.
     # - *output* [String] - The filename to output in the project's 'build/journals' directory.
+    # - *starts_on* [String] - A cut-off date, before which, transactions in the input_file are ignored. Date is
+    #                          expected to be provided in YYYY-MM-DD format.
     # - *format* [Hash] - This section defines the logic used to decode a csv into fields. Typically, this section is
     #   shared between multiple transformers by way of an 'include' directive, to a file in your
     #   config/ directory. More on this below.<br><br>
     #   Note the use of the !!proc directive. These values are explained in the 'Special yaml features'
     #   section.
-    # - *income* [Array<Hash>] - This collection matches one or more income entries in the input file, and reconciles them to
-    #   an output entry.
-    # - *expense* [Array<Hash>] - This collection matches one or more expense entries in the input file, and reconciles them
-    #   to an output entry.
+    # - *income* [Array<Hash>] - This collection matches one or more income entries in the input file, and reconciles
+    #   them to an output entry.
+    # - *expense* [Array<Hash>] - This collection matches one or more expense entries in the input file, and reconciles
+    #   them to an output entry.
     #
     # Income and expenses are nearly identical in their rules and features, and are further explained in the 'Defining
     # income and expense sections' below.
@@ -79,38 +79,44 @@ module RRA
     # - *transform_commodities* [Hash] - This directive can be used to convert commodities in the format specified by
     #   its keys, to the commodity specified in its values. For example, the following will ensure that all USD values
     #   encountered in the input file, are transcribed as '$' in the output files:
+    #     ...
     #     transform_commodities:
     #       USD: '$'
+    #     ...
     # - *balances* [Hash] - This feature raises an error, if the balance of the :from account on a given date(key)
     #   doesn't match the provided value. Here's an example of what this looks like in a transformer:
+    #     ...
     #     balances:
     #       '2023-01-15': $ 2345.67
     #       '2023-06-15': $ 3456,78
+    #     ...
     #   This feature is mostly implemented by the {RRA::Validations::BalanceValidation}, and is provided as a fail-safe,
     #   in which you can input the balance reported by the statements from your financial institution, and ensure your
     #   build is consistent with the expectation of that institution.
-    # - *disable_checks* [Array<String>] - This declaration can be used to disable one or more of your journal validations. This
-    #   is described in greater depth in the {RRA::Base::Validation} documentation. Here's a sample of this feature,
-    #   which can be used to disable the balances section that was explained above:
+    # - *disable_checks* [Array<String>] - This declaration can be used to disable one or more of your journal
+    #   validations. This is described in greater depth in the {RRA::Base::Validation} documentation. Here's a sample
+    #   of this feature, which can be used to disable the balances section that was explained above:
+    #     ...
     #     disable_checks:
     #       - balance
-    # - *tag_accounts* [Array<Hash>] - This feature is preliminary, and subject to change. The gist of this feature, is that
-    #   it offers a second pass, after the income/expense rules have applied. This pass enables additional tags to be
-    #   applied to a posting, based on how that posting was transformed in the first pass. I'm not sure I like how this
-    #   feature came out, so, I'm disinclined to document it for now. If there's an interest in this feature, I can
+    #     ...
+    # - *tag_accounts* [Array<Hash>] - This feature is preliminary, and subject to change. The gist of this feature, is
+    #   that it offers a second pass, after the income/expense rules have applied. This pass enables additional tags to
+    #   be applied to a posting, based on how that posting was transformed in the first pass. I'm not sure I like how
+    #   this feature came out, so, I'm disinclined to document it for now. If there's an interest in this feature, I can
     #   stabilize it's support, and better document it.
     #
     # = Understanding 'format' parameters
-    # The format section applies rules to the parsing of the input file. And, as such, some of these parameters are
+    # The format section applies rules to the parsing of the input file. Some of these parameters are
     # specific to the format of the input file. These rules are typically specific to a financial instution's specific
-    # output formatting. And, as such, are typically shared between multiple transformer files in the form of an
+    # output formatting. And are typically shared between multiple transformer files in the form of an
     # !!include directive (see below).
     #
     # == CSV specific format parameters
     # The parameters are specific to .csv input files.
-    # - *fields* [Hash<String, Proc>] - This field is required for csv's. This hash contains a map of field names, to !!proc's.
-    #   The supported (required) field keys are: date, amount, and description. The values for each of these keys
-    #   is evaluated (in ruby), and provided a single parameter, 'row' which contains a row as returned from ruby's
+    # - *fields* [Hash<String, Proc>] - This field is required for csv's. This hash contains a map of field names, to
+    #   !!proc's. The supported (required) field keys are: date, amount, and description. The values for each of these
+    #   keys is evaluated (in ruby), and provided a single parameter, 'row' which contains a row as returned from ruby's
     #   CSV.parse method. The example project, supplied by the new_project command, contains an easy implementation
     #   of this feature in action.
     # - *invert_amount* [bool] (default: false) - Whether to call the {RRA::Journal::Commodity#invert!} on every
@@ -131,34 +137,127 @@ module RRA
     # - *default_currency* [String] (default: '$') - A currency to default amount's to, if a currency isn't specified
     # - *reverse_order* [bool] (default: false) - Whether to output transactions in the opposite order of how they were
     #   encoded in the input file.
-    # - *cash_back* - TODO
+    # - *cash_back* [Hash] - This feature enables you to match transaction descriptions for a cash back indication and
+    #   amount, and to break that component of the charge into a separate account. The valid keys in this hash are
+    #   :match and :to . The matched captures of the regex are assumed to be symbol (1) and amount (2), which are used
+    #   to construct a commodity that's assigned to the :to value. Here's an easy exmple
+    #     ...
+    #     cash_back:
+    #       match: '/\(CASH BACK: ([^ ]) ([\d]+\.[\d]{2})\)\Z/'
+    #       to: Personal:Assets:Cash
+    #     ...
     #
     # = Defining income and expense sections
-    # TODO
+    # This is where you'll spend most of your time reconciling. Once the basic csv structure is parsing, these sections
+    # are how you'll match entries in your input file, and turn them into reconciled output entries. The income_rules
+    # and expense_rules are governed by the same logic. Let's breakout some of their rules, that you should understand:
+    # - The *_rules section of the yaml is a array of hashes
+    # - These hashes contain 'match' directives, and 'assignment' directives
+    # - All transactions in the input file, are sent to either income_rules, or expense_rules, depending on whether
+    #   their amount is a credit(income), or a debit(expense).
+    # - Each transaction in the input file is sent down the chain of rules (either income or expense) from the top of
+    #   the list, towards the bottom - until a matching rule is found. At that time, traversal will stop. And, all
+    #   directives in this rule will apply to the input transaction.
+    # - If you've ever managed a firewall, this matching and directive process works very similarly to how packets are
+    #   managed by a firewall ruleset.
+    # - If no matches were found, an error is raised. Typically, you'll want a catch-all at the end of the chain, like
+    #   so:
+    #    ...
+    #    - match: /.*/
+    #      to: Personal:Expenses:Unknown
+    #
+    # For every hash in an array of income and expense rules, you can specify one or more of the following yaml
+    # directives. Note that these directives all serve to provide two function: matching input transactions, indicating
+    # how to reconcile any matches it captures.
+    #
+    # == Income & Expense Rules: Matching
+    # The following directives are matching rules. If more than one of these directives are encountered in a rule,
+    # they're and'd together. Meaning: all of the conditions that are listed, need to apply to subject, in order for a
+    # match to execute.
+    # - *match* [Regexp,String] - If a string is provided, compares the :description of the feed transaction against the
+    #                             value provided, and matches if they're equal. If a regex is provided, matches the
+    #                             :description of the feed transaction against the regex provided.
+    #                             If a regex is provided, captures are supported. (see the note below)
+    # - *account* [Regexp,String] - This matcher is useful for transformers that support the :to field.
+    #                               (see {RRA::Transformers:JournalTransformer}). If a string is provided, compares the
+    #                               account :to which a transaction was assigned, to the value provided. And matches if
+    #                               they're equal. If a regex is provided, matches the account :to which a transaction
+    #                               was assigned, against the regex provided.
+    #                               If a regex is provided, captures are supported. (see the note below)
+    # - *account_is_not* [String] - This matcher is useful for transformers that support the :to field.
+    #                               (see {RRA::Transformers:JournalTransformer}). This field matches any transaction
+    #                               whose account :to, does not equal the provided string.
+    # - *amount_less_than* [RRA::Commodity] - This field compares it's value to the transaction :amount , and matches if
+    #                                         that amount is less than the provided amount.
+    # - *amount_greater_than* [RRA::Commodity] - This field compares it's value to the transaction :amount , and matches
+    #                                            if that amount is greater than the provided amount.
+    # - *amount_equals* [RRA::Commodity] - This field compares it's value to the transaction :amount , and matches if
+    #                                      that amount is equal to the provided amount.
+    # - *on_date* [Regexp,Date] - If a date is provided, compares the :date of the feed transaction against the value
+    #                             provided, and matches if they're equal. If a regex is provided, matches the
+    #                             :date of the feed, converted to a string in the format 'YYYY-MM-DD', against the regex
+    #                             provided.
+    #                             If a regex is provided, captures are supported. (see the note below)
+    # - *before_date* [Date] - This field compares it's value to the feed transaction :date, and matches if the feed's
+    #                          :date occurred before the provided :date.
+    # - *after_date* [Date] - This field compares it's value to the feed transaction :date, and matches if the feed's
+    #                          :date occurred after the provided :date.
+    # - *from_is_not* [String] - This field matches any transaction whose account :from, does not equal the provided
+    #                            string.
+    #
+    # *NOTE* Some matchers which support captures: This is a powerful feature that allows regexp captured values, to
+    # substitute in the :to field of the transformed transaction. Here's an example of how this feature works:
+    #  - match: '/^Reservation\: (?<unit>[^ ]+)/'
+    #    to: AirBNB:Income:$unit
+    # In this example, the text that existed in the "(?<unit>[^ ]+)" section of the 'match' field, is substituted in
+    # place of "$unit" in the output journal.
+    #
+    # == Income & Expense Rules: Reconciliation
+    # The following directives are reconciliation rules. These rules have nothing to do with matching, and instead
+    # apply to the outputted transaction for the rule in which they're declared. If more than one of these rules are
+    # present - they all apply.
+    # - *to* [TODO] - TODO This supports captures
+    # - *targets* [Array<Hash>] - For some transactions, multiple transfers need to expand from a single input
+    #                      transaction. In those cases, :targets is the reconciliation rule you'll want to use.
+    #                      This field is expected to be an array of Hashes. With, each hash supporting the following
+    #                      fields:
+    #                      - *to* [TODO] - TODO
+    #                      - *commodity* [TODO] - TODO
+    #                      - *complex_commodity* [TODO] - TODO
+    #                      - *tags* [Array<String>] - TODO {RRA::Journal::Posting::Tag.from_s}
+    # - *tag* [TODO] - TODO:
+    # - *to_module* [TODO] - TODO
+    # - *from* [String] - TODO
     #
     # = Special yaml features
     # - TODO: !!include
-    # - TODO: !!proc
+    # - TODO: !!proc (TODO: note the > and \n not doing what you'd think. use semi's)
     #
     # TODO
     # This class implements most of the transformer logic. And, exists as the base
     # class from which input-specific transformers inherit (RRA:Transformers:CsvTransformer,
     # RRA:Transformers:JournalTransformer)
-    # @attr_reader [TODO] label
-    # @attr_reader [TODO] file
-    # @attr_reader [TODO] output_file
-    # @attr_reader [TODO] input_file
-    # @attr_reader [TODO] starts_on
-    # @attr_reader [TODO] balances
-    # @attr_reader [TODO] disable_checks,
-    # @attr_reader [TODO] from
-    # @attr_reader [TODO] income_rules
-    # @attr_reader [TODO] expense_rules
-    # @attr_reader [TODO] tag_accounts
-    # @attr_reader [TODO] cash_back
-    # @attr_reader [TODO] cash_back_to,
-    # @attr_reader [TODO] reverse_order
-    # @attr_reader [TODO] default_currency
+    # @attr_reader [String] label The contents of the yaml :label parameter (see above)
+    # @attr_reader [String] file The full path to the transformer yaml file this class was parsed from
+    # @attr_reader [String] output_file The contents of the yaml :output parameter (see above)
+    # @attr_reader [String] input_file The contents of the yaml :input parameter (see above)
+    # @attr_reader [Date] starts_on The contents of the yaml :starts_on parameter (see above)
+    # @attr_reader [Hash<String, String>] balances A hash of dates (in 'YYYY-MM-DD') to commodities (as string)
+    #                                              corresponding to the balance that are expected on those dates.
+    #                                              See {RRA::Validations::BalanceValidation} for details on this
+    #                                              feature.
+    # @attr_reader [Array<String>] disable_checks The JournalValidations that are disabled on this transformer (see
+    #                                             above)
+    # @attr_reader [String] from The contents of the yaml :from parameter (see above)
+    # @attr_reader [Array<Hash>] income_rules The contents of the yaml :income_rules parameter (see above)
+    # @attr_reader [Array<Hash>] expense_rules The contents of the yaml :expense_rules parameter (see above)
+    # @attr_reader [Array<Hash>] tag_accounts The contents of the yaml :tag_accounts parameter (see above)
+    # @attr_reader [Regexp] cash_back The contents of the :match parameter, inside the yaml's :cash_back parameter (see
+    #                                 above)
+    # @attr_reader [String] cash_back_to The contents of the :to parameter, inside the yaml's :cash_back parameter (see
+    #                                 above)
+    # @attr_reader [TrueClass,FalseClass] reverse_order The contents of the yaml :reverse_order parameter (see above)
+    # @attr_reader [String] default_currency The contents of the yaml :default_currency parameter (see above)
     class Transformer
       include RRA::Utilities
 
@@ -169,12 +268,12 @@ module RRA
         end
       end
 
+      # @!visibility private
       # This class exists as an intermediary class, mostly to support the source
       # formats of both .csv and .journal files, without forcing one conform to the
       # other.
       class Posting
-        attr_accessor :line_number, :date, :description, :commodity,
-                      :complex_commodity, :from, :to, :tags, :targets
+        attr_accessor :line_number, :date, :description, :commodity, :complex_commodity, :from, :to, :tags, :targets
 
         def initialize(line_number, opts = {})
           @line_number = line_number
@@ -188,6 +287,7 @@ module RRA
           @targets = opts[:targets] || []
         end
 
+        # @!visibility private
         def to_journal_posting
           transfers = targets.map do |target|
             RRA::Journal::Posting::Transfer.new target[:to],
@@ -207,11 +307,12 @@ module RRA
                   :from, :income_rules, :expense_rules, :tag_accounts, :cash_back, :cash_back_to,
                   :reverse_order, :default_currency
 
+      # @!visibility private
       HEADER = "; -*- %s -*-¬\n; vim: syntax=ledger"
 
-      REQUIRED_FIELDS = %w[label output input from income expense].map(&:to_sym)
-
-      # NOTE: yaml is expected to be an RRA::Yaml
+      # Create a Transformer from the provided yaml
+      # @param [RRA::Yaml] yaml A file containing the settings to use in the construction of this transformer.
+      #                         (see above)
       def initialize(yaml)
         @label = yaml[:label]
         @file = yaml.path
@@ -219,8 +320,10 @@ module RRA
 
         @starts_on = yaml.key?(:starts_on) ? Date.strptime(yaml[:starts_on], '%Y-%m-%d') : nil
 
-        missing_fields = REQUIRED_FIELDS.find_all { |attr| !yaml.key? attr }
+        missing_fields = %i[label output input from income expense format].find_all { |attr| !yaml.key? attr }
         raise MissingFields.new(*missing_fields) unless missing_fields.empty?
+
+        # TODO: Check for missing format[fields]
 
         if RRA.app
           @output_file = RRA.app.config.build_path format('journals/%s', yaml[:output])
@@ -258,10 +361,13 @@ module RRA
         end
       end
 
+      # Returns the taskname to use by rake, for this transformer
+      # @return [String] The taskname, based off the :file basename
       def as_taskname
         File.basename(file, File.extname(file)).tr('^a-z0-9', '-')
       end
 
+      # @!visibility private
       # This is kinda weird I guess, but, we use it to identify whether the
       # provided str matches one of the unique fields that identifying this object
       # this is mostly (only?) used by the command objects, to resolve parameters
@@ -283,11 +389,13 @@ module RRA
         FileUtils.uptodate? output_file, dependencies
       end
 
+      # @!visibility private
       # This file is used to mtime the last success
       def validated_touch_file_path
         format('%s.valid', output_file)
       end
 
+      # @!visibility private
       def mark_validated!
         FileUtils.touch validated_touch_file_path
       end
@@ -296,6 +404,7 @@ module RRA
         FileUtils.uptodate? validated_touch_file_path, [output_file]
       end
 
+      # @!visibility private
       def transform_commodity(from)
         # NOTE: We could be dealing with a ComplexCommodity, hence the check
         # for a .code
@@ -308,6 +417,7 @@ module RRA
         from
       end
 
+      # @!visibility private
       def transform_posting(rule, posting)
         # NOTE: The modules produce more than one tx per csv line, sometimes:
 
@@ -393,6 +503,7 @@ module RRA
         end
       end
 
+      # @!visibility private
       def postings
         @postings ||= (reverse_order ? source_postings.reverse! : source_postings).map do |source_posting|
           # See what rule applies to this posting:
@@ -431,6 +542,7 @@ module RRA
         end.flatten.compact
       end
 
+      # @!visibility private
       def match_rule(rules, posting)
         rules.each_with_index do |rule, i|
           captures = nil
@@ -468,6 +580,10 @@ module RRA
         File.write output_file, to_ledger
       end
 
+      # Returns an array of all of the transformers found in the specified path.
+      # @param [String] directory_path The path containing your yml transformer files
+      # @return [Array<RRA::Transformers::CsvTransformer, RRA::Transformers::JournalTransformer>]
+      #   An array of parsed transformers.
       def self.all(directory_path)
         # NOTE: I'm not crazy about this method. Probably we should have
         # implemented a single Transformer class, with CSV/Journal drivers.
