@@ -175,35 +175,35 @@ module RRA
     # they're and'd together. Meaning: all of the conditions that are listed, need to apply to subject, in order for a
     # match to execute.
     # - *match* [Regexp,String] - If a string is provided, compares the :description of the feed transaction against the
-    #                             value provided, and matches if they're equal. If a regex is provided, matches the
-    #                             :description of the feed transaction against the regex provided.
-    #                             If a regex is provided, captures are supported. (see the note below)
+    #   value provided, and matches if they're equal. If a regex is provided, matches the
+    #   :description of the feed transaction against the regex provided.
+    #   If a regex is provided, captures are supported. (see the note below)
     # - *account* [Regexp,String] - This matcher is useful for transformers that support the :to field.
-    #                               (see {RRA::Transformers:JournalTransformer}). If a string is provided, compares the
-    #                               account :to which a transaction was assigned, to the value provided. And matches if
-    #                               they're equal. If a regex is provided, matches the account :to which a transaction
-    #                               was assigned, against the regex provided.
-    #                               If a regex is provided, captures are supported. (see the note below)
+    #   (see {RRA::Transformers::JournalTransformer}). If a string is provided, compares the
+    #   account :to which a transaction was assigned, to the value provided. And matches if
+    #   they're equal. If a regex is provided, matches the account :to which a transaction
+    #   was assigned, against the regex provided.
+    #   If a regex is provided, captures are supported. (see the note below)
     # - *account_is_not* [String] - This matcher is useful for transformers that support the :to field.
-    #                               (see {RRA::Transformers:JournalTransformer}). This field matches any transaction
-    #                               whose account :to, does not equal the provided string.
-    # - *amount_less_than* [RRA::Commodity] - This field compares it's value to the transaction :amount , and matches if
-    #                                         that amount is less than the provided amount.
-    # - *amount_greater_than* [RRA::Commodity] - This field compares it's value to the transaction :amount , and matches
-    #                                            if that amount is greater than the provided amount.
-    # - *amount_equals* [RRA::Commodity] - This field compares it's value to the transaction :amount , and matches if
-    #                                      that amount is equal to the provided amount.
+    #   (see {RRA::Transformers::JournalTransformer}). This field matches any transaction
+    #   whose account :to, does not equal the provided string.
+    # - *amount_less_than* [Commodity] - This field compares it's value to the transaction :amount , and matches if
+    #   that amount is less than the provided amount.
+    # - *amount_greater_than* [Commodity] - This field compares it's value to the transaction :amount , and matches
+    #   if that amount is greater than the provided amount.
+    # - *amount_equals* [Commodity] - This field compares it's value to the transaction :amount , and matches if
+    #   that amount is equal to the provided amount.
     # - *on_date* [Regexp,Date] - If a date is provided, compares the :date of the feed transaction against the value
-    #                             provided, and matches if they're equal. If a regex is provided, matches the
-    #                             :date of the feed, converted to a string in the format 'YYYY-MM-DD', against the regex
-    #                             provided.
-    #                             If a regex is provided, captures are supported. (see the note below)
+    #   provided, and matches if they're equal. If a regex is provided, matches the
+    #   :date of the feed, converted to a string in the format 'YYYY-MM-DD', against the regex
+    #   provided.
+    #   If a regex is provided, captures are supported. (see the note below)
     # - *before_date* [Date] - This field compares it's value to the feed transaction :date, and matches if the feed's
-    #                          :date occurred before the provided :date.
+    #   :date occurred before the provided :date.
     # - *after_date* [Date] - This field compares it's value to the feed transaction :date, and matches if the feed's
-    #                          :date occurred after the provided :date.
+    #   :date occurred after the provided :date.
     # - *from_is_not* [String] - This field matches any transaction whose account :from, does not equal the provided
-    #                            string.
+    #   string.
     #
     # *NOTE* Some matchers which support captures: This is a powerful feature that allows regexp captured values, to
     # substitute in the :to field of the transformed transaction. Here's an example of how this feature works:
@@ -216,27 +216,58 @@ module RRA
     # The following directives are reconciliation rules. These rules have nothing to do with matching, and instead
     # apply to the outputted transaction for the rule in which they're declared. If more than one of these rules are
     # present - they all apply.
-    # - *to* [TODO] - TODO This supports captures
+    # - *to* [String] - This field will provide the :to account to reconcile an input transaction against. Be aware
+    #   aware of the above note on captures, as this field supports capture variable substitution.
+    # - *from* [String] - This field can be used to change the reconciled :from account, to a different account than
+    #   the default :from, that was specified in the root of the transformer yaml.
+    # - *tag* [String] - Tag(s) to apply to the reconciled transaction.
     # - *targets* [Array<Hash>] - For some transactions, multiple transfers need to expand from a single input
-    #                      transaction. In those cases, :targets is the reconciliation rule you'll want to use.
-    #                      This field is expected to be an array of Hashes. With, each hash supporting the following
-    #                      fields:
-    #                      - *to* [TODO] - TODO
-    #                      - *commodity* [TODO] - TODO
-    #                      - *complex_commodity* [TODO] - TODO
-    #                      - *tags* [Array<String>] - TODO {RRA::Journal::Posting::Tag.from_s}
-    # - *tag* [TODO] - TODO:
-    # - *to_module* [TODO] - TODO
-    # - *from* [String] - TODO
+    #   transaction. In those cases, :targets is the reconciliation rule you'll want to use.
+    #   This field is expected to be an array of Hashes. With, each hash supporting the
+    #   following fields:
+    #   - *to* [String] - As with the above :to, this field will provide the account to reconcile the transfer to.
+    #   - *amount* [Commodity] - The amount to ascribe to this transfer. While the sum of the targets 'should' equal the
+    #     input transaction amount, there is no validation performed by RRA to do so. So, excercize discretion when
+    #     manually breaking out input transactions into multiple transfers.
+    #   - *complex_commodity* [ComplexCommodity] - A complex commodity to ascribe to this transfer, instead of an
+    #     :amount. See {RRA::Journal::ComplexCommodity.from_s} for more details on this feature.
+    #   - *tags* [Array<String>] - An array of tags to assign to this transfer. See {RRA::Journal::Posting::Tag.from_s}
+    #     for more details on tag formatting.
+    # - *to_module* [String] - Transformer Modules are a powerful feature that can reduce duplication, and manual
+    #   calculations from your transformer yaml. The value provided here, must correlate with an
+    #   available transformer module, and if so, sends this rule to that module for
+    #   reconciliation.
+    # - *module_params* [Hash] - This section is specific to the transformer module that was specified in the :to_module
+    #   field. Any of the key/value pairs specified here, are sent to the transformer module,
+    #   along with the rest of the input transaction. And, presumably, these fields will futher
+    #   direct the reconciliation of the input transaction.
     #
     # = Special yaml features
-    # - TODO: !!include
-    # - TODO: !!proc (TODO: note the > and \n not doing what you'd think. use semi's)
+    # All of these pysch extensions, are prefixed with two exclamation points, and can be placed in lieu of a value, for
+    # some of the fields outlined above.
+    # - *!!include* [String] - Include another yaml file, in place of this directive. The file is expected to be
+    #   provided, immediately followed by this declaration (separated by a space). It's common to see this directive
+    #   used as a shortcut to shared :format sections. But, these can be used almost anywhere. Here's an example:
+    #     ...
+    #     from: "Personal:Assets:AcmeBank:Checking"
+    #     label: "Personal AcmeBank:Checking (2023)"
+    #     format: !!include config/csv-format-acmebank.yml
+    #     ...
+    # - *!!proc* [String] - Convert the contents of the text following this directive, into a Proc object. It's common
+    #   to see this directive used in the format section of a transformer yaml. Here's an example:
+    #     ...
+    #     fields:
+    #     date: !!proc >
+    #       date = Date.strptime(row[0], '%m/%d/%Y');
+    #       date - 1
+    #     amount: !!proc row[1]
+    #     description: !!proc row[2]
+    #     ...
+    #   Note that the use of '>' is a yaml feature, that allows multiline strings to compose by way of an indent in
+    #   the lines that follow. For one-line '!!proc' declarations, this character is not needed. Additionally, this
+    #   means that in most cases, carriage returns are not parsed. As such, you'll want to terminate lines in these
+    #   segments, with a semicolon, to achieve the same end.
     #
-    # TODO
-    # This class implements most of the transformer logic. And, exists as the base
-    # class from which input-specific transformers inherit (RRA:Transformers:CsvTransformer,
-    # RRA:Transformers:JournalTransformer)
     # @attr_reader [String] label The contents of the yaml :label parameter (see above)
     # @attr_reader [String] file The full path to the transformer yaml file this class was parsed from
     # @attr_reader [String] output_file The contents of the yaml :output parameter (see above)
@@ -320,10 +351,9 @@ module RRA
 
         @starts_on = yaml.key?(:starts_on) ? Date.strptime(yaml[:starts_on], '%Y-%m-%d') : nil
 
-        missing_fields = %i[label output input from income expense format].find_all { |attr| !yaml.key? attr }
-        raise MissingFields.new(*missing_fields) unless missing_fields.empty?
+        missing_fields = %i[label output input from income expense].find_all { |attr| !yaml.key? attr }
 
-        # TODO: Check for missing format[fields]
+        raise MissingFields.new(*missing_fields) unless missing_fields.empty?
 
         if RRA.app
           @output_file = RRA.app.config.build_path format('journals/%s', yaml[:output])

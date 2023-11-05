@@ -11,13 +11,25 @@ module RRA
       def initialize(yaml)
         super yaml
 
-        if yaml.key? :format
-          @fields_format = yaml[:format][:fields] if yaml[:format].key? :fields
-          @invert_amount = yaml[:format][:invert_amount] || false if yaml[:format].key? :invert_amount
-          @skip_lines = yaml[:format][:skip_lines]
-          @trim_lines = yaml[:format][:trim_lines]
-          @csv_format = { headers: yaml[:format][:csv_headers] } if yaml[:format].key? :csv_headers
-        end
+        missing_fields = if yaml.key? :format
+                           if yaml[:format].key?(:fields)
+                             %i[date amount description].map do |attr|
+                               format('format/fields/%s', attr) unless yaml[:format][:fields].key?(attr)
+                             end.compact
+                           else
+                             ['format/fields']
+                           end
+                         else
+                           ['format']
+                         end
+
+        raise MissingFields.new(*missing_fields) unless missing_fields.empty?
+
+        @fields_format = yaml[:format][:fields] if yaml[:format].key? :fields
+        @invert_amount = yaml[:format][:invert_amount] || false if yaml[:format].key? :invert_amount
+        @skip_lines = yaml[:format][:skip_lines]
+        @trim_lines = yaml[:format][:trim_lines]
+        @csv_format = { headers: yaml[:format][:csv_headers] } if yaml[:format].key? :csv_headers
       end
 
       class << self
