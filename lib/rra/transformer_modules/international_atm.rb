@@ -3,27 +3,67 @@
 module RRA
   module Transformers
     module Modules
-      # This transformer module will automatically allocate ATM components of an expense, to a specified
-      # account. (Presumably, 'Personal:Assets:Cash'). The remainder balance, after this allocation,
-      # will be allocated by way of the normal rules that apply to any transaction.
+      # This transformer module will automatically allocate ATM components of a transaction, to constituent
+      # accounts. This module is useful for tracking the myriad expenses that banks impose on your atm
+      # withdrawals internationally. This module takes the total withdrawal, as reported in the input file
+      # and deducts conversion_markup and operation_costs from that total. It then takes the remainder balance
+      # and constructs a {RRA::Journal::ComplexCommodity} with the provided :amount as the :left side of that
+      # balance, and the remainder after fees on the right side. This seems to be how all ATM's (that I've
+      # encountered) work. Note that not all atm, use all of the fees listed below. Some will use them all,
+      # some will use a subset.
       #
       # The module parameters we support are:
-      #  :amount - TODO document this
-      #  :operation_cost - TODO document this
-      #  :conversion_markup - TODO document this
-      #  :conversion_markup_to - TODO document this
-      #  :operation_cost_to - TODO document this
+      # - *amount* [Commodity] - The amount you withdrew on the ATM screen. This is paper amount, that you received.
+      #   This amount should be denoted in the commodity you received.
+      # - *operation_cost* [Commodity] - This amount is denominated in the same currency you received in paper, and
+      #   is typically listed in a summary screen, and on your printed receipt.
+      # - *conversion_markup* [String] - This is a percentage, expressed as a string. So, "7.5%" would be expected
+      #   to be written as "7.5", here. This amount is typically listed on a summary screen, and in your printed
+      #   receipt.
+      # - *conversion_markup_to* [String] - The account that :conversion_markup fees should be transferred to
+      # - *operation_cost_to* [String] - The account that :operation_cost fees should be transferred to
+      #
+      # = Example
+      # Here's how this module might be used in your transformer:
+      #   ...
+      #   - match: /BANCOLOMBIA/
+      #     to: Personal:Assets:Cash
+      #     to_module: InternationalAtm
+      #     module_params:
+      #       amount: "600000 COP"
+      #       operation_cost: "24290.00 COP"
+      #       operation_cost_to: Personal:Expenses:Banking:Fees:RandomAtmOperator
+      #       conversion_markup: "7.5"
+      #       conversion_markup_to: Personal:Expenses:Banking:Fees:RandomAtmOperator
+      #   ...
+      # And how one of these above uses will reconcile, in your build:
+      #   ...
+      #   2023-02-18 BANCOLOMBIA AERO_JMC4 antioquia
+      #     Personal:Assets:Cash                                600000.00 COP @@ $ 123.26
+      #     Personal:Expenses:Banking:Fees:RandomAtmOperator    24290.00 COP @@ $ 4.99
+      #     Personal:Expenses:Banking:Fees:RandomAtmOperator    $ 9.62
+      #     Personal:Assets:AcmeBank:Checking
+      #   ...
+      # Note that the transformer line above, could match more than one transaction in the input file, and if it
+      # does, each of them will be expanded similarly to the expansion below. Though, with international exchange
+      # rates changing on a daily basis, the numbers may be different, depending on the debit amount encountered
+      # in the input file.
       class InternationalAtm
+        # @!visibility private
         MSG_MISSING_REQUIRED_FIELDS = "'International Atm' module at line:%s missing required field %s"
+        # @!visibility private
         MSG_OPERATION_COST_AND_AMOUNT_MUST_HAVE_SAME_COMMODITY = "'International Atm' module at line:%s requires " \
                                                                  'that the operation cost currency matches the ' \
                                                                  'amount withdrawn'
+        # @!visibility private
         MSG_FIELD_REQUIRED_IF_FIELD_EXISTS = "'International Atm' module at line:%s. Field %s is required if field " \
                                              '%s is provided.'
 
+        # @!visibility private
         attr_reader :tag, :targets, :to, :amount, :operation_cost, :conversion_markup,
                     :conversion_markup_to, :operation_cost_to
 
+        # @!visibility private
         def initialize(rule)
           @tag = rule[:tag]
           @targets = rule[:targets]
@@ -57,6 +97,7 @@ module RRA
           end
         end
 
+        # @!visibility private
         def to_tx(from_posting)
           reported_amount = from_posting.commodity
           targets = []

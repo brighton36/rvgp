@@ -245,7 +245,7 @@ module RRA
     # = Special yaml features
     # All of these pysch extensions, are prefixed with two exclamation points, and can be placed in lieu of a value, for
     # some of the fields outlined above.
-    # - *!!include* [String] - Include another yaml file, in place of this directive. The file is expected to be
+    # - <b>!!include</b> [String] - Include another yaml file, in place of this directive. The file is expected to be
     #   provided, immediately followed by this declaration (separated by a space). It's common to see this directive
     #   used as a shortcut to shared :format sections. But, these can be used almost anywhere. Here's an example:
     #     ...
@@ -253,7 +253,7 @@ module RRA
     #     label: "Personal AcmeBank:Checking (2023)"
     #     format: !!include config/csv-format-acmebank.yml
     #     ...
-    # - *!!proc* [String] - Convert the contents of the text following this directive, into a Proc object. It's common
+    # - <b>!!proc</b> [String] - Convert the contents of the text following this directive, into a Proc object. It's common
     #   to see this directive used in the format section of a transformer yaml. Here's an example:
     #     ...
     #     fields:
@@ -411,10 +411,14 @@ module RRA
         output_file == str_as_file)
       end
 
+      # Returns the file paths that were referenced by this transformer in one form or another.
+      # Useful for determining build freshness.
+      # @return [Array<String>] dependent files, in this transformer.
       def dependencies
         [file, input_file] + @dependencies
       end
 
+      # @!visibility private
       def uptodate?
         FileUtils.uptodate? output_file, dependencies
       end
@@ -430,6 +434,7 @@ module RRA
         FileUtils.touch validated_touch_file_path
       end
 
+      # @!visibility private
       def validated?
         FileUtils.uptodate? validated_touch_file_path, [output_file]
       end
@@ -602,10 +607,15 @@ module RRA
         nil
       end
 
+      # Builds the contents of this transformere's output file, and returns it. This is the finished
+      # product of this class
+      # @return [String] a PTA journal, composed of the input_file's transactions, after all rules are applied.
       def to_ledger
         [HEADER % label, postings.map(&:to_ledger), ''].flatten.join("\n\n")
       end
 
+      # Writes the contents of #to_ledger, to the :output_file specified in the transformer yaml.
+      # @return [void]
       def to_ledger!
         File.write output_file, to_ledger
       end
