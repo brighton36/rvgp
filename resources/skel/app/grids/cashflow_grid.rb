@@ -6,7 +6,7 @@ class CashFlowGrid < RRA::Base::Grid
        output_path_template: '%s-cashflow'
 
   def sheet_header
-    ['Account'] + collect_months { |month| month.strftime('%m-%y') }
+    ['Account'] + map_months { |month| month.strftime('%m-%y') }
   end
 
   def sheet_body
@@ -16,12 +16,12 @@ class CashFlowGrid < RRA::Base::Grid
     #       easier to parse.
     monthly_amounts_by_account
       .sort_by { |acct, _| acct }
-      .collect { |account, by_month| [account] + collect_months { |m| by_month[m].round(2) if by_month[m] } }
+      .map { |account, by_month| [account] + map_months { |m| by_month[m].round(2) if by_month[m] } }
   end
 
   private
 
-  def collect_months(&block)
-    months_through_dates(starting_at, ending_at).collect(&block)
+  def map_months(&block)
+    months_through(starting_at, ending_at).map(&block)
   end
 end

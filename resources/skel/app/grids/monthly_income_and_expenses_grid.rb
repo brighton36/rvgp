@@ -15,7 +15,7 @@ class MonthlyIncomeAndExpensesGrid < RRA::Base::Grid
     table = { 'Income' => monthly_amounts('Income'), 'Expense' => monthly_amounts('Expense') }
 
     # This deserializes our lookup hash(es) into rows:
-    months_through_dates(starting_at, ending_at).collect do |month|
+    months_through(starting_at, ending_at).collect do |month|
       [month.strftime('%m-%y')] + %w[Income Expense].map do |direction|
         cell = table[direction][month]
         cell ? cell.abs : nil

@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require 'pry'
-
 # This class writes the wealth growth grid, by month
 class WealthGrowthGrid < RRA::Base::Grid
   grid 'wealth_growth', 'Generate Wealth Growth Grids', 'Wealth Growth by month (%s)',
@@ -20,7 +18,7 @@ class WealthGrowthGrid < RRA::Base::Grid
       monthly_totals acct, accrue_before_begin: true
     end
 
-    months = months_through_dates starting_at, ending_at
+    months = months_through starting_at, ending_at
 
     months.collect.with_index do |month, i|
       # NOTE: The reason we use this last_month hack, is because ledger tends to

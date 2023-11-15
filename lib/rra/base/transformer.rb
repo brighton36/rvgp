@@ -253,8 +253,8 @@ module RRA
     #     label: "Personal AcmeBank:Checking (2023)"
     #     format: !!include config/csv-format-acmebank.yml
     #     ...
-    # - <b>!!proc</b> [String] - Convert the contents of the text following this directive, into a Proc object. It's common
-    #   to see this directive used in the format section of a transformer yaml. Here's an example:
+    # - <b>!!proc</b> [String] - Convert the contents of the text following this directive, into a Proc object. It'
+    #   common to see this directive used in the format section of a transformer yaml. Here's an example:
     #     ...
     #     fields:
     #     date: !!proc >
