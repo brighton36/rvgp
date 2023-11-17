@@ -218,7 +218,7 @@ class TestFakeFeed < Minitest::Test
 
     yaml_file.close
 
-    RRA::Transformers::CsvTransformer.new(RRA::Yaml.new(yaml_file.path)).to_ledger
+    RRA::Transformers::CsvTransformer.new(RRA::Utilities::Yaml.new(yaml_file.path)).to_ledger
   ensure
     [feed_file, yaml_file, journal_file].each do |f|
       f.close

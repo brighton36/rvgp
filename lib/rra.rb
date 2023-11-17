@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'rra/yaml'
+require_relative 'rra/utilities/yaml'
 require_relative 'rra/application'
 require_relative 'rra/commands'
 require_relative 'rra/base/transformer'

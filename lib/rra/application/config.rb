@@ -18,7 +18,7 @@ module RRA
         @build_path = format('%s/build', project_path)
 
         config_path = project_path 'config/rra.yml'
-        @yaml = RRA::Yaml.new config_path, project_path if File.exist? config_path
+        @yaml = RRA::Utilities::Yaml.new config_path, project_path if File.exist? config_path
 
         RRA::Pta.pta_adapter = @yaml[:pta_adapter].to_sym if @yaml.key? :pta_adapter
 

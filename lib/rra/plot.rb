@@ -49,7 +49,7 @@ module RRA
   # {RRA::Utilities::GridQuery#to_grid}.
   #
   # @attr_reader [String] path A path to the location of the input yaml, as provided to #initialize
-  # @attr_reader [RRA::Yaml] yaml The yaml object, containing the parameters of this plot
+  # @attr_reader [RRA::Utilities::Yaml] yaml The yaml object, containing the parameters of this plot
   # @attr_reader [String] glob A string containing wildcards, used to match input grids in the filesystem. This
   #                            parameter is expected to be found inside the yaml[:glob], and will generally look
   #                            something like: "%\\{year}-wealth-growth.csv" or
@@ -95,7 +95,7 @@ module RRA
     def initialize(path)
       @path = path
 
-      @yaml = RRA::Yaml.new path, [RRA.app.config.project_path, GNUPLOT_RESOURCES_PATH]
+      @yaml = RRA::Utilities::Yaml.new path, [RRA.app.config.project_path, GNUPLOT_RESOURCES_PATH]
 
       missing_attrs = REQUIRED_FIELDS.reject { |f| yaml.key? f }
       raise MissingYamlAttribute, yaml.path, missing_attrs unless missing_attrs.empty?
@@ -283,7 +283,7 @@ module RRA
     def gnuplot_options
       @gnuplot_options ||= begin
         gnuplot_options = yaml[:gnuplot] || {}
-        template = RRA::Yaml.new(format('%s/default.yml', GNUPLOT_RESOURCES_PATH))
+        template = RRA::Utilities::Yaml.new(format('%s/default.yml', GNUPLOT_RESOURCES_PATH))
         gnuplot_options.merge(template: template)
       end
     end

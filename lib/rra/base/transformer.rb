@@ -342,8 +342,8 @@ module RRA
       HEADER = "; -*- %s -*-¬\n; vim: syntax=ledger"
 
       # Create a Transformer from the provided yaml
-      # @param [RRA::Yaml] yaml A file containing the settings to use in the construction of this transformer.
-      #                         (see above)
+      # @param [RRA::Utilities::Yaml] yaml A file containing the settings to use in the construction of this transformer
+      #                                   . (see above)
       def initialize(yaml)
         @label = yaml[:label]
         @file = yaml.path
@@ -631,7 +631,7 @@ module RRA
         # driver, we can renovate it, and add some kind of registry for drivers.
 
         Dir.glob(format('%s/app/transformers/*.yml', directory_path)).map do |path|
-          yaml = RRA::Yaml.new path, RRA.app.config.project_path
+          yaml = RRA::Utilities::Yaml.new path, RRA.app.config.project_path
 
           raise MissingFields.new, :input unless yaml.key? :input
 

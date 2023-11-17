@@ -7,7 +7,6 @@ require_relative '../utilities'
 module RRA
   # This module largely exists as a folder, in which to group Parent classes, that are used throughout the project.
   # There's nothing else interesting happening here in this module, other than its use as as namespace.
-  # @!visibility private
   module Base
     # This is the base class implementation, for your application-defined grids. This class offers the bulk of
     # functionality that your grids will use. The goal of a grid, is to compute csv files, in the project's build/grids
