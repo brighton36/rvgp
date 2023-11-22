@@ -5,10 +5,10 @@ require 'tempfile'
 module RRA
   module Commands
     # @!visibility private
-    # This class contains the handling of the 'reconcile' command. Note that
+    # This class contains the handling of the 'ireconcile' command. Note that
     # there is no rake integration in this command, as that function is irrelevent
     # to the notion of an 'export'.
-    class Reconcile < RRA::Base::Command
+    class Ireconcile < RRA::Base::Command
       accepts_options OPTION_ALL, OPTION_LIST, %i[vsplit v]
 
       # There's a bug here where we scroll to the top of the file sometimes, on
@@ -47,13 +47,13 @@ module RRA
         super(*args)
 
         unless /vim?\Z/.match ENV.fetch('EDITOR')
-          @errors << I18n.t('commands.reconcile.errors.unsupported_editor', editor: ENV['EDITOR'].inspect)
+          @errors << I18n.t('commands.ireconcile.errors.unsupported_editor', editor: ENV['EDITOR'].inspect)
         end
       end
 
       # @!visibility private
       def execute!
-        Tempfile.create 'reconcile.vim' do |file|
+        Tempfile.create 'ireconcile.vim' do |file|
           file.write [format(VIMSCRIPT_HEADER, rra_path: $PROGRAM_NAME),
                       targets.map { |target| target.to_vimscript options[:vsplit] }.join("\ntabnew\n")].join
 

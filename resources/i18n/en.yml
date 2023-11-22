@@ -37,7 +37,7 @@ en:
           csvdir: 'Output the provided plots, as csvs, with grid hacks applied, into the specified directory. Mostly useful for debugging.'
           title: 'The title of the Google doc being published. Defaults to "RRA Finance Report %m/%d/%y %H:%M". '
           sleep: 'Seconds to sleep, between each sheet upload. This sleep prevents Google from aborting the publish, under the auspice of api spamming. Defaults to 5.'
-      reconcile:
+      ireconcile:
         description: 'Open an interactive vim session, to edit and build a transform'
         options: 
           all: 'Process all available transforms'
@@ -54,7 +54,7 @@ en:
           stdout: 'Output build to STDOUT instead of output_file'
           all: 'Process all available transforms'
           list: 'List all available transforms'
-          concise: "Concise output mode. Strips output that's unrelated to errors and warnings. (Mostly used by the reconcile command)"
+          concise: "Concise output mode. Strips output that's unrelated to errors and warnings. (Mostly used by the ireconcile command)"
       validate_journal:
         description: 'Validate transformed journals, using the app/validations'
         options: 

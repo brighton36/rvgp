@@ -105,8 +105,9 @@ module RRA
         def name
           name_capture = superclass.descendant_registry[:name_capture]
           name = name_capture.match(to_s) ? ::Regexp.last_match(1) : to_s
+
           # underscorize the capture:
-          name.scan(/[A-Z][^A-Z]+/).join('_').downcase
+          name.scan(/[A-Z][^A-Z]*/).join('_').downcase
         end
 
         private

@@ -16,7 +16,7 @@ module RRA
   # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/new_project.rb new_project.rb}
   # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/plot.rb plot.rb}
   # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/publish_gsheets.rb publish_gsheets.rb}
-  # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/reconcile.rb reconcile.rb}
+  # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/ireconcile.rb ireconcile.rb}
   # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/transform.rb transform.rb}
   # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/validate_journal.rb validate_journal.rb}
   # - {https://github.com/brighton36/rra/blob/main/lib/rra/commands/validate_system.rb validate_system.rb}
