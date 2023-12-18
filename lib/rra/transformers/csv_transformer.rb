@@ -26,6 +26,7 @@ module RRA
         raise MissingFields.new(*missing_fields) unless missing_fields.empty?
 
         @fields_format = yaml[:format][:fields] if yaml[:format].key? :fields
+        @encoding_format = yaml[:format][:encoding] if yaml[:format].key? :encoding
         @invert_amount = yaml[:format][:invert_amount] || false if yaml[:format].key? :invert_amount
         @skip_lines = yaml[:format][:skip_lines]
         @trim_lines = yaml[:format][:trim_lines]
@@ -65,7 +66,9 @@ module RRA
       private
 
       def input_file_contents
-        self.class.input_file_contents File.read(input_file), skip_lines, trim_lines
+        open_args = {}
+        open_args[:encoding] = @encoding_format if @encoding_format
+        self.class.input_file_contents File.read(input_file, **open_args), skip_lines, trim_lines
       end
 
       # We actually returned semi-transformed transactions here. That lets us do

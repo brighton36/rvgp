@@ -121,6 +121,9 @@ module RRA
     #   of this feature in action.
     # - *invert_amount* [bool] (default: false) - Whether to call the {RRA::Journal::Commodity#invert!} on every
     #   amount that's encountered in the input file
+    # - *encoding* [String] - This parameter is passed to the :encoding parameter of File.read, during the parsing of
+    #   the supplied input_file. This can be used to prevent CSV::MalformedCSVError in cases such as a bom encoded
+    #   input file.
     # - *csv_headers* [bool] (default: false) - Whether or not the first row of the input file, contains column headers
     #   for the rows that follow.
     # - *skip_lines* [Integer, String] - This option will direct the transformer to skip over lines at the beginning of
