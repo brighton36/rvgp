@@ -223,7 +223,8 @@ module RRA
     #   aware of the above note on captures, as this field supports capture variable substitution.
     # - *from* [String] - This field can be used to change the reconciled :from account, to a different account than
     #   the default :from, that was specified in the root of the transformer yaml.
-    # - *tag* [String] - Tag(s) to apply to the reconciled transaction.
+    # - *tag* [String] - Tag(s) to apply to the reconciled posting.
+    # - *to_tag* [String] - Tag(s) to apply to the :to transfer, the first transfer, in the posting
     # - *targets* [Array<Hash>] - For some transactions, multiple transfers need to expand from a single input
     #   transaction. In those cases, :targets is the reconciliation rule you'll want to use.
     #   This field is expected to be an array of Hashes. With, each hash supporting the
@@ -535,7 +536,10 @@ module RRA
             posting.targets << { to: cash_back_to, commodity: cash_back_commodity }
           end
 
-          posting.targets << { to: to, commodity: residual_commodity }
+          to_target = { to: to, commodity: residual_commodity }
+
+          to_target[:tags] = [rule[:to_tag]] if rule[:to_tag]
+          posting.targets << to_target
 
           posting
         end
