@@ -100,14 +100,21 @@ module RRA
         relpath ? [@build_path, relpath].join('/') : @build_path
       end
 
+      # This is a bit of a kludge. We wanted this in a few places, so, I DRY'd it here. tldr: this returns an array
+      # of years (as integers), which, were groked from the file names found in the app/transformers directory.
+      # It's a rough shorthand, that, ends up being a better 'guess' of start/end dates, than Date.today
+      # @!visibility private
+      def transformer_years
+        Dir.glob(project_path('app/transformers/*.yml')).map do |f|
+          ::Regexp.last_match(1).to_i if /\A(\d{4}).+/.match File.basename(f)
+        end.compact.uniq.sort
+      end
+
       private
 
       def default_grid_starting_at
-        transformer_years = Dir.glob(project_path('app/transformers/*.yml')).map do |f|
-          ::Regexp.last_match(1).to_i if /\A(\d{4}).+/.match File.basename(f)
-        end.compact.uniq.sort
-
-        transformer_years.empty? ? (Date.today << 12) : Date.new(transformer_years.first, 1, 1)
+        years = transformer_years
+        years.empty? ? (Date.today << 12) : Date.new(years.first, 1, 1)
       end
 
       # We want/need grid tasks that are defined by (year)-gridname. However, we want
@@ -124,8 +131,12 @@ module RRA
         # It's important that we return a lambda, so that the call_or_return()
         # re-runs this code after the grids are generated
         lambda do
-          return Date.today unless Dir[build_path('journals/*.journal')].count.positive?
+          unless Dir[build_path('journals/*.journal')].count.positive?
+            years = transformer_years
+            return years.empty? ? Date.today : Date.new(years.last, 12, 31)
+          end
 
+          # TODO: I think this is why our rake / rake clean output is mismatching atm
           end_date = pta.newest_transaction_date file: project_journal_path
 
           return end_date if end_date == Date.civil(end_date.year, end_date.month, -1)

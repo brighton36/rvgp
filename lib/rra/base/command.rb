@@ -402,13 +402,20 @@ module RRA
             #       and putting that into the task, or task_args somehow.... then
             #       passing this &function to the task() method, instead of returning
             #       a block...
-            lambda { |_task, _task_args|
+            lambda { |task, _task_args|
               error_count = 0
               command = new target.name
 
               unless target.uptodate?
                 rets = command.execute!
                 raise StandardError, 'This should never happen' if rets.length > 1
+
+                if rets.empty?
+                  raise StandardError, format('The %<command>s command aborted when trying to run the %<task>s task',
+                                              command: command.class.name,
+                                              task: task.name)
+
+                end
 
                 error_count += rets[0][:errors].length
               end

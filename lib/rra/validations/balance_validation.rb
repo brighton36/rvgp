@@ -27,7 +27,7 @@ module RRA
           cite_balances = transformer.balances.map do |d, expected_balance_s|
             expected_balance = expected_balance_s.to_commodity
 
-            balances_on_day = pta.balance transformer.from,
+            balances_on_day = pta.balance format('^%s$', transformer.from),
                                           depth: 1,
                                           end: d.to_s,
                                           file: RRA.app.config.project_journal_path

@@ -113,6 +113,7 @@ module RRA
             income_targets += targets.map do |t|
               ret = { to: t[:to] }
               if t.key? :amount
+                # TODO: I think there's a bug here, in that amounts with commodities, won't parse...
                 ret[:commodity] = RRA::Journal::Commodity.from_symbol_and_amount t[:currency] || '$', t[:amount].to_s
               end
 
