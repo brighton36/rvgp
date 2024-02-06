@@ -18,8 +18,6 @@ module RRA
         super
       end
 
-      # TODO: This should get broken down, if possible. We should only use this
-      # path, if there are no available grids
       # @!visibility private
       def self.initialize_rake(rake_main)
         command_klass = self
@@ -29,7 +27,7 @@ module RRA
         rake_main.instance_eval do
           desc 'Generate all Plots'
           task 'plot' do |task, task_args|
-            Target.all.each { |target| command_klass.task_exec(target).call task, task_args }
+            Target.all.each { |target| command_klass.task_exec(target) }
           end
         end
       end

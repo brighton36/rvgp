@@ -398,36 +398,30 @@ module RRA
 
           # @!visibility private
           def task_exec(target)
-            # NOTE: We'd probably be better served by taking the target out of here,
-            #       and putting that into the task, or task_args somehow.... then
-            #       passing this &function to the task() method, instead of returning
-            #       a block...
-            lambda { |task, _task_args|
-              error_count = 0
-              command = new target.name
+            error_count = 0
+            command = new target.name
 
-              unless target.uptodate?
-                rets = command.execute!
-                raise StandardError, 'This should never happen' if rets.length > 1
+            unless target.uptodate?
+              rets = command.execute!
+              raise StandardError, 'This should never happen' if rets.length > 1
 
-                if rets.empty?
-                  raise StandardError, format('The %<command>s command aborted when trying to run the %<task>s task',
-                                              command: command.class.name,
-                                              task: task.name)
+              if rets.empty?
+                raise StandardError, format('The %<command>s command aborted when trying to run the %<task>s task',
+                                            command: command.class.name,
+                                            task: task.name)
 
-                end
-
-                error_count += rets[0][:errors].length
               end
 
-              # NOTE: It would be kind of nice, IMO, if the namespace continued
-              # to run, and then failed. Instead of having all tasks in the
-              # namespace halt, on an error. I don't know how to do this, without
-              # a lot of monkey patching and such.
-              # Or, maybe, we could just not use multitask() and instead write
-              # our own multitasking loop, which, is a similar pita
-              abort if error_count.positive?
-            }
+              error_count += rets[0][:errors].length
+            end
+
+            # NOTE: It would be kind of nice, IMO, if the namespace continued
+            # to run, and then failed. Instead of having all tasks in the
+            # namespace halt, on an error. I don't know how to do this, without
+            # a lot of monkey patching and such.
+            # Or, maybe, we could just not use multitask() and instead write
+            # our own multitasking loop, which, is a similar pita
+            abort if error_count.positive?
           end
 
           # This method initializes rake tasks in the provided context. This method exists as a default implementation
@@ -442,8 +436,10 @@ module RRA
               rake_main.instance_eval do
                 namespace command_klass.rake_namespace do
                   command_klass.const_get('Target').all.each do |target|
-                    desc target.description
-                    task target.name, &command_klass.task_exec(target)
+                    unless Rake::Task.task_defined?(target.name)
+                      desc target.description
+                      task(target.name) { |_task, _task_args| command_klass.task_exec(target) }
+                    end
                   end
                 end
               end

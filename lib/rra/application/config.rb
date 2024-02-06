@@ -130,6 +130,7 @@ module RRA
       def default_grid_ending_at
         # It's important that we return a lambda, so that the call_or_return()
         # re-runs this code after the grids are generated
+        # TODO: This lambda is goofy. Let's see if we can nix it
         lambda do
           unless Dir[build_path('journals/*.journal')].count.positive?
             years = transformer_years

@@ -79,22 +79,38 @@ module RRA
         command_klass.initialize_rake rake_main if command_klass.respond_to? :initialize_rake
       end
 
-      # TODO: I think we should maybe break these into tasks, which multitask within,
-      # that way we don't call the grids.task_names here, and instead call that
-      # once we've completed the transform/validate/etc
       rake_main.instance_eval do
+        default_tasks = %i[transform validate_journal validate_system]
         multitask transform: RRA.app.transformers.map { |tf| "transform:#{tf.as_taskname}" }
         multitask validate_journal: RRA.app.transformers.map { |tf| "validate_journal:#{tf.as_taskname}" }
         multitask validate_system: RRA.system_validations.task_names
-        multitask grid: RRA.grids.task_names
+        # Since grid tasks can't be determined until all the journals are built, we have to defer the
+        # registration of these tasks, until after the build step.
+        # TODO:  This should use a touch file, akin to how we do in the validations. But, for build
+        if Dir[RRA.app.config.build_path('journals/*.journal')].count.zero?
+          default_tasks << :all_grids
+          task :all_grids do |_task, _task_args|
+            # This re-registers the grid tasks, into the rake
+            RRA::Commands::Grid.initialize_rake rake_main
+            multitask grid: RRA.grids.task_names
 
+            # And then runs the (multitask'd) grid build as we normally would
+            Rake::Task[:grid].invoke
+          end
+        else
+          default_tasks << :grid
+          multitask grid: RRA.grids.task_names
+        end
+
+        # TODO :Let's expand this out the way we did grids
         # NOTE: We really have no way of determininig what plots will be
         # available at program initialization. Mostly, this is because the
         # grids create sheets, based on the results of the build step.
         # So, what we'll do instead, is offer the grids, as plot targets.
         # And let the plot task determine which grids contain which plots
+        default_tasks << :plot
 
-        task default: %i[transform validate_journal validate_system grid plot]
+        task default: default_tasks
       end
     end
 
