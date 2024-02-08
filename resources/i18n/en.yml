@@ -91,6 +91,8 @@ en:
       errors:
         missing_app_dir: "An application directory was not provided, and is required. Set this parameter via --dir argument, or via the LEDGER_FILE environment variable"
         directory_exists: "The directory \"%{dir}\" could not be created because it already exists."
+    plot:
+      target_description: 'Build the %{name} plot file, and its variants'
     rotate_year:
       list_targets: 'The following transformers are eligible for annual rotation:'
       operations_header: 'The following command(s) will be executed:'
@@ -107,6 +109,10 @@ en:
     grid:
       list_targets: 'The following grids are available:'
       target_description: '%{description} for %{year}'
+    rescan_grids:
+      target_description: 'Re-scan the journal directory, and register previously unavaible grid targets into the running build'
+    rescan_plots:
+      target_description: 'Re-scan the grid directory, and register previously unavaible plot targets into the running build'
     transform:
       list_targets: 'The following transforms are available:'
       target_description: 'Transform the "%{input_file}" journal'

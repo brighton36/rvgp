@@ -84,31 +84,50 @@ module RRA
         multitask transform: RRA.app.transformers.map { |tf| "transform:#{tf.as_taskname}" }
         multitask validate_journal: RRA.app.transformers.map { |tf| "validate_journal:#{tf.as_taskname}" }
         multitask validate_system: RRA.system_validations.task_names
-        # Since grid tasks can't be determined until all the journals are built, we have to defer the
-        # registration of these tasks, until after the build step.
+
+        # There's a chicken-and-an-egg problem that's due:
+        #  - users (potentially) wanting to see/trigger specific plot and grid targets, in a clean project
+        #  - A pre-requisite that journals (and grids) exist, in order to determine what grid/plot targets
+        #    are available.
+        # So, what we do here, is do our best to determine what's available in a clean build. And, at the
+        # time at which we're ready to start buildings grids/plots - we re-initialize the available tasks
+        # based on what was built prior in the running build.
+        #
+        # Most grids can be determined by examining the transformer years that exist in the app/ directory.
+        # But, in the case that new year starts, and the prior year hasn't been rotated, we'll be adding
+        # additional grids here.
+        #
+        # As for plots... probably we can do a better job of pre-determining those. But, they're pretty
+        # inconsequential in the build time, so, unless someone needs this feature for some reason, there
+        # are 'no' plots at the time of a full rake build, and the rescan adds them here after the grids
+        # are built.
+
         # TODO:  This should use a touch file, akin to how we do in the validations. But, for build
         if Dir[RRA.app.config.build_path('journals/*.journal')].count.zero?
-          default_tasks << :all_grids
-          task :all_grids do |_task, _task_args|
-            # This re-registers the grid tasks, into the rake
+          desc I18n.t('commands.rescan_grids.target_description')
+          task :rescan_grids do |_task, _task_args|
             RRA::Commands::Grid.initialize_rake rake_main
             multitask grid: RRA.grids.task_names
-
-            # And then runs the (multitask'd) grid build as we normally would
-            Rake::Task[:grid].invoke
           end
-        else
-          default_tasks << :grid
-          multitask grid: RRA.grids.task_names
+          default_tasks << :rescan_grids
         end
 
-        # TODO :Let's expand this out the way we did grids
-        # NOTE: We really have no way of determininig what plots will be
-        # available at program initialization. Mostly, this is because the
-        # grids create sheets, based on the results of the build step.
-        # So, what we'll do instead, is offer the grids, as plot targets.
-        # And let the plot task determine which grids contain which plots
+        default_tasks << :grid
+        multitask grid: RRA.grids.task_names
+
+        # TODO:  This should use a touch file, akin to how we do in the validations. But, for build
+        if Dir[RRA.app.config.build_path('grids/*.csv')].count.zero?
+          # This re-registers the grid tasks, into the rake
+          desc I18n.t('commands.rescan_plots.target_description')
+          task :rescan_plots do |_task, _task_args|
+            RRA::Commands::Plot.initialize_rake rake_main
+            multitask plot: RRA::Commands::Plot::Target.all.map { |t| "plot:#{t.name}" }
+          end
+          default_tasks << :rescan_plots
+        end
+
         default_tasks << :plot
+        multitask plot: RRA::Commands::Plot::Target.all.map { |t| "plot:#{t.name}" }
 
         task default: default_tasks
       end

@@ -18,20 +18,6 @@ module RRA
         super
       end
 
-      # @!visibility private
-      def self.initialize_rake(rake_main)
-        command_klass = self
-
-        # TODO: This was copy pasta'd from RakeTask
-        # TODO: This should show each plot individually, if the grids exist...
-        rake_main.instance_eval do
-          desc 'Generate all Plots'
-          task 'plot' do |task, task_args|
-            Target.all.each { |target| command_klass.task_exec(target) }
-          end
-        end
-      end
-
       # This class represents a plot, available for building. And dispatches a build request.
       # Typically, the name of a plot takes the form of "#\\{year}-#\\{plotname}". See
       # RRA::Base::Command::PlotTarget, from which this class inherits, for a better
