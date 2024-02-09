@@ -102,8 +102,8 @@ module RRA
         # are 'no' plots at the time of a full rake build, and the rescan adds them here after the grids
         # are built.
 
-        # TODO:  This should use a touch file, akin to how we do in the validations. But, for build
-        if Dir[RRA.app.config.build_path('journals/*.journal')].count.zero?
+        isnt_transformed = RRA::Commands::Transform::Target.all.any? { |t| !t.uptodate? }
+        if isnt_transformed
           desc I18n.t('commands.rescan_grids.target_description')
           task :rescan_grids do |_task, _task_args|
             RRA::Commands::Grid.initialize_rake rake_main
@@ -115,8 +115,7 @@ module RRA
         default_tasks << :grid
         multitask grid: RRA.grids.task_names
 
-        # TODO:  This should use a touch file, akin to how we do in the validations. But, for build
-        if Dir[RRA.app.config.build_path('grids/*.csv')].count.zero?
+        if isnt_transformed || RRA::Commands::Grid::Target.all.any? { |t| !t.uptodate? }
           # This re-registers the grid tasks, into the rake
           desc I18n.t('commands.rescan_plots.target_description')
           task :rescan_plots do |_task, _task_args|
