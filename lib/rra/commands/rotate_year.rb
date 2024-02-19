@@ -188,7 +188,7 @@ module RRA
 
         def rotate_path(path)
           parts = path.split('/')
-          fiepart = parts.pop
+          filepart = parts.pop
 
           return path unless /\A(\d+)(.*)\Z/.match(filepart)
 
