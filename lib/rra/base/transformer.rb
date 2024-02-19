@@ -374,7 +374,8 @@ module RRA
         @expense_rules = yaml[:expense]
         @transform_commodities = yaml[:transform_commodities] || {}
         @balances = yaml[:balances]
-        @disable_checks = yaml.key?(:disable_checks) ? yaml[:disable_checks].map(&:to_sym) : []
+        @disable_checks = yaml[:disable_checks]&.map(&:to_sym) if yaml.key?(:disable_checks)
+        @disable_checks ||= []
 
         if yaml.key? :tag_accounts
           @tag_accounts = yaml[:tag_accounts]

@@ -65,12 +65,12 @@ module RRA
 
         # @!visibility private
         def operation_descriptions
-          [I18n.t('commands.rotate_year.operation_rotate', path: transformer.input_file)]
+          [I18n.t('commands.rotate_year.operation_rotate', name: File.basename(transformer.file))]
         end
 
         # @!visibility private
         def description
-          I18n.t 'commands.rotate_year.target_description', basename: @transformer.name
+          I18n.t 'commands.rotate_year.target_description', basename: File.basename(transformer.file)
         end
 
         # @!visibility private
@@ -98,14 +98,14 @@ module RRA
         def git!(*args)
           @git_prefix ||= begin
             output, exit_code = Open3.capture2 'which git'
-            raise GitError unless exit_code.to_i.zero?
+            raise GitError, output unless exit_code.to_i.zero?
 
-            [output.chomp, '-C', Shellwords.escape(RRA.app.project_path)].join(' ')
+            [output.chomp, '-C', Shellwords.escape(RRA.app.project_path)]
           end
 
-          output, exit_code = Open3.capture2 (@git_prefix + args.map { |a| Shellwords.escape a }).join(' ')
+          output, exit_code = Open3.capture2((@git_prefix + args.map { |a| Shellwords.escape a }).join(' '))
 
-          raise GitError unless exit_code.to_i.zero?
+          raise GitError, output unless exit_code.to_i.zero?
 
           output
         end
@@ -139,14 +139,14 @@ module RRA
 
           FileUtils.touch rotated_input_path
 
-          git! 'add', rotated_transformer_path if git_repo?
-
           rotated_transformer_path = format('%<dir>s/%<basename>s.%<ext>s',
                                             dir: File.dirname(transformer.file), basename: rotated_basename, ext: 'yml')
 
           File.write rotated_transformer_path, rotated_transformer_contents
 
           git! 'add', rotated_transformer_path if git_repo?
+
+          git! 'add', rotated_input_path if git_repo?
 
           nil
         end
@@ -186,13 +186,9 @@ module RRA
           rotate_path transformer.input_file
         end
 
-        def rotated_transformer_path
-          rotate_path transformer.file
-        end
-
         def rotate_path(path)
           parts = path.split('/')
-          filepart = parts.pop
+          fiepart = parts.pop
 
           return path unless /\A(\d+)(.*)\Z/.match(filepart)
 

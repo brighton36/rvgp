@@ -96,7 +96,7 @@ en:
     rotate_year:
       list_targets: 'The following transformers are eligible for annual rotation:'
       operations_header: 'The following command(s) will be executed:'
-      operation_rotate: 'Rotate %{path}'
+      operation_rotate: 'Rotate "%{name}"'
       operation_mkdir: 'mkdir %{path}'
       confirm_operation: "Yes"
       confirm_operation_prompt: "Would you like to run the above operations? (Type \"Yes\" to continue) "
