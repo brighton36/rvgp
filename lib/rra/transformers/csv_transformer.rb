@@ -73,7 +73,7 @@ module RRA
 
       # We actually returned semi-transformed transactions here. That lets us do
       # some remedial parsing before rule application, as well as reversing the order
-      # which, is needed for the to_module to run in sequence.
+      # which, is needed for the to_shorthand to run in sequence.
       def source_postings
         @source_postings ||= begin
           rows = CSV.parse input_file_contents, **csv_format

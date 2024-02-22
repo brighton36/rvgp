@@ -237,12 +237,12 @@ module RRA
     #     :amount. See {RRA::Journal::ComplexCommodity.from_s} for more details on this feature.
     #   - *tags* [Array<String>] - An array of tags to assign to this transfer. See {RRA::Journal::Posting::Tag.from_s}
     #     for more details on tag formatting.
-    # - *to_module* [String] - Transformer Modules are a powerful feature that can reduce duplication, and manual
+    # - *to_shorthand* [String] - Transformer Shorthand are a powerful feature that can reduce duplication, and manual
     #   calculations from your transformer yaml. The value provided here, must correlate with an
-    #   available transformer module, and if so, sends this rule to that module for
+    #   available transformer shorthand, and if so, sends this rule to that shorthand for
     #   reconciliation.
-    # - *module_params* [Hash] - This section is specific to the transformer module that was specified in the :to_module
-    #   field. Any of the key/value pairs specified here, are sent to the transformer module,
+    # - *shorthand_params* [Hash] - This section is specific to the transformer shorthand that was specified in the :to_shorthand
+    #   field. Any of the key/value pairs specified here, are sent to the transformer shorthand,
     #   along with the rest of the input transaction. And, presumably, these fields will futher
     #   direct the reconciliation of the input transaction.
     #
@@ -459,7 +459,7 @@ module RRA
 
       # @!visibility private
       def transform_posting(rule, posting)
-        # NOTE: The modules produce more than one tx per csv line, sometimes:
+        # NOTE: The shorthand(s) produce more than one tx per csv line, sometimes:
 
         to = rule[:to].dup
         posting.from = rule[:from] if rule.key? :from
@@ -479,21 +479,21 @@ module RRA
           end
         end
 
-        if rule.key? :to_module
+        if rule.key? :to_shorthand
           rule_key = posting.commodity.positive? ? :expense : :income
 
-          @modules ||= {}
-          @modules[rule_key] ||= {}
-          mod = @modules[rule_key][rule[:index]]
+          @shorthand ||= {}
+          @shorthand[rule_key] ||= {}
+          mod = @shorthand[rule_key][rule[:index]]
 
           unless mod
-            module_klass = format 'RRA::Transformers::Modules::%s', rule[:to_module]
+            shorthand_klass = format 'RRA::Transformers::Shorthand::%s', rule[:to_shorthand]
 
-            raise StandardError, format('Unknown module %s', module_klass) unless Object.const_defined?(module_klass)
+            raise StandardError, format('Unknown shorthand %s', shorthand_klass) unless Object.const_defined?(shorthand_klass)
 
-            mod = Object.const_get(module_klass).new rule
+            mod = Object.const_get(shorthand_klass).new rule
 
-            @modules[rule_key][rule[:index]] = mod
+            @shorthand[rule_key][rule[:index]] = mod
           end
 
           mod.to_tx posting

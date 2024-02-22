@@ -2,7 +2,7 @@
 
 module RRA
   module Transformers
-    module Modules
+    module Shorthand
       # This transformer module will automatically allocate the proceeds (or losses) from a stock sale.
       # This module will allocate capital gains or losses, given a symbol, amount, and price.
       #
@@ -21,8 +21,8 @@ module RRA
       # Here's how this module might be used in your transformer:
       #   ...
       #   - match: /Acme Stonk Exchange/
-      #     to_module: Investment
-      #     module_params:
+      #     to_shorthand: Investment
+      #     shorthand_params:
       #       symbol: VOO
       #       price: "$ 400.00"
       #       amount: "-1000"
@@ -48,14 +48,14 @@ module RRA
           @targets = rule[:targets]
           @to = rule[:to] || 'Personal:Assets'
 
-          if rule.key? :module_params
-            @symbol = rule[:module_params][:symbol]
-            @amount = rule[:module_params][:amount]
-            @gains_account = rule[:module_params][:gains_account]
+          if rule.key? :shorthand_params
+            @symbol = rule[:shorthand_params][:symbol]
+            @amount = rule[:shorthand_params][:amount]
+            @gains_account = rule[:shorthand_params][:gains_account]
 
             %w[price total capital_gains].each do |key|
-              if rule[:module_params].key? key.to_sym
-                instance_variable_set "@#{key}".to_sym, rule[:module_params][key.to_sym].to_commodity
+              if rule[:shorthand_params].key? key.to_sym
+                instance_variable_set "@#{key}".to_sym, rule[:shorthand_params][key.to_sym].to_commodity
               end
             end
           end

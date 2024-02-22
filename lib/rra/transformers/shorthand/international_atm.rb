@@ -2,7 +2,7 @@
 
 module RRA
   module Transformers
-    module Modules
+    module Shorthand
       # This transformer module will automatically allocate ATM components of a transaction, to constituent
       # accounts. This module is useful for tracking the myriad expenses that banks impose on your atm
       # withdrawals internationally. This module takes the total withdrawal, as reported in the input file
@@ -28,8 +28,8 @@ module RRA
       #   ...
       #   - match: /BANCOLOMBIA/
       #     to: Personal:Assets:Cash
-      #     to_module: InternationalAtm
-      #     module_params:
+      #     to_shorthand: InternationalAtm
+      #     shorthand_params:
       #       amount: "600000 COP"
       #       operation_cost: "24290.00 COP"
       #       operation_cost_to: Personal:Expenses:Banking:Fees:RandomAtmOperator
@@ -69,15 +69,15 @@ module RRA
           @targets = rule[:targets]
           @to = rule[:to] || 'Personal:Assets'
 
-          if rule.key? :module_params
-            module_params = rule[:module_params]
-            @amount = module_params[:amount].to_commodity if module_params.key? :amount
-            @operation_cost = module_params[:operation_cost].to_commodity if module_params.key? :operation_cost
-            if module_params.key? :conversion_markup
-              @conversion_markup = (BigDecimal(module_params[:conversion_markup]) / 100) + 1
+          if rule.key? :shorthand_params
+            shorthand_params = rule[:shorthand_params]
+            @amount = shorthand_params[:amount].to_commodity if shorthand_params.key? :amount
+            @operation_cost = shorthand_params[:operation_cost].to_commodity if shorthand_params.key? :operation_cost
+            if shorthand_params.key? :conversion_markup
+              @conversion_markup = (BigDecimal(shorthand_params[:conversion_markup]) / 100) + 1
             end
-            @conversion_markup_to = module_params[:conversion_markup_to] if module_params.key? :conversion_markup_to
-            @operation_cost_to = module_params[:operation_cost_to] if module_params.key? :operation_cost_to
+            @conversion_markup_to = shorthand_params[:conversion_markup_to] if shorthand_params.key? :conversion_markup_to
+            @operation_cost_to = shorthand_params[:operation_cost_to] if shorthand_params.key? :operation_cost_to
           end
 
           raise StandardError, format(MSG_MISSING_REQUIRED_FIELDS, rule[:line].inspect, 'amount') unless amount

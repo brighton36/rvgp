@@ -6,7 +6,7 @@ require_relative './finance_gem_hacks'
 
 module RRA
   module Transformers
-    module Modules
+    module Shorthand
       # This transformer module will automatically allocate the the escrow, principal, and interest components of a
       # mortage debit, into constituent accounts. The amounts of each, are automatically calculated, based on the loan
       # terms, and taking the residual leftover, into a escrow account, presumably for taxes and insurance to be paid by
@@ -58,8 +58,8 @@ module RRA
       # Here's how this module might be used in your transformer:
       #   ...
       #   - match: /AcmeFinance Servicing/
-      #     to_module: Mortgage
-      #     module_params:
+      #     to_shorthand: Mortgage
+      #     shorthand_params:
       #       label: 1-8-1 Yurakucho Dori Mortgage
       #       intermediary_account: Personal:Expenses:Banking:MortgagePayment:181Yurakucho
       #       payee_principal: Personal:Liabilities:Mortgage:181Yurakucho
@@ -98,19 +98,19 @@ module RRA
 
         # @!visibility private
         def initialize(rule)
-          @label = rule[:module_params][:label]
+          @label = rule[:shorthand_params][:label]
           @currency = rule[:currency] || '$'
-          @principal = rule[:module_params][:principal].to_commodity
-          @rate = rule[:module_params][:rate]
-          @payee_principal = rule[:module_params][:payee_principal]
-          @payee_interest = rule[:module_params][:payee_interest]
-          @intermediary_account = rule[:module_params][:intermediary_account]
-          @escrow_account = rule[:module_params][:escrow_account]
-          @start_at_installment_number = rule[:module_params][:start_at_installment_number]
-          @additional_payments = rule[:module_params][:additional_payments]
+          @principal = rule[:shorthand_params][:principal].to_commodity
+          @rate = rule[:shorthand_params][:rate]
+          @payee_principal = rule[:shorthand_params][:payee_principal]
+          @payee_interest = rule[:shorthand_params][:payee_interest]
+          @intermediary_account = rule[:shorthand_params][:intermediary_account]
+          @escrow_account = rule[:shorthand_params][:escrow_account]
+          @start_at_installment_number = rule[:shorthand_params][:start_at_installment_number]
+          @additional_payments = rule[:shorthand_params][:additional_payments]
           @override_payments = {}
-          if rule[:module_params].key? :override_payments
-            rule[:module_params][:override_payments].each do |override|
+          if rule[:shorthand_params].key? :override_payments
+            rule[:shorthand_params][:override_payments].each do |override|
               unless %i[at_installment interest].all? { |k| override.key? k }
                 raise StandardError, format('Invalid Payment Override : %s', override)
               end
