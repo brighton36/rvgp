@@ -102,7 +102,7 @@ module RRA
       end
 
       # For now, we simply delegate these messages to the :left commodity. This path
-      # is only in use in the transformer, which, determines whether the commodity
+      # is only in use in the reconciler, which, determines whether the commodity
       # is income or expense. (and/or inverts the amount) It's conceivable that we
       # may want to test the right commodity at some point here, and determine if
       # the net operation is positive or negative.

@@ -64,9 +64,9 @@ module RRA
       end
 
       # @!visibility private
-      # This class represents a transformer. See RRA::Base::Command::ReconcilerTarget, for
+      # This class represents a reconciler. See RRA::Base::Command::ReconcilerTarget, for
       # most of the logic that this class inherits. Typically, these targets take the form
-      # of "#\\{year}-#\\{transformer_name}"
+      # of "#\\{year}-#\\{reconciler_name}"
       class Target < RRA::Base::Command::ReconcilerTarget
         # @!visibility private
         VIMSCRIPT_TEMPLATE = <<-VIMSCRIPT
@@ -85,8 +85,8 @@ module RRA
           # NOTE: I guess we don't need to escape these paths, so long as there arent
           #       any \n's in the path name... I guess
           format(VIMSCRIPT_TEMPLATE,
-                 output_file: @transformer.output_file,
-                 input_file: @transformer.file,
+                 output_file: @reconciler.output_file,
+                 input_file: @reconciler.file,
                  split: is_vsplit ? 'vsplit' : 'split')
         end
       end

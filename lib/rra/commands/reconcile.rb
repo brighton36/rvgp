@@ -26,28 +26,28 @@ module RRA
       end
 
       # @!visibility private
-      # This class represents a transformer. See RRA::Base::Command::ReconcilerTarget, for
+      # This class represents a reconciler. See RRA::Base::Command::ReconcilerTarget, for
       # most of the logic that this class inherits. Typically, these targets take the form
-      # of "#\\{year}-#\\{transformer_name}"
+      # of "#\\{year}-#\\{reconciler_name}"
       class Target < RRA::Base::Command::ReconcilerTarget
         for_command :transform
 
         # @!visibility private
         def description
-          I18n.t 'commands.transform.target_description', input_file: @transformer.input_file
+          I18n.t 'commands.transform.target_description', input_file: @reconciler.input_file
         end
 
         # @!visibility private
         def uptodate?
-          @transformer.uptodate?
+          @reconciler.uptodate?
         end
 
         # @!visibility private
         def execute(options)
           if options[:stdout]
-            puts @transformer.to_ledger
+            puts @reconciler.to_ledger
           else
-            @transformer.to_ledger!
+            @reconciler.to_ledger!
           end
 
           nil

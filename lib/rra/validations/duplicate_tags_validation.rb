@@ -9,7 +9,7 @@ module RRA
       # any given entry. Unlike most of the validations in RRA, this one doesn't use ledger or hledger
       # to validate. This validation parses the file itself, in ruby, and ensures based on the contents.
       def validate
-        journal = RRA::Journal.parse File.read(transformer.output_file)
+        journal = RRA::Journal.parse File.read(reconciler.output_file)
         dupe_messages = []
 
         journal.postings.each do |posting|

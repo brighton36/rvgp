@@ -75,7 +75,7 @@ module RRA
         end
 
         logger = RRA::Application::StatusOutputRake.new pastel: RRA.pastel
-        %i[project_directory bank_feeds transformers].each do |step|
+        %i[project_directory bank_feeds reconcilers].each do |step|
           logger.info self.class.name, I18n.t(format('commands.new_project.initialize.%s', step)) do
             send format('initialize_%s', step).to_sym
           end
@@ -110,7 +110,7 @@ module RRA
         end
 
         # These are the app subdirectories...
-        %w[commands grids plots transformers validations].each do |dir|
+        %w[commands grids plots reconcilers validations].each do |dir|
           full_dir = [app_dir, 'app', dir].join('/')
           next if Dir.exist? full_dir
 
@@ -139,9 +139,9 @@ module RRA
         { warnings: [], errors: [] }
       end
 
-      def initialize_transformers
+      def initialize_reconcilers
         each_year_in_project do |year|
-          File.write destination_path('%<app_dir>s/app/transformers/%<year>d-personal-basic-checking.yml',
+          File.write destination_path('%<app_dir>s/app/reconcilers/%<year>d-personal-basic-checking.yml',
                                       year: year),
                      RRA::Fakers::FakeReconciler.basic_checking(
                        label: format('Personal AcmeBank:Checking (%<year>s)', year: year),

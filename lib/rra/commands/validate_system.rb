@@ -13,7 +13,7 @@ module RRA
       # @!visibility private
       # This class principally represents the system validations, that are defined
       # in the application directory. Unlike the journal validations, these
-      # targets are not specific to years, or transformers.
+      # targets are not specific to years, or reconcilers.
       class Target < RRA::Base::Command::Target
         # @!visibility private
         def initialize(validation_klass)

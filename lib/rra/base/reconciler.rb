@@ -12,13 +12,13 @@ module RRA
     # yaml file with transformation directives. What follows is a guide on those directives.
     #
     # Most of your time spent in these files, will be spent adding rules to the income and expense sections (see
-    # the 'Defining income and expense sections'). However, in order to get the transformer far enough into the parsing
+    # the 'Defining income and expense sections'). However, in order to get the reconciler far enough into the parsing
     # logic to get to that section, you'll need to understand the general structure of these files.
     #
     # = The General Structure of Reconciler Yaml's
-    # Reconciler yaml files are expected to be found in the app/transformer directory. Typically with a four-digit year
-    # as the start of its filename, and a yml extension. Here's a simple example transformer directory:
-    #   ~/ledger> lsd -1 app/transformers/
+    # Reconciler yaml files are expected to be found in the app/reconciler directory. Typically with a four-digit year
+    # as the start of its filename, and a yml extension. Here's a simple example reconciler directory:
+    #   ~/ledger> lsd -1 app/reconcilers/
     #    2022-business-checking.yml
     #    2023-business-checking.yml
     #    2022-personal-amex.yml
@@ -27,14 +27,14 @@ module RRA
     #    2023-personal-checking.yml
     #    2022-personal-saving.yml
     #    2023-personal-saving.yml
-    # In this example directory, we can see eight transformers defined, on each of the years 2022 and 2023, for each of
+    # In this example directory, we can see eight reconcilers defined, on each of the years 2022 and 2023, for each of
     # the accounts: business-checking, personal-checking, personal-saving, and personal-amex. Each of these files will
     # reference a separate input. Each of this files will produce a journal, with a corresponding name in
     # build/journals.
     #
-    # All transformer files, are required to have a :label, :output, :input, :from, :income, and :expense key defined.
-    # Here's an example of a transformer, with all of these sections present. Let's take a look at the
-    # '2023-personal-checking.yml' transformer, from above:
+    # All reconciler files, are required to have a :label, :output, :input, :from, :income, and :expense key defined.
+    # Here's an example of a reconciler, with all of these sections present. Let's take a look at the
+    # '2023-personal-checking.yml' reconciler, from above:
     #   from: "Personal:Assets:AcmeBank:Checking"
     #   label: "Personal AcmeBank:Checking (2023)"
     #   input: 2023-personal-basic-checking.csv
@@ -54,15 +54,15 @@ module RRA
     # This file has a number of fairly obvious fields, and some not-so obvious fields. Let's take a look at these fields
     # one by one:
     #
-    # - *from* [String] - This is the pta account, that the transformer will ascribe as it's default source of funds.
-    # - *label* [String] - This a label for the transformer, that is mostly just used for status output on the cli.
+    # - *from* [String] - This is the pta account, that the reconciler will ascribe as it's default source of funds.
+    # - *label* [String] - This a label for the reconciler, that is mostly just used for status output on the cli.
     # - *input* [String] - The filename/path to the input to this file. Typically this is a csv file, located in the
     #   project's 'feeds' directory.
     # - *output* [String] - The filename to output in the project's 'build/journals' directory.
     # - *starts_on* [String] - A cut-off date, before which, transactions in the input_file are ignored. Date is
     #                          expected to be provided in YYYY-MM-DD format.
     # - *format* [Hash] - This section defines the logic used to decode a csv into fields. Typically, this section is
-    #   shared between multiple transformers by way of an 'include' directive, to a file in your
+    #   shared between multiple reconcilers by way of an 'include' directive, to a file in your
     #   config/ directory. More on this below.<br><br>
     #   Note the use of the !!proc directive. These values are explained in the 'Special yaml features'
     #   section.
@@ -74,7 +74,7 @@ module RRA
     # Income and expenses are nearly identical in their rules and features, and are further explained in the 'Defining
     # income and expense sections' below.
     #
-    # In addition to these basic parameters, the following parameters are also supported in the root of your transformer
+    # In addition to these basic parameters, the following parameters are also supported in the root of your reconciler
     # file:
     # - *transform_commodities* [Hash] - This directive can be used to convert commodities in the format specified by
     #   its keys, to the commodity specified in its values. For example, the following will ensure that all USD values
@@ -84,7 +84,7 @@ module RRA
     #       USD: '$'
     #     ...
     # - *balances* [Hash] - This feature raises an error, if the balance of the :from account on a given date(key)
-    #   doesn't match the provided value. Here's an example of what this looks like in a transformer:
+    #   doesn't match the provided value. Here's an example of what this looks like in a reconciler:
     #     ...
     #     balances:
     #       '2023-01-15': $ 2345.67
@@ -109,7 +109,7 @@ module RRA
     # = Understanding 'format' parameters
     # The format section applies rules to the parsing of the input file. Some of these parameters are
     # specific to the format of the input file. These rules are typically specific to a financial instution's specific
-    # output formatting. And are typically shared between multiple transformer files in the form of an
+    # output formatting. And are typically shared between multiple reconciler files in the form of an
     # !!include directive (see below).
     #
     # == CSV specific format parameters
@@ -126,14 +126,14 @@ module RRA
     #   input file.
     # - *csv_headers* [bool] (default: false) - Whether or not the first row of the input file, contains column headers
     #   for the rows that follow.
-    # - *skip_lines* [Integer, String] - This option will direct the transformer to skip over lines at the beginning of
+    # - *skip_lines* [Integer, String] - This option will direct the reconciler to skip over lines at the beginning of
     #   the input file. This can be specified either as a number, which indicates the number of lines to ignore. Or,
     #   alternatively, this can be specified as a RegExp (provided in the form of a yaml string). In which case, the
-    #   transformer will begin to parse one character after the end of the regular expression match.
-    # - *trim_lines* [Integer, String] - This option will direct the transformer to skip over lines at the end of
+    #   reconciler will begin to parse one character after the end of the regular expression match.
+    # - *trim_lines* [Integer, String] - This option will direct the reconciler to skip over lines at the end of
     #   the input file. This can be specified either as a number, which indicates the number of lines to trim. Or,
     #   alternatively, this can be specified as a RegExp (provided in the form of a yaml string). In which case, the
-    #   transformer will trim the file up to one character to the left of the regular expression match.
+    #   reconciler will trim the file up to one character to the left of the regular expression match.
     #
     # == CSV and Journal file parameters
     # These parameters are available to both .journal as well as .csv files.
@@ -181,13 +181,13 @@ module RRA
     #   value provided, and matches if they're equal. If a regex is provided, matches the
     #   :description of the feed transaction against the regex provided.
     #   If a regex is provided, captures are supported. (see the note below)
-    # - *account* [Regexp,String] - This matcher is useful for transformers that support the :to field.
+    # - *account* [Regexp,String] - This matcher is useful for reconcilers that support the :to field.
     #   (see {RRA::Reconcilers::JournalReconciler}). If a string is provided, compares the
     #   account :to which a transaction was assigned, to the value provided. And matches if
     #   they're equal. If a regex is provided, matches the account :to which a transaction
     #   was assigned, against the regex provided.
     #   If a regex is provided, captures are supported. (see the note below)
-    # - *account_is_not* [String] - This matcher is useful for transformers that support the :to field.
+    # - *account_is_not* [String] - This matcher is useful for reconcilers that support the :to field.
     #   (see {RRA::Reconcilers::JournalReconciler}). This field matches any transaction
     #   whose account :to, does not equal the provided string.
     # - *amount_less_than* [Commodity] - This field compares it's value to the transaction :amount , and matches if
@@ -222,7 +222,7 @@ module RRA
     # - *to* [String] - This field will provide the :to account to reconcile an input transaction against. Be aware
     #   aware of the above note on captures, as this field supports capture variable substitution.
     # - *from* [String] - This field can be used to change the reconciled :from account, to a different account than
-    #   the default :from, that was specified in the root of the transformer yaml.
+    #   the default :from, that was specified in the root of the reconciler yaml.
     # - *tag* [String] - Tag(s) to apply to the reconciled posting.
     # - *to_tag* [String] - Tag(s) to apply to the :to transfer, the first transfer, in the posting
     # - *targets* [Array<Hash>] - For some transactions, multiple transfers need to expand from a single input
@@ -238,11 +238,11 @@ module RRA
     #   - *tags* [Array<String>] - An array of tags to assign to this transfer. See {RRA::Journal::Posting::Tag.from_s}
     #     for more details on tag formatting.
     # - *to_shorthand* [String] - Reconciler Shorthand are a powerful feature that can reduce duplication, and manual
-    #   calculations from your transformer yaml. The value provided here, must correlate with an
-    #   available transformer shorthand, and if so, sends this rule to that shorthand for
+    #   calculations from your reconciler yaml. The value provided here, must correlate with an
+    #   available reconciler shorthand, and if so, sends this rule to that shorthand for
     #   reconciliation.
-    # - *shorthand_params* [Hash] - This section is specific to the transformer shorthand that was specified in the
-    #   :to_shorthand field. Any of the key/value pairs specified here, are sent to the transformer shorthand, along
+    # - *shorthand_params* [Hash] - This section is specific to the reconciler shorthand that was specified in the
+    #   :to_shorthand field. Any of the key/value pairs specified here, are sent to the reconciler shorthand, along
     #   with the rest of the input transaction. And, presumably, these fields will futher direct the reconciliation
     #   of the input transaction.
     #
@@ -258,7 +258,7 @@ module RRA
     #     format: !!include config/csv-format-acmebank.yml
     #     ...
     # - <b>!!proc</b> [String] - Convert the contents of the text following this directive, into a Proc object. It'
-    #   common to see this directive used in the format section of a transformer yaml. Here's an example:
+    #   common to see this directive used in the format section of a reconciler yaml. Here's an example:
     #     ...
     #     fields:
     #     date: !!proc >
@@ -273,7 +273,7 @@ module RRA
     #   segments, with a semicolon, to achieve the same end.
     #
     # @attr_reader [String] label The contents of the yaml :label parameter (see above)
-    # @attr_reader [String] file The full path to the transformer yaml file this class was parsed from
+    # @attr_reader [String] file The full path to the reconciler yaml file this class was parsed from
     # @attr_reader [String] output_file The contents of the yaml :output parameter (see above)
     # @attr_reader [String] input_file The contents of the yaml :input parameter (see above)
     # @attr_reader [Date] starts_on The contents of the yaml :starts_on parameter (see above)
@@ -281,7 +281,7 @@ module RRA
     #                                              corresponding to the balance that are expected on those dates.
     #                                              See {RRA::Validations::BalanceValidation} for details on this
     #                                              feature.
-    # @attr_reader [Array<String>] disable_checks The JournalValidations that are disabled on this transformer (see
+    # @attr_reader [Array<String>] disable_checks The JournalValidations that are disabled on this reconciler (see
     #                                             above)
     # @attr_reader [String] from The contents of the yaml :from parameter (see above)
     # @attr_reader [Array<Hash>] income_rules The contents of the yaml :income_rules parameter (see above)
@@ -296,7 +296,7 @@ module RRA
     class Reconciler
       include RRA::Utilities
 
-      # This error is thrown when a transformer yaml is missing one or more require parameters
+      # This error is thrown when a reconciler yaml is missing one or more require parameters
       class MissingFields < StandardError
         def initialize(*args)
           super format('One or more required keys %s, were missing in the yaml', args.map(&:inspect).join(', '))
@@ -346,7 +346,7 @@ module RRA
       HEADER = "; -*- %s -*-¬\n; vim: syntax=ledger"
 
       # Create a Reconciler from the provided yaml
-      # @param [RRA::Utilities::Yaml] yaml A file containing the settings to use in the construction of this transformer
+      # @param [RRA::Utilities::Yaml] yaml A file containing the settings to use in the construction of this reconciler
       #                                   . (see above)
       def initialize(yaml)
         @label = yaml[:label]
@@ -396,7 +396,7 @@ module RRA
         end
       end
 
-      # Returns the taskname to use by rake, for this transformer
+      # Returns the taskname to use by rake, for this reconciler
       # @return [String] The taskname, based off the :file basename
       def as_taskname
         File.basename(file, File.extname(file)).tr('^a-z0-9', '-')
@@ -416,9 +416,9 @@ module RRA
         output_file == str_as_file)
       end
 
-      # Returns the file paths that were referenced by this transformer in one form or another.
+      # Returns the file paths that were referenced by this reconciler in one form or another.
       # Useful for determining build freshness.
-      # @return [Array<String>] dependent files, in this transformer.
+      # @return [Array<String>] dependent files, in this reconciler.
       def dependencies
         [file, input_file] + @dependencies
       end
@@ -617,30 +617,30 @@ module RRA
         nil
       end
 
-      # Builds the contents of this transformere's output file, and returns it. This is the finished
+      # Builds the contents of this reconcilere's output file, and returns it. This is the finished
       # product of this class
       # @return [String] a PTA journal, composed of the input_file's transactions, after all rules are applied.
       def to_ledger
         [HEADER % label, postings.map(&:to_ledger), ''].flatten.join("\n\n")
       end
 
-      # Writes the contents of #to_ledger, to the :output_file specified in the transformer yaml.
+      # Writes the contents of #to_ledger, to the :output_file specified in the reconciler yaml.
       # @return [void]
       def to_ledger!
         File.write output_file, to_ledger
       end
 
-      # Returns an array of all of the transformers found in the specified path.
-      # @param [String] directory_path The path containing your yml transformer files
+      # Returns an array of all of the reconcilers found in the specified path.
+      # @param [String] directory_path The path containing your yml reconciler files
       # @return [Array<RRA::Reconcilers::CsvReconciler, RRA::Reconcilers::JournalReconciler>]
-      #   An array of parsed transformers.
+      #   An array of parsed reconcilers.
       def self.all(directory_path)
         # NOTE: I'm not crazy about this method. Probably we should have
         # implemented a single Reconciler class, with CSV/Journal drivers.
         # Nonetheless, this code works for now. Maybe if we add another
         # driver, we can renovate it, and add some kind of registry for drivers.
 
-        Dir.glob(format('%s/app/transformers/*.yml', directory_path)).map do |path|
+        Dir.glob(format('%s/app/reconcilers/*.yml', directory_path)).map do |path|
           yaml = RRA::Utilities::Yaml.new path, RRA.app.config.project_path
 
           raise MissingFields.new, :input unless yaml.key? :input

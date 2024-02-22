@@ -7,12 +7,12 @@ require_relative './finance_gem_hacks'
 module RRA
   module Reconcilers
     module Shorthand
-      # This transformer module will automatically allocate the the escrow, principal, and interest components of a
+      # This reconciler module will automatically allocate the the escrow, principal, and interest components of a
       # mortage debit, into constituent accounts. The amounts of each, are automatically calculated, based on the loan
       # terms, and taking the residual leftover, into a escrow account, presumably for taxes and insurance to be paid by
       # the mortgage provider.
       #
-      # Its important to note, that a single transformer rule will match every mortgage payment encountered. And, that
+      # Its important to note, that a single reconciler rule will match every mortgage payment encountered. And, that
       # each of these payments will generate four transactions in the output file:
       # - The initial payment, which, will be transferred to an :intermediary_account
       # - A principal payment, which, will be debited from the :intermediary account, to the :payee_principal
@@ -24,7 +24,7 @@ module RRA
       # - Manually transcribe debits from the escrow account, to escrow payees, in your project's
       #   ./journal/property-name-escrow.journal, based on when your mortgage provider alerts you to these payments.
       # - Download a csv from your mortgage provider, of your escrow account (if they offer one), and define a
-      #   transformer to allocate escrow payments.
+      #   reconciler to allocate escrow payments.
       #
       # The module parameters we support are:
       # - *label* [String] - This is a prefix, used in the description of Principal, Interest, and Escrow transactions
@@ -36,7 +36,7 @@ module RRA
       # - *intermediary_account* [String] - The account to ascribe intermediary payments to, from the source account,
       #   before being assigned to principal, interest, and escrow break-outs.
       # - *start_at_installment_number* [Integer] - The installment number, of the first matching transaction,
-      #   encountered by this module. Year one of a mortgage would start at zero. Subsequent annual transformers would
+      #   encountered by this module. Year one of a mortgage would start at zero. Subsequent annual reconcilers would
       #   be expected to define an installment number from which calculations can automatically pick-up the work
       #   from years prior.
       # - *additional_payments* [Array<Hash>] - Any additional payments, to apply to the principal, can be listed here.
@@ -55,7 +55,7 @@ module RRA
       #     assume the same commodity as the :principle.
       #
       # = Example
-      # Here's how this module might be used in your transformer:
+      # Here's how this module might be used in your reconciler:
       #   ...
       #   - match: /AcmeFinance Servicing/
       #     to_shorthand: Mortgage
@@ -88,7 +88,7 @@ module RRA
       #     Personal:Expenses:Banking:MortgagePayment:181Yurakucho
       #   ...
       # Note that you'll have an automatically calculated reconcilation for each payment you
-      # make, during the year. A single transformer rule, will take care of reconciling every
+      # make, during the year. A single reconciler rule, will take care of reconciling every
       # payment, automatically.
       class Mortgage
         # @!visibility private

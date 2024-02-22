@@ -201,7 +201,7 @@ class TestFakeFeed < Minitest::Test
           end
   end
 
-  def reconcile_journal(feed, transformer_opts)
+  def reconcile_journal(feed, reconciler_opts)
     journal_file = Tempfile.open %w[rra_test .journal]
 
     feed_file = Tempfile.open %w[rra_test .csv]
@@ -213,7 +213,7 @@ class TestFakeFeed < Minitest::Test
     yaml_file.write RRA::Fakers::FakeReconciler.basic_checking(
       **{ label: 'Personal AcmeBank:Checking',
           input_path: feed_file.path,
-          output_path: journal_file.path }.merge(transformer_opts)
+          output_path: journal_file.path }.merge(reconciler_opts)
     )
 
     yaml_file.close

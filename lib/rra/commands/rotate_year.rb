@@ -44,10 +44,10 @@ module RRA
       end
 
       # @!visibility private
-      # This class represents a transformer that's not 'historical'. Which, makes it different from the
+      # This class represents a reconciler that's not 'historical'. Which, makes it different from the
       # ReconcilerTarget. 'historical' is determined by whether its input_file is located in a '/historical/' basedir.
       class Target < RRA::Base::Command::Target
-        attr_reader :transformer
+        attr_reader :reconciler
 
         # @!visibility private
         # This is used as a catch in the mv! method
@@ -55,22 +55,22 @@ module RRA
         end
 
         # Create a new RotateYear::Target
-        # @param [RRA::Base::Reconciler] transformer An instance of either {RRA::Reconcilers::CsvReconciler}, or
+        # @param [RRA::Base::Reconciler] reconciler An instance of either {RRA::Reconcilers::CsvReconciler}, or
         #                                             {RRA::Reconcilers::JournalReconciler}, to use as the basis
         #                                             for this target.
-        def initialize(transformer)
-          super transformer.as_taskname, transformer.label
-          @transformer = transformer
+        def initialize(reconciler)
+          super reconciler.as_taskname, reconciler.label
+          @reconciler = reconciler
         end
 
         # @!visibility private
         def operation_descriptions
-          [I18n.t('commands.rotate_year.operation_rotate', name: File.basename(transformer.file))]
+          [I18n.t('commands.rotate_year.operation_rotate', name: File.basename(reconciler.file))]
         end
 
         # @!visibility private
         def description
-          I18n.t 'commands.rotate_year.target_description', basename: File.basename(transformer.file)
+          I18n.t 'commands.rotate_year.target_description', basename: File.basename(reconciler.file)
         end
 
         # @!visibility private
@@ -126,25 +126,25 @@ module RRA
 
         # @!visibility private
         def execute(_)
-          historical_feed_path = [File.dirname(transformer.input_file), 'historical'].join('/')
+          historical_feed_path = [File.dirname(reconciler.input_file), 'historical'].join('/')
           rotated_basename = name_parts.tap { |parts| parts[0] += 1 }.join
 
           FileUtils.mkdir_p historical_feed_path
 
           # TODO: Is any of this working? It's very close. Test.
-          mv! transformer.input_file, historical_feed_path
+          mv! reconciler.input_file, historical_feed_path
 
           rotated_input_path = format('%<dir>s/%<file>s.%<ext>s',
-                                      dir: File.dirname(transformer.input_file), file: rotated_basename, ext: 'csv')
+                                      dir: File.dirname(reconciler.input_file), file: rotated_basename, ext: 'csv')
 
           FileUtils.touch rotated_input_path
 
-          rotated_transformer_path = format('%<dir>s/%<basename>s.%<ext>s',
-                                            dir: File.dirname(transformer.file), basename: rotated_basename, ext: 'yml')
+          rotated_reconciler_path = format('%<dir>s/%<basename>s.%<ext>s',
+                                           dir: File.dirname(reconciler.file), basename: rotated_basename, ext: 'yml')
 
-          File.write rotated_transformer_path, rotated_transformer_contents
+          File.write rotated_reconciler_path, rotated_reconciler_contents
 
-          git! 'add', rotated_transformer_path if git_repo?
+          git! 'add', rotated_reconciler_path if git_repo?
 
           git! 'add', rotated_input_path if git_repo?
 
@@ -152,11 +152,11 @@ module RRA
         end
 
         # @!visibility private
-        # This method returns a rotated transformer, based on the contents of the legacy transformer.
+        # This method returns a rotated reconciler, based on the contents of the legacy reconciler.
         # Root elements are preserved, but, child elements are not. Income and expense sections are
         # pre-populated with catch-all rules.
-        def rotated_transformer_contents
-          elements = File.read(transformer.file).scan(/^[^\n ].+/)
+        def rotated_reconciler_contents
+          elements = File.read(reconciler.file).scan(/^[^\n ].+/)
           from = elements.map { |r| ::Regexp.last_match(1) if /^from:[ \t]*(.+)/.match r }
                          .compact.first&.tr('"\'', '')&.split(':')&.first
 
@@ -175,15 +175,15 @@ module RRA
         # All possible Reconciler Targets that the project has defined.
         # @return [Array<RRA::Base::Command::ReconcilerTarget>] A collection of targets.
         def self.all
-          RRA.app.transformers.map do |transformer|
-            new transformer unless File.dirname(transformer.input_file).split('/').last == 'historical'
+          RRA.app.reconcilers.map do |reconciler|
+            new reconciler unless File.dirname(reconciler.input_file).split('/').last == 'historical'
           end.compact
         end
 
         private
 
         def rotated_input_file_path
-          rotate_path transformer.input_file
+          rotate_path reconciler.input_file
         end
 
         def rotate_path(path)

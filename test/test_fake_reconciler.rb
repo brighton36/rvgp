@@ -8,8 +8,8 @@ require_relative '../lib/rra/fakers/fake_reconciler'
 
 # Minitest class, used to test RRA::Fakers::FakeReconciler
 class TestFakeReconciler < Minitest::Test
-  def test_basic_transformer_with_format_path
-    transformer = Psych.load RRA::Fakers::FakeReconciler.basic_checking(
+  def test_basic_reconciler_with_format_path
+    reconciler = Psych.load RRA::Fakers::FakeReconciler.basic_checking(
       label: 'Personal AcmeBank:Checking (2020)',
       input_path: '2020-personal-basic-checking.csv',
       output_path: '2020-personal-basic-checking.journal',
@@ -18,19 +18,19 @@ class TestFakeReconciler < Minitest::Test
       expense: expenses
     )
 
-    assert_equal 'Personal:Assets:AcmeBank:Checking', transformer['from']
-    assert_equal 'Personal AcmeBank:Checking (2020)', transformer['label']
-    assert_equal 'config/csv-format-acme-checking.yml', transformer['format'].path
-    assert_equal '2020-personal-basic-checking.csv', transformer['input']
-    assert_equal '2020-personal-basic-checking.journal', transformer['output']
-    assert_nil transformer['balances']
+    assert_equal 'Personal:Assets:AcmeBank:Checking', reconciler['from']
+    assert_equal 'Personal AcmeBank:Checking (2020)', reconciler['label']
+    assert_equal 'config/csv-format-acme-checking.yml', reconciler['format'].path
+    assert_equal '2020-personal-basic-checking.csv', reconciler['input']
+    assert_equal '2020-personal-basic-checking.journal', reconciler['output']
+    assert_nil reconciler['balances']
 
-    assert_equal incomes + [{ 'match' => '/.*/', 'to' => 'Personal:Income:Unknown' }], transformer['income']
-    assert_equal expenses + [{ 'match' => '/.*/', 'to' => 'Personal:Expenses:Unknown' }], transformer['expense']
+    assert_equal incomes + [{ 'match' => '/.*/', 'to' => 'Personal:Income:Unknown' }], reconciler['income']
+    assert_equal expenses + [{ 'match' => '/.*/', 'to' => 'Personal:Expenses:Unknown' }], reconciler['expense']
   end
 
-  def test_basic_transformer_without_format
-    transformer = Psych.load RRA::Fakers::FakeReconciler.basic_checking(
+  def test_basic_reconciler_without_format
+    reconciler = Psych.load RRA::Fakers::FakeReconciler.basic_checking(
       label: 'Personal AcmeBank:Checking (2020)',
       input_path: '2020-personal-basic-checking.csv',
       output_path: '2020-personal-basic-checking.journal',
@@ -38,10 +38,10 @@ class TestFakeReconciler < Minitest::Test
       expense: expenses
     )
 
-    assert_equal true, transformer['format']['csv_headers']
-    assert_equal true, transformer['format']['reverse_order']
-    assert_equal '$', transformer['format']['default_currency']
-    assert_equal %w[date amount description], transformer['format']['fields'].keys
+    assert_equal true, reconciler['format']['csv_headers']
+    assert_equal true, reconciler['format']['reverse_order']
+    assert_equal '$', reconciler['format']['default_currency']
+    assert_equal %w[date amount description], reconciler['format']['fields'].keys
   end
 
   private

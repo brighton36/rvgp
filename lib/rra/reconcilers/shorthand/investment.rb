@@ -3,7 +3,7 @@
 module RRA
   module Reconcilers
     module Shorthand
-      # This transformer module will automatically allocate the proceeds (or losses) from a stock sale.
+      # This reconciler module will automatically allocate the proceeds (or losses) from a stock sale.
       # This module will allocate capital gains or losses, given a symbol, amount, and price.
       #
       # The module parameters we support are:
@@ -18,7 +18,7 @@ module RRA
       # - *gains_account* [String] - The account name to allocate capital gains to.
       #
       # = Example
-      # Here's how this module might be used in your transformer:
+      # Here's how this module might be used in your reconciler:
       #   ...
       #   - match: /Acme Stonk Exchange/
       #     to_shorthand: Investment

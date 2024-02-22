@@ -4,7 +4,7 @@ require_relative 'faker_helpers'
 
 module RRA
   module Fakers
-    # Contains faker implementations that produce transformer yamls
+    # Contains faker implementations that produce reconciler yamls
     class FakeReconciler < Faker::Base
       class << self
         include FakerHelpers
@@ -37,7 +37,7 @@ module RRA
           expense: %<expense>s
         FEED_TEMPLATE
 
-        # Generates a basic transformer, for use in transforming a basic_checking feed
+        # Generates a basic reconciler, for use in transforming a basic_checking feed
         # @param from [String] The from parameter to write into our yaml
         # @param label [String] The label parameter to write into our yaml
         # @param format_path [String] A path to the format yaml, for use in the format parameter of our yaml
@@ -45,7 +45,7 @@ module RRA
         # @param output_path [String] A path to the output journal, for use in the output parameter of our yaml
         # @param income [Array] An array of hashes, containing the income rules, to write into our yaml
         # @param expense [Array] An array of hashes, containing the expense rules, to write into our yaml
-        # @return [String] A YAML file, containing the generated transformer
+        # @return [String] A YAML file, containing the generated reconciler
         def basic_checking(from: 'Personal:Assets:AcmeBank:Checking',
                            label: nil,
                            format_path: nil,

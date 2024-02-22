@@ -16,20 +16,20 @@ module RRA
     # journal validation. Here are the differences between these two validation classes:
     #
     # =Journal Validations
-    # Validate the output of one transformer at a time<br>
+    # Validate the output of one reconciler at a time<br>
     #
     # These validations are run immediately after the transform task, and before system validations
-    # are run. Each instance of these validations is applied to a transformers output file (typically located in
+    # are run. Each instance of these validations is applied to a reconcilers output file (typically located in
     # build/journal). And by default, any journal validations that are defined in a project's app/validations are
-    # instantiated against every transformer's output, in the project. This behavior can be overwritten, by defining a
-    # 'disable_checks' array in the root of the transformer's yaml, containing the name(s) of validations to disable
+    # instantiated against every reconciler's output, in the project. This behavior can be overwritten, by defining a
+    # 'disable_checks' array in the root of the reconciler's yaml, containing the name(s) of validations to disable
     # for that journal. These names are expected to be the classname of the validation, underscorized, lowercase, and
     # with the 'Validation' suffix removed from the class. For example, to disable the
-    # {RRA::Validations::BalanceValidation} in one of the transformers of your project, add the following lines to its
+    # {RRA::Validations::BalanceValidation} in one of the reconcilers of your project, add the following lines to its
     # yaml:
     #   disable_checks:
     #     - balance
-    # A JournalValidation is passed the transformer corresponding to it's instance in its initialize method. For further
+    # A JournalValidation is passed the reconciler corresponding to it's instance in its initialize method. For further
     # details on how these validations work, see the documentation for this class here {RRA::Base::JournalValidation} or
     # check out an example implementation. Here's the BalanceValidation itself, which is a relatively easy example to
     # {https://github.com/brighton36/rra/blob/main/lib/rra/validations/balance_validation.rb balance_validation.rb}
@@ -82,9 +82,9 @@ module RRA
     # validations run immediately after all Journal validations have completed.
     #
     # *Input*
-    # Journal validations have one input, accessible via its {RRA::Base::JournalValidation#transformer}. System
+    # Journal validations have one input, accessible via its {RRA::Base::JournalValidation#reconciler}. System
     # validations have no preconfigured inputs at all. Journal Validations support a disable_checks attribute in the
-    # transformer yaml, and system validations have no such directive.
+    # reconciler yaml, and system validations have no such directive.
     #
     # *Labeling*
     # With Journal validations, tasks are labeled automatically by rra, based on their class name. System validations
@@ -158,21 +158,21 @@ module RRA
 
     # A base class, from which your journal validations should inherit. For more information on validations, and your
     # options, see the documentation notes on {RRA::Base::JournalValidation}.
-    # @attr_reader [RRA::Reconcilers::CsvReconciler,RRA::Reconcilers::JournalReconciler] transformer
-    #   The transformer whose output will be inspected by this journal validation instance.
+    # @attr_reader [RRA::Reconcilers::CsvReconciler,RRA::Reconcilers::JournalReconciler] reconciler
+    #   The reconciler whose output will be inspected by this journal validation instance.
     class JournalValidation < Validation
       include RRA::Application::DescendantRegistry
 
       register_descendants RRA, :journal_validations, name_capture: NAME_CAPTURE
 
-      attr_reader :transformer
+      attr_reader :reconciler
 
       # Create a new Journal Validation
-      # @param [RRA::Reconcilers::CsvReconciler,RRA::Reconcilers::JournalReconciler] transformer
-      #    see {RRA::Base::JournalValidation#transformer}
-      def initialize(transformer)
+      # @param [RRA::Reconcilers::CsvReconciler,RRA::Reconcilers::JournalReconciler] reconciler
+      #    see {RRA::Base::JournalValidation#reconciler}
+      def initialize(reconciler)
         super()
-        @transformer = transformer
+        @reconciler = reconciler
       end
 
       # This helper method will supply the provided arguments to pta.register. And if there are any transactions
@@ -184,7 +184,7 @@ module RRA
       def validate_no_transactions(with_error_msg, *args)
         ledger_opts = args.last.is_a?(Hash) ? args.pop : {}
 
-        results = pta.register(*args, { file: transformer.output_file }.merge(ledger_opts))
+        results = pta.register(*args, { file: reconciler.output_file }.merge(ledger_opts))
 
         transactions = block_given? ? yield(results.transactions) : results.transactions
 
@@ -201,7 +201,7 @@ module RRA
       # @param [Array<String>] account This arguments is supplied directly to {RRA::Pta::AvailabilityHelper#pta}'s
       #                                #balance method
       def validate_no_balance(with_error_msg, account)
-        results = pta.balance account, file: transformer.output_file
+        results = pta.balance account, file: reconciler.output_file
 
         error_citations = results.accounts.map do |ra|
           ra.amounts.map { |commodity| [ra.fullname, RRA.pastel.red('━'), commodity.to_s].join(' ') }

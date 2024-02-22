@@ -101,11 +101,11 @@ module RRA
       end
 
       # This is a bit of a kludge. We wanted this in a few places, so, I DRY'd it here. tldr: this returns an array
-      # of years (as integers), which, were groked from the file names found in the app/transformers directory.
+      # of years (as integers), which, were groked from the file names found in the app/reconcilers directory.
       # It's a rough shorthand, that, ends up being a better 'guess' of start/end dates, than Date.today
       # @!visibility private
-      def transformer_years
-        Dir.glob(project_path('app/transformers/*.yml')).map do |f|
+      def reconciler_years
+        Dir.glob(project_path('app/reconcilers/*.yml')).map do |f|
           ::Regexp.last_match(1).to_i if /\A(\d{4}).+/.match File.basename(f)
         end.compact.uniq.sort
       end
@@ -113,7 +113,7 @@ module RRA
       private
 
       def default_grid_starting_at
-        years = transformer_years
+        years = reconciler_years
         years.empty? ? (Date.today << 12) : Date.new(years.first, 1, 1)
       end
 
@@ -133,7 +133,7 @@ module RRA
         # TODO: This lambda is goofy. Let's see if we can nix it
         lambda do
           unless Dir[build_path('journals/*.journal')].count.positive?
-            years = transformer_years
+            years = reconciler_years
             return years.empty? ? Date.today : Date.new(years.last, 12, 31)
           end
 

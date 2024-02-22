@@ -70,41 +70,41 @@ module RRA
 
       # This is an implementation of Target, that matches Reconcilers.
       #
-      # This class allows any of the current project's transformers to match a target. And, such targets can be selected
+      # This class allows any of the current project's reconcilers to match a target. And, such targets can be selected
       # by way of a:
-      # - full transformer path
-      # - transformer file basename (without the full path)
-      # - the transformer's from field
-      # - the transformer's label field
-      # - the transformer's input file
-      # - the transformer's output file
+      # - full reconciler path
+      # - reconciler file basename (without the full path)
+      # - the reconciler's from field
+      # - the reconciler's label field
+      # - the reconciler's input file
+      # - the reconciler's output file
       #
-      # Any class that operates by way of a transformer-defined target, can use this implementation, in lieu of
+      # Any class that operates by way of a reconciler-defined target, can use this implementation, in lieu of
       # re-implementing the wheel.
       class ReconcilerTarget < RRA::Base::Command::Target
         # Create a new ReconcilerTarget
-        # @param [RRA::Base::Reconciler] transformer An instance of either {RRA::Reconcilers::CsvReconciler}, or
+        # @param [RRA::Base::Reconciler] reconciler An instance of either {RRA::Reconcilers::CsvReconciler}, or
         #                                             {RRA::Reconcilers::JournalReconciler}, to use as the basis
         #                                             for this target.
-        def initialize(transformer)
-          super transformer.as_taskname, transformer.label
-          @transformer = transformer
+        def initialize(reconciler)
+          super reconciler.as_taskname, reconciler.label
+          @reconciler = reconciler
         end
 
         # (see RRA::Base::Command::Target#matches?)
         def matches?(identifier)
-          @transformer.matches_argument? identifier
+          @reconciler.matches_argument? identifier
         end
 
         # (see RRA::Base::Command::Target#description)
         def description
-          I18n.t format('commands.%s.target_description', self.class.command), input_file: @transformer.input_file
+          I18n.t format('commands.%s.target_description', self.class.command), input_file: @reconciler.input_file
         end
 
         # All possible Reconciler Targets that the project has defined.
         # @return [Array<RRA::Base::Command::ReconcilerTarget>] A collection of targets.
         def self.all
-          RRA.app.transformers.map { |transformer| new transformer }
+          RRA.app.reconcilers.map { |reconciler| new reconciler }
         end
 
         # This is a little goofy. But, it exists as a hack to support dispatching this target via the

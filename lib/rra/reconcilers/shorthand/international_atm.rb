@@ -3,7 +3,7 @@
 module RRA
   module Reconcilers
     module Shorthand
-      # This transformer module will automatically allocate ATM components of a transaction, to constituent
+      # This reconciler module will automatically allocate ATM components of a transaction, to constituent
       # accounts. This module is useful for tracking the myriad expenses that banks impose on your atm
       # withdrawals internationally. This module takes the total withdrawal, as reported in the input file
       # and deducts conversion_markup and operation_costs from that total. It then takes the remainder balance
@@ -24,7 +24,7 @@ module RRA
       # - *operation_cost_to* [String] - The account that :operation_cost fees should be transferred to
       #
       # = Example
-      # Here's how this module might be used in your transformer:
+      # Here's how this module might be used in your reconciler:
       #   ...
       #   - match: /BANCOLOMBIA/
       #     to: Personal:Assets:Cash
@@ -44,7 +44,7 @@ module RRA
       #     Personal:Expenses:Banking:Fees:RandomAtmOperator    $ 9.62
       #     Personal:Assets:AcmeBank:Checking
       #   ...
-      # Note that the transformer line above, could match more than one transaction in the input file, and if it
+      # Note that the reconciler line above, could match more than one transaction in the input file, and if it
       # does, each of them will be expanded similarly to the expansion below. Though, with international exchange
       # rates changing on a daily basis, the numbers may be different, depending on the debit amount encountered
       # in the input file.

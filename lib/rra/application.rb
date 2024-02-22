@@ -55,9 +55,9 @@ module RRA
       require_grids!
     end
 
-    # @return [Array] An array, containing all the transformer objects, defined in the project
-    def transformers
-      @transformers ||= RRA::Base::Reconciler.all project_path
+    # @return [Array] An array, containing all the reconciler objects, defined in the project
+    def reconcilers
+      @reconcilers ||= RRA::Base::Reconciler.all project_path
     end
 
     # This method will insert all the project tasks, into a Rake object.
@@ -81,8 +81,8 @@ module RRA
 
       rake_main.instance_eval do
         default_tasks = %i[transform validate_journal validate_system]
-        multitask transform: RRA.app.transformers.map { |tf| "transform:#{tf.as_taskname}" }
-        multitask validate_journal: RRA.app.transformers.map { |tf| "validate_journal:#{tf.as_taskname}" }
+        multitask transform: RRA.app.reconcilers.map { |tf| "transform:#{tf.as_taskname}" }
+        multitask validate_journal: RRA.app.reconcilers.map { |tf| "validate_journal:#{tf.as_taskname}" }
         multitask validate_system: RRA.system_validations.task_names
 
         # There's a chicken-and-an-egg problem that's due:
@@ -93,7 +93,7 @@ module RRA
         # time at which we're ready to start buildings grids/plots - we re-initialize the available tasks
         # based on what was built prior in the running build.
         #
-        # Most grids can be determined by examining the transformer years that exist in the app/ directory.
+        # Most grids can be determined by examining the reconciler years that exist in the app/ directory.
         # But, in the case that new year starts, and the prior year hasn't been rotated, we'll be adding
         # additional grids here.
         #
