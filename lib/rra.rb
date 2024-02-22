@@ -3,15 +3,15 @@
 require_relative 'rra/utilities/yaml'
 require_relative 'rra/application'
 require_relative 'rra/commands'
-require_relative 'rra/base/transformer'
+require_relative 'rra/base/reconciler'
 
-# NOTE: Transformers & shorthand may want to go into a registry system at
+# NOTE: Reconcilers & shorthand may want to go into a registry system at
 # some point, akin to grids/validations.
-require_relative 'rra/transformers/csv_transformer'
-require_relative 'rra/transformers/journal_transformer'
-require_relative 'rra/transformers/shorthand/mortgage'
-require_relative 'rra/transformers/shorthand/investment'
-require_relative 'rra/transformers/shorthand/international_atm'
+require_relative 'rra/reconcilers/csv_reconciler'
+require_relative 'rra/reconcilers/journal_reconciler'
+require_relative 'rra/reconcilers/shorthand/mortgage'
+require_relative 'rra/reconcilers/shorthand/investment'
+require_relative 'rra/reconcilers/shorthand/international_atm'
 
 require_relative 'rra/base/validation'
 

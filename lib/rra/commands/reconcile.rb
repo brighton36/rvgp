@@ -26,10 +26,10 @@ module RRA
       end
 
       # @!visibility private
-      # This class represents a transformer. See RRA::Base::Command::TransformerTarget, for
+      # This class represents a transformer. See RRA::Base::Command::ReconcilerTarget, for
       # most of the logic that this class inherits. Typically, these targets take the form
       # of "#\\{year}-#\\{transformer_name}"
-      class Target < RRA::Base::Command::TransformerTarget
+      class Target < RRA::Base::Command::ReconcilerTarget
         for_command :transform
 
         # @!visibility private

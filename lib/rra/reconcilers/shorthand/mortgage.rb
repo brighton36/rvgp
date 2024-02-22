@@ -5,7 +5,7 @@ require 'finance'
 require_relative './finance_gem_hacks'
 
 module RRA
-  module Transformers
+  module Reconcilers
     module Shorthand
       # This transformer module will automatically allocate the the escrow, principal, and interest components of a
       # mortage debit, into constituent accounts. The amounts of each, are automatically calculated, based on the loan
@@ -152,14 +152,14 @@ module RRA
 
           intermediary_opts = { date: from_posting.date, from: intermediary_account, tags: from_posting.tags }
 
-          [RRA::Base::Transformer::Posting.new(from_posting.line_number,
-                                               date: from_posting.date,
-                                               description: from_posting.description,
-                                               from: from_posting.from,
-                                               tags: from_posting.tags,
-                                               targets: [to: intermediary_account, commodity: total]),
+          [RRA::Base::Reconciler::Posting.new(from_posting.line_number,
+                                              date: from_posting.date,
+                                              description: from_posting.description,
+                                              from: from_posting.from,
+                                              tags: from_posting.tags,
+                                              targets: [to: intermediary_account, commodity: total]),
            # Principal:
-           RRA::Base::Transformer::Posting.new(
+           RRA::Base::Reconciler::Posting.new(
              from_posting.line_number,
              intermediary_opts.merge({ description: format('%<label>s (#%<num>d) Principal',
                                                            label: label,
@@ -168,7 +168,7 @@ module RRA
            ),
 
            # Interest:
-           RRA::Base::Transformer::Posting.new(
+           RRA::Base::Reconciler::Posting.new(
              from_posting.line_number,
              intermediary_opts.merge({ description: format('%<label>s (#%<num>d) Interest',
                                                            label: label,
@@ -177,7 +177,7 @@ module RRA
            ),
 
            # Escrow:
-           RRA::Base::Transformer::Posting.new(
+           RRA::Base::Reconciler::Posting.new(
              from_posting.line_number,
              intermediary_opts.merge({ description: format('%<label>s (#%<num>d) Escrow',
                                                            label: label,

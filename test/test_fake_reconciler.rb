@@ -4,12 +4,12 @@
 require 'minitest/autorun'
 
 require_relative '../lib/rra'
-require_relative '../lib/rra/fakers/fake_transformer'
+require_relative '../lib/rra/fakers/fake_reconciler'
 
-# Minitest class, used to test RRA::Fakers::FakeTransformer
-class TestFakeTransformer < Minitest::Test
+# Minitest class, used to test RRA::Fakers::FakeReconciler
+class TestFakeReconciler < Minitest::Test
   def test_basic_transformer_with_format_path
-    transformer = Psych.load RRA::Fakers::FakeTransformer.basic_checking(
+    transformer = Psych.load RRA::Fakers::FakeReconciler.basic_checking(
       label: 'Personal AcmeBank:Checking (2020)',
       input_path: '2020-personal-basic-checking.csv',
       output_path: '2020-personal-basic-checking.journal',
@@ -30,7 +30,7 @@ class TestFakeTransformer < Minitest::Test
   end
 
   def test_basic_transformer_without_format
-    transformer = Psych.load RRA::Fakers::FakeTransformer.basic_checking(
+    transformer = Psych.load RRA::Fakers::FakeReconciler.basic_checking(
       label: 'Personal AcmeBank:Checking (2020)',
       input_path: '2020-personal-basic-checking.csv',
       output_path: '2020-personal-basic-checking.journal',

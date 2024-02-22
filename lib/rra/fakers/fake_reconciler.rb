@@ -5,7 +5,7 @@ require_relative 'faker_helpers'
 module RRA
   module Fakers
     # Contains faker implementations that produce transformer yamls
-    class FakeTransformer < Faker::Base
+    class FakeReconciler < Faker::Base
       class << self
         include FakerHelpers
 

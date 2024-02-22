@@ -5,7 +5,7 @@ require 'minitest/autorun'
 
 require_relative '../lib/rra'
 require_relative '../lib/rra/fakers/fake_feed'
-require_relative '../lib/rra/fakers/fake_transformer'
+require_relative '../lib/rra/fakers/fake_reconciler'
 
 # Minitest class, used to test RRA::Fakers::FakeJournal
 class TestFakeFeed < Minitest::Test
@@ -210,7 +210,7 @@ class TestFakeFeed < Minitest::Test
 
     yaml_file = Tempfile.open %w[rra_test .yaml]
 
-    yaml_file.write RRA::Fakers::FakeTransformer.basic_checking(
+    yaml_file.write RRA::Fakers::FakeReconciler.basic_checking(
       **{ label: 'Personal AcmeBank:Checking',
           input_path: feed_file.path,
           output_path: journal_file.path }.merge(transformer_opts)
@@ -218,7 +218,7 @@ class TestFakeFeed < Minitest::Test
 
     yaml_file.close
 
-    RRA::Transformers::CsvTransformer.new(RRA::Utilities::Yaml.new(yaml_file.path)).to_ledger
+    RRA::Reconcilers::CsvReconciler.new(RRA::Utilities::Yaml.new(yaml_file.path)).to_ledger
   ensure
     [feed_file, yaml_file, journal_file].each do |f|
       f.close

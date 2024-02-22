@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module RRA
-  module Transformers
+  module Reconcilers
     module Shorthand
       # This transformer module will automatically allocate the proceeds (or losses) from a stock sale.
       # This module will allocate capital gains or losses, given a symbol, amount, and price.
@@ -125,12 +125,12 @@ module RRA
             end
           end
 
-          RRA::Base::Transformer::Posting.new from_posting.line_number,
-                                              date: from_posting.date,
-                                              description: from_posting.description,
-                                              from: from_posting.from,
-                                              tags: from_posting.tags,
-                                              targets: income_targets
+          RRA::Base::Reconciler::Posting.new from_posting.line_number,
+                                             date: from_posting.date,
+                                             description: from_posting.description,
+                                             from: from_posting.from,
+                                             tags: from_posting.tags,
+                                             targets: income_targets
         end
       end
     end

@@ -5,8 +5,8 @@ require 'minitest/autorun'
 
 require_relative '../lib/rra'
 
-# Minitest class, used to test RRA::Transformers::CsvTransformer
-class TestCsvTransformer < Minitest::Test
+# Minitest class, used to test RRA::Reconcilers::CsvReconciler
+class TestCsvReconciler < Minitest::Test
   THREE_LINES = "Line 1\nLine 2\nLine 3\n"
   THREE_LINES_WO_ENDLINE = "Line 1\nLine 2\nLine 3"
   THREE_LINES_W_ENDLINE_AS_CHAR0 = "\nLine 2\nLine 3\n"
@@ -55,6 +55,6 @@ class TestCsvTransformer < Minitest::Test
 
   # This is just to may the tests a bit easier to type
   def input_file_contents(*args)
-    RRA::Transformers::CsvTransformer.input_file_contents(*args)
+    RRA::Reconcilers::CsvReconciler.input_file_contents(*args)
   end
 end

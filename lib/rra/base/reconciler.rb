@@ -4,19 +4,19 @@ require_relative '../utilities'
 
 module RRA
   module Base
-    # Transformers are a cornerstone of the RRA build, and an integral part of your project. Transformers, take an input
+    # Reconcilers are a cornerstone of the RRA build, and an integral part of your project. Reconcilers, take an input
     # file (Either a csv file or a journal file), and transform them into a reconciled pta journal. This class
     # implements most of the functionality needed to make that happen.
     #
-    # Transformers take two files as input. Firstly, it takes an aforementioned input file. But, secondly, it takes a
+    # Reconcilers take two files as input. Firstly, it takes an aforementioned input file. But, secondly, it takes a
     # yaml file with transformation directives. What follows is a guide on those directives.
     #
     # Most of your time spent in these files, will be spent adding rules to the income and expense sections (see
     # the 'Defining income and expense sections'). However, in order to get the transformer far enough into the parsing
     # logic to get to that section, you'll need to understand the general structure of these files.
     #
-    # = The General Structure of Transformer Yaml's
-    # Transformer yaml files are expected to be found in the app/transformer directory. Typically with a four-digit year
+    # = The General Structure of Reconciler Yaml's
+    # Reconciler yaml files are expected to be found in the app/transformer directory. Typically with a four-digit year
     # as the start of its filename, and a yml extension. Here's a simple example transformer directory:
     #   ~/ledger> lsd -1 app/transformers/
     #    2022-business-checking.yml
@@ -182,13 +182,13 @@ module RRA
     #   :description of the feed transaction against the regex provided.
     #   If a regex is provided, captures are supported. (see the note below)
     # - *account* [Regexp,String] - This matcher is useful for transformers that support the :to field.
-    #   (see {RRA::Transformers::JournalTransformer}). If a string is provided, compares the
+    #   (see {RRA::Reconcilers::JournalReconciler}). If a string is provided, compares the
     #   account :to which a transaction was assigned, to the value provided. And matches if
     #   they're equal. If a regex is provided, matches the account :to which a transaction
     #   was assigned, against the regex provided.
     #   If a regex is provided, captures are supported. (see the note below)
     # - *account_is_not* [String] - This matcher is useful for transformers that support the :to field.
-    #   (see {RRA::Transformers::JournalTransformer}). This field matches any transaction
+    #   (see {RRA::Reconcilers::JournalReconciler}). This field matches any transaction
     #   whose account :to, does not equal the provided string.
     # - *amount_less_than* [Commodity] - This field compares it's value to the transaction :amount , and matches if
     #   that amount is less than the provided amount.
@@ -237,7 +237,7 @@ module RRA
     #     :amount. See {RRA::Journal::ComplexCommodity.from_s} for more details on this feature.
     #   - *tags* [Array<String>] - An array of tags to assign to this transfer. See {RRA::Journal::Posting::Tag.from_s}
     #     for more details on tag formatting.
-    # - *to_shorthand* [String] - Transformer Shorthand are a powerful feature that can reduce duplication, and manual
+    # - *to_shorthand* [String] - Reconciler Shorthand are a powerful feature that can reduce duplication, and manual
     #   calculations from your transformer yaml. The value provided here, must correlate with an
     #   available transformer shorthand, and if so, sends this rule to that shorthand for
     #   reconciliation.
@@ -293,7 +293,7 @@ module RRA
     #                                 above)
     # @attr_reader [TrueClass,FalseClass] reverse_order The contents of the yaml :reverse_order parameter (see above)
     # @attr_reader [String] default_currency The contents of the yaml :default_currency parameter (see above)
-    class Transformer
+    class Reconciler
       include RRA::Utilities
 
       # This error is thrown when a transformer yaml is missing one or more require parameters
@@ -345,7 +345,7 @@ module RRA
       # @!visibility private
       HEADER = "; -*- %s -*-¬\n; vim: syntax=ledger"
 
-      # Create a Transformer from the provided yaml
+      # Create a Reconciler from the provided yaml
       # @param [RRA::Utilities::Yaml] yaml A file containing the settings to use in the construction of this transformer
       #                                   . (see above)
       def initialize(yaml)
@@ -487,7 +487,7 @@ module RRA
           mod = @shorthand[rule_key][rule[:index]]
 
           unless mod
-            shorthand_klass = format 'RRA::Transformers::Shorthand::%s', rule[:to_shorthand]
+            shorthand_klass = format 'RRA::Reconcilers::Shorthand::%s', rule[:to_shorthand]
 
             unless Object.const_defined?(shorthand_klass)
               raise StandardError, format('Unknown shorthand %s', shorthand_klass)
@@ -632,11 +632,11 @@ module RRA
 
       # Returns an array of all of the transformers found in the specified path.
       # @param [String] directory_path The path containing your yml transformer files
-      # @return [Array<RRA::Transformers::CsvTransformer, RRA::Transformers::JournalTransformer>]
+      # @return [Array<RRA::Reconcilers::CsvReconciler, RRA::Reconcilers::JournalReconciler>]
       #   An array of parsed transformers.
       def self.all(directory_path)
         # NOTE: I'm not crazy about this method. Probably we should have
-        # implemented a single Transformer class, with CSV/Journal drivers.
+        # implemented a single Reconciler class, with CSV/Journal drivers.
         # Nonetheless, this code works for now. Maybe if we add another
         # driver, we can renovate it, and add some kind of registry for drivers.
 
@@ -649,8 +649,8 @@ module RRA
           # web addresses eventually. So, probably this designe pattern would
           # have to just be reconsidered entirely around that time.
           case File.extname(yaml[:input])
-          when '.csv' then RRA::Transformers::CsvTransformer.new(yaml)
-          when '.journal' then RRA::Transformers::JournalTransformer.new(yaml)
+          when '.csv' then RRA::Reconcilers::CsvReconciler.new(yaml)
+          when '.journal' then RRA::Reconcilers::JournalReconciler.new(yaml)
           else
             raise StandardError, format('Unrecognized file extension for input file "%s"', yaml[:input])
           end

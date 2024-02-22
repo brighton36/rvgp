@@ -45,7 +45,7 @@ module RRA
 
       # @!visibility private
       # This class represents a transformer that's not 'historical'. Which, makes it different from the
-      # TransformerTarget. 'historical' is determined by whether its input_file is located in a '/historical/' basedir.
+      # ReconcilerTarget. 'historical' is determined by whether its input_file is located in a '/historical/' basedir.
       class Target < RRA::Base::Command::Target
         attr_reader :transformer
 
@@ -55,8 +55,8 @@ module RRA
         end
 
         # Create a new RotateYear::Target
-        # @param [RRA::Base::Transformer] transformer An instance of either {RRA::Transformers::CsvTransformer}, or
-        #                                             {RRA::Transformers::JournalTransformer}, to use as the basis
+        # @param [RRA::Base::Reconciler] transformer An instance of either {RRA::Reconcilers::CsvReconciler}, or
+        #                                             {RRA::Reconcilers::JournalReconciler}, to use as the basis
         #                                             for this target.
         def initialize(transformer)
           super transformer.as_taskname, transformer.label
@@ -172,8 +172,8 @@ module RRA
           end.join("\n").tr(year.to_s, (year + 1).to_s)
         end
 
-        # All possible Transformer Targets that the project has defined.
-        # @return [Array<RRA::Base::Command::TransformerTarget>] A collection of targets.
+        # All possible Reconciler Targets that the project has defined.
+        # @return [Array<RRA::Base::Command::ReconcilerTarget>] A collection of targets.
         def self.all
           RRA.app.transformers.map do |transformer|
             new transformer unless File.dirname(transformer.input_file).split('/').last == 'historical'

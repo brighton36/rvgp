@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../fakers/fake_feed'
-require_relative '../fakers/fake_transformer'
+require_relative '../fakers/fake_reconciler'
 
 module RRA
   module Commands
@@ -143,7 +143,7 @@ module RRA
         each_year_in_project do |year|
           File.write destination_path('%<app_dir>s/app/transformers/%<year>d-personal-basic-checking.yml',
                                       year: year),
-                     RRA::Fakers::FakeTransformer.basic_checking(
+                     RRA::Fakers::FakeReconciler.basic_checking(
                        label: format('Personal AcmeBank:Checking (%<year>s)', year: year),
                        input_path: format('%<year>d-personal-basic-checking.csv', year: year),
                        output_path: format('%<year>d-personal-basic-checking.journal', year: year),

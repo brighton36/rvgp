@@ -4,8 +4,8 @@ require 'csv'
 require_relative '../journal'
 
 module RRA
-  module Transformers
-    class CsvTransformer < RRA::Base::Transformer
+  module Reconcilers
+    class CsvReconciler < RRA::Base::Reconciler
       attr_reader :fields_format, :csv_format, :invert_amount, :skip_lines, :trim_lines
 
       def initialize(yaml)
@@ -93,11 +93,11 @@ module RRA
 
             commodity.invert! if invert_amount
 
-            RRA::Base::Transformer::Posting.new i + 1,
-                                                date: tx[:date],
-                                                description: tx[:description],
-                                                commodity: transform_commodity(commodity),
-                                                from: from
+            RRA::Base::Reconciler::Posting.new i + 1,
+                                               date: tx[:date],
+                                               description: tx[:description],
+                                               commodity: transform_commodity(commodity),
+                                               from: from
           end
         end
       end

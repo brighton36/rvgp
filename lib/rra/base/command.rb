@@ -68,7 +68,7 @@ module RRA
         end
       end
 
-      # This is an implementation of Target, that matches Transformers.
+      # This is an implementation of Target, that matches Reconcilers.
       #
       # This class allows any of the current project's transformers to match a target. And, such targets can be selected
       # by way of a:
@@ -81,10 +81,10 @@ module RRA
       #
       # Any class that operates by way of a transformer-defined target, can use this implementation, in lieu of
       # re-implementing the wheel.
-      class TransformerTarget < RRA::Base::Command::Target
-        # Create a new TransformerTarget
-        # @param [RRA::Base::Transformer] transformer An instance of either {RRA::Transformers::CsvTransformer}, or
-        #                                             {RRA::Transformers::JournalTransformer}, to use as the basis
+      class ReconcilerTarget < RRA::Base::Command::Target
+        # Create a new ReconcilerTarget
+        # @param [RRA::Base::Reconciler] transformer An instance of either {RRA::Reconcilers::CsvReconciler}, or
+        #                                             {RRA::Reconcilers::JournalReconciler}, to use as the basis
         #                                             for this target.
         def initialize(transformer)
           super transformer.as_taskname, transformer.label
@@ -101,23 +101,23 @@ module RRA
           I18n.t format('commands.%s.target_description', self.class.command), input_file: @transformer.input_file
         end
 
-        # All possible Transformer Targets that the project has defined.
-        # @return [Array<RRA::Base::Command::TransformerTarget>] A collection of targets.
+        # All possible Reconciler Targets that the project has defined.
+        # @return [Array<RRA::Base::Command::ReconcilerTarget>] A collection of targets.
         def self.all
           RRA.app.transformers.map { |transformer| new transformer }
         end
 
         # This is a little goofy. But, it exists as a hack to support dispatching this target via the
-        # {RRA::Base::Command::TransformerTarget.command} method. You can see an example of this at work in the
+        # {RRA::Base::Command::ReconcilerTarget.command} method. You can see an example of this at work in the
         # {https://github.com/brighton36/rra/blob/main/lib/rra/commands/transform.rb transform.rb} file.
         # @param [Symbol] underscorized_command_name The command to return, when
-        #                                            {RRA::Base::Command::TransformerTarget.command} is called.
+        #                                            {RRA::Base::Command::ReconcilerTarget.command} is called.
         def self.for_command(underscorized_command_name)
           @for_command = underscorized_command_name
         end
 
         # Returns which command this class is defined for. See the note in
-        # #{RRA::Base::Command::TransformerTarget.for_command}.
+        # #{RRA::Base::Command::ReconcilerTarget.for_command}.
         # @return [Symbol] The command this target is relevant for.
         def self.command
           @for_command

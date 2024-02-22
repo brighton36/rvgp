@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module RRA
-  module Transformers
+  module Reconcilers
     module Shorthand
       # This transformer module will automatically allocate ATM components of a transaction, to constituent
       # accounts. This module is useful for tracking the myriad expenses that banks impose on your atm
@@ -135,12 +135,12 @@ module RRA
                                                                              operation: :per_lot,
                                                                              right: remitted) }
 
-          RRA::Base::Transformer::Posting.new from_posting.line_number,
-                                              date: from_posting.date,
-                                              description: from_posting.description,
-                                              from: from_posting.from,
-                                              tags: from_posting.tags,
-                                              targets: targets.reverse
+          RRA::Base::Reconciler::Posting.new from_posting.line_number,
+                                             date: from_posting.date,
+                                             description: from_posting.description,
+                                             from: from_posting.from,
+                                             tags: from_posting.tags,
+                                             targets: targets.reverse
         end
       end
     end

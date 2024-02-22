@@ -158,7 +158,7 @@ module RRA
 
     # A base class, from which your journal validations should inherit. For more information on validations, and your
     # options, see the documentation notes on {RRA::Base::JournalValidation}.
-    # @attr_reader [RRA::Transformers::CsvTransformer,RRA::Transformers::JournalTransformer] transformer
+    # @attr_reader [RRA::Reconcilers::CsvReconciler,RRA::Reconcilers::JournalReconciler] transformer
     #   The transformer whose output will be inspected by this journal validation instance.
     class JournalValidation < Validation
       include RRA::Application::DescendantRegistry
@@ -168,7 +168,7 @@ module RRA
       attr_reader :transformer
 
       # Create a new Journal Validation
-      # @param [RRA::Transformers::CsvTransformer,RRA::Transformers::JournalTransformer] transformer
+      # @param [RRA::Reconcilers::CsvReconciler,RRA::Reconcilers::JournalReconciler] transformer
       #    see {RRA::Base::JournalValidation#transformer}
       def initialize(transformer)
         super()
