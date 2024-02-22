@@ -241,10 +241,10 @@ module RRA
     #   calculations from your transformer yaml. The value provided here, must correlate with an
     #   available transformer shorthand, and if so, sends this rule to that shorthand for
     #   reconciliation.
-    # - *shorthand_params* [Hash] - This section is specific to the transformer shorthand that was specified in the :to_shorthand
-    #   field. Any of the key/value pairs specified here, are sent to the transformer shorthand,
-    #   along with the rest of the input transaction. And, presumably, these fields will futher
-    #   direct the reconciliation of the input transaction.
+    # - *shorthand_params* [Hash] - This section is specific to the transformer shorthand that was specified in the
+    #   :to_shorthand field. Any of the key/value pairs specified here, are sent to the transformer shorthand, along
+    #   with the rest of the input transaction. And, presumably, these fields will futher direct the reconciliation
+    #   of the input transaction.
     #
     # = Special yaml features
     # All of these pysch extensions, are prefixed with two exclamation points, and can be placed in lieu of a value, for
@@ -489,7 +489,9 @@ module RRA
           unless mod
             shorthand_klass = format 'RRA::Transformers::Shorthand::%s', rule[:to_shorthand]
 
-            raise StandardError, format('Unknown shorthand %s', shorthand_klass) unless Object.const_defined?(shorthand_klass)
+            unless Object.const_defined?(shorthand_klass)
+              raise StandardError, format('Unknown shorthand %s', shorthand_klass)
+            end
 
             mod = Object.const_get(shorthand_klass).new rule
 

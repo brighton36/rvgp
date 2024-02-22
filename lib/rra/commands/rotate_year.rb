@@ -131,7 +131,7 @@ module RRA
 
           FileUtils.mkdir_p historical_feed_path
 
-          # TODO Is any of this working? It's very close. Test.
+          # TODO: Is any of this working? It's very close. Test.
           mv! transformer.input_file, historical_feed_path
 
           rotated_input_path = format('%<dir>s/%<file>s.%<ext>s',

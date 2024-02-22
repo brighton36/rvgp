@@ -147,7 +147,6 @@ module RRA
           I18n.t 'commands.plot.target_description', name: name
         end
 
-
         # @!visibility private
         def uptodate?
           # I'm not crazy about listing the extension here. Possibly that should come

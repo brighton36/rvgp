@@ -76,7 +76,9 @@ module RRA
             if shorthand_params.key? :conversion_markup
               @conversion_markup = (BigDecimal(shorthand_params[:conversion_markup]) / 100) + 1
             end
-            @conversion_markup_to = shorthand_params[:conversion_markup_to] if shorthand_params.key? :conversion_markup_to
+            if shorthand_params.key? :conversion_markup_to
+              @conversion_markup_to = shorthand_params[:conversion_markup_to]
+            end
             @operation_cost_to = shorthand_params[:operation_cost_to] if shorthand_params.key? :operation_cost_to
           end
 
