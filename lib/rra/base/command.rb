@@ -109,7 +109,7 @@ module RRA
 
         # This is a little goofy. But, it exists as a hack to support dispatching this target via the
         # {RRA::Base::Command::ReconcilerTarget.command} method. You can see an example of this at work in the
-        # {https://github.com/brighton36/rra/blob/main/lib/rra/commands/transform.rb transform.rb} file.
+        # {https://github.com/brighton36/rra/blob/main/lib/rra/commands/reconcile.rb reconcile.rb} file.
         # @param [Symbol] underscorized_command_name The command to return, when
         #                                            {RRA::Base::Command::ReconcilerTarget.command} is called.
         def self.for_command(underscorized_command_name)
@@ -331,7 +331,7 @@ module RRA
       private
 
       def execute_each_target
-        # This keeps things DRY for the case of commands such as transform, which
+        # This keeps things DRY for the case of commands such as reconcile, which
         # use the stdout option
         targets.each { |target| target.execute options }
       end

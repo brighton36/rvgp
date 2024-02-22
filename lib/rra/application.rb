@@ -80,8 +80,8 @@ module RRA
       end
 
       rake_main.instance_eval do
-        default_tasks = %i[transform validate_journal validate_system]
-        multitask transform: RRA.app.reconcilers.map { |tf| "transform:#{tf.as_taskname}" }
+        default_tasks = %i[reconcile validate_journal validate_system]
+        multitask reconcile: RRA.app.reconcilers.map { |tf| "reconcile:#{tf.as_taskname}" }
         multitask validate_journal: RRA.app.reconcilers.map { |tf| "validate_journal:#{tf.as_taskname}" }
         multitask validate_system: RRA.system_validations.task_names
 
@@ -102,8 +102,8 @@ module RRA
         # are 'no' plots at the time of a full rake build, and the rescan adds them here after the grids
         # are built.
 
-        isnt_transformed = RRA::Commands::Transform::Target.all.any? { |t| !t.uptodate? }
-        if isnt_transformed
+        isnt_reconciled = RRA::Commands::Reconcile::Target.all.any? { |t| !t.uptodate? }
+        if isnt_reconciled
           desc I18n.t('commands.rescan_grids.target_description')
           task :rescan_grids do |_task, _task_args|
             RRA::Commands::Grid.initialize_rake rake_main
@@ -115,7 +115,7 @@ module RRA
         default_tasks << :grid
         multitask grid: RRA.grids.task_names
 
-        if isnt_transformed || RRA::Commands::Grid::Target.all.any? { |t| !t.uptodate? }
+        if isnt_reconciled || RRA::Commands::Grid::Target.all.any? { |t| !t.uptodate? }
           # This re-registers the grid tasks, into the rake
           desc I18n.t('commands.rescan_plots.target_description')
           task :rescan_plots do |_task, _task_args|

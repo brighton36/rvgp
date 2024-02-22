@@ -33,7 +33,7 @@ module RRA
           disable_checks = @reconciler.disable_checks.map(&:to_sym)
 
           # Make sure the file exists, before proceeding with anything:
-          return [I18n.t('commands.transform.errors.journal_missing')], [] unless File.exist? @reconciler.output_file
+          return [I18n.t('commands.reconcile.errors.journal_missing')], [] unless File.exist? @reconciler.output_file
 
           warnings = []
           errors = []

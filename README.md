@@ -1,5 +1,5 @@
 # rra : Ruby Rake Accounting
-A workflow tool to: transform bank-downloaded csv's into categorized pta journals. Run finance validations on those journals. And generate reports and graphs on the output.
+A workflow tool to: reconcile bank-downloaded csv's into categorized pta journals. Run finance validations on those journals. And generate reports and graphs on the output.
 
 ## The Quick Pitch
 If you like ruby, and you want something akin to rails... but for your finances - this is what you're looking for! This tool offers an easy workflow,
@@ -44,7 +44,7 @@ You entered "Yukihiro Matsumoto". Is that correct? (Type "Yes" to continue) : Ye
 📖 New Project
    Initializing Project directory ........................................... 🟢
    Initializing Randomized bank feeds ....................................... 🟢
-   Initializing Randomized transformers ..................................... 🟢
+   Initializing Randomized reconcilers ..................................... 🟢
 
 The new project has been generated successfully.
 Though you may want to add the following line to your ~/.bashrc:
@@ -87,11 +87,11 @@ From here, you're all set to run your first build. cd into your project director
 The output of this process, is now visible in the `build` folder under your project's root. 
 
 > **Note**
-> The "No balance checkpoints found." warning indicates that your transformer definition, is missing a balance checkpoint. Since new_projects use 'fake' data, there's no balance checkpoint specified in the transformer yaml. With your data, you'll want to enter the balance, and date, on some of your statements, into the 'balances' section of this file, to ensure accuracy against the financial institution's records. (Or, you can just disable this feature) More on that later. Nonetheless, these warnings are safe to ignore for now.
+> The "No balance checkpoints found." warning indicates that your reconciler definition, is missing a balance checkpoint. Since new_projects use 'fake' data, there's no balance checkpoint specified in the reconciler yaml. With your data, you'll want to enter the balance, and date, on some of your statements, into the 'balances' section of this file, to ensure accuracy against the financial institution's records. (Or, you can just disable this feature) More on that later. Nonetheless, these warnings are safe to ignore for now.
 
 Now you can begin to explore your build. If you'd like to see the net worth of your project, try running `gnuplot build/plots/all-wealth-growth.gpi`. If you'd like to publish some plots to google, you can populate your config/ directory with google API settings, and run `rra publish_gsheets -a`. Or, just run a `hledger bal` (or `ledger bal`) to see your account balances.
    
-From here, you're ready to start populating this project with your data, instead of the randomly generated feeds. The easiest way to get started, is to run a `rake clean` (Thus undo'ing the above rake work, and clearing the build/ directory). And to then, remove unnecessary files in your `feeds/` and `app/transformers/` directories. Go ahead from there, and download your banking institution's csv files into the `feeds/` directory. And create yaml files for each of them, in your `app/transformers` directory. Use an existing yaml file for quick reference. 
+From here, you're ready to start populating this project with your data, instead of the randomly generated feeds. The easiest way to get started, is to run a `rake clean` (Thus undo'ing the above rake work, and clearing the build/ directory). And to then, remove unnecessary files in your `feeds/` and `app/reconcilers/` directories. Go ahead from there, and download your banking institution's csv files into the `feeds/` directory. And create yaml files for each of them, in your `app/reconcilers` directory. Use an existing yaml file for quick reference. 
 
 Probably though, you'll want to read the rest of this README, to better understand how the project workflow is structured, and how these files work with that process.
 
@@ -103,7 +103,7 @@ Let's take a moment, to understand the project directory structure. Here's what 
  Rakefile   yukihiro-matsumoto.journal
 
 app:
- commands   grids   plots   transformers   validations
+ commands   grids   plots   reconcilers   validations
 
 build:
  grids   journals   plots
@@ -124,13 +124,13 @@ In the root of this project, is your 'main' journal, alongside the Rakefile, and
 * **journals** These are where your 'manually entered' PTA journals belong. As your project grows, you can insert as many .journal files in here as you'd like. These will be automatically included by the yukihiro-matsumoto.journal. And, to get you started, there is an opening-balances.journal, which, nearly every project should have.
 * **feeds** This folder exists to keep your 'source' files. Which, would principally be csv's that have been downloaded from banks. PTA '.journal' files are also supported. I synchronize the journal output from [cone](https://play.google.com/store/apps/details?id=info.tangential.cone&hl=en_US&gl=US), into journal files here.
 * **build** This folder, is where the output of rra goes. There's really no good reason to write to this folder, outside the rra libraries. Be careful about putting anything in here that you don't want to lose. A `rake clean` erases just about anything that's in here. We'll better address this folder, by examining the app folder, a bit further down.
-* **app** Here's where the magic happens. This folder contains the ruby and yaml, that transforms the contents of your feeds, into a finished product. There are a number of subfolders, each containing logic dedicated to a specific part of the build process. (See below) 
+* **app** Here's where the magic happens. This folder contains the ruby and yaml, that reconciles the contents of your feeds, into a finished product. There are a number of subfolders, each containing logic dedicated to a specific part of the build process. (See below) 
 * **config** This is self explanatory. This directory exists to contain application feed settings. You can look through the default config files, for an overview of what's possible here.
 
 Drilling into the app folder, we see the following sub-folders:
 
-* **app/transformers** This folder contains yaml files, which are used to transform your feeds, into pta journals. These yaml files support an extensive featureset to 'match entries', and then tag and categorize those matches. The output of this transform, is stored in the build/journals folder, once executed.
-* **app/validations** This folder contains ruby files, inside which, are tests that ensure validity of the output, for the above transformers. These ruby files contain classes which inherit from either the RRA::Base::SystemValidation, or, the RRA::Base::JournalValidation, depending on whether they validate the system as a whole (Perhaps, checking for any transactions tagged 'vacation', but which aren't also tagged with a 'location'). Or, whether they are specifically designed for a given transformer's output file. There is no build output on these files. Validations either trigger an warning on the console, or abort a build from continuing (with an error on the console).
+* **app/reconcilers** This folder contains yaml files, which are used to reconcile your feeds, into pta journals. These yaml files support an extensive featureset to 'match entries', and then tag and categorize those matches. The output of this reconcile, is stored in the build/journals folder, once executed.
+* **app/validations** This folder contains ruby files, inside which, are tests that ensure validity of the output, for the above reconcilers. These ruby files contain classes which inherit from either the RRA::Base::SystemValidation, or, the RRA::Base::JournalValidation, depending on whether they validate the system as a whole (Perhaps, checking for any transactions tagged 'vacation', but which aren't also tagged with a 'location'). Or, whether they are specifically designed for a given reconciler's output file. There is no build output on these files. Validations either trigger an warning on the console, or abort a build from continuing (with an error on the console).
 * **app/grids** This folder contains ruby files, containing classes which build 'grids'. Grids, are csv files, that contain calculated outputs, based on your journals. These grids can be used for many purposes, but, probably should be considered 'excel sheets' that are later plotted, or referenced by a command elsewhere. Typically, these grids are composed of 'hledger monthly' queries. However, they can just as easily be generated independent of your journals. Which is useful for tracking 'business projections' and financial models that you wrote yourself. The output of these grids, are stored in your build/grids folder.
 * **app/plots** This folder contains the yaml files which contain the gnuplot and google settings that draw your plots. These settings determine what will gpi files are generated in your build/plots folder.
 * **app/commands** This folder contains any additional commands you wish to extend the rra app with. And which are then suitable for insertion into the rake workflow. These files are ruby files, containing classes which inherit from the RRA::Base::Command object.
@@ -152,7 +152,7 @@ To better understand how your files, are processed by rra, here's a diagram of h
 ```mermaid
   graph TD;
     subgraph Reconciliation[Reconciliation Cycle]
-      Transformers("app/transformers/*.yml").->JournalBuild("<br>🏗 <b>Journal Build</b><br><br>");
+      Reconcilers("app/reconcilers/*.yml").->JournalBuild("<br>🏗 <b>Journal Build</b><br><br>");
       Feeds("feeds/*.csv").->JournalBuild;
       JournalBuild-->JournalOutput("build/journals/*.journal");
     end
@@ -170,7 +170,7 @@ To better understand how your files, are processed by rra, here's a diagram of h
     
     style Reconciliation fill:#fdf6e3,stroke:#b58900;
 
-    style Transformers fill:#e3e4f4,stroke:#6c71c4;
+    style Reconcilers fill:#e3e4f4,stroke:#6c71c4;
     style Feeds fill:#e3e4f4,stroke:#6c71c4;
     style JValidationInput fill:#e3e4f4,stroke:#6c71c4;
     style SValidationInput fill:#e3e4f4,stroke:#6c71c4;

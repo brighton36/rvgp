@@ -5,11 +5,11 @@ require_relative '../utilities'
 module RRA
   module Base
     # Reconcilers are a cornerstone of the RRA build, and an integral part of your project. Reconcilers, take an input
-    # file (Either a csv file or a journal file), and transform them into a reconciled pta journal. This class
+    # file (Either a csv file or a journal file), and reconcile them into a reconciled pta journal. This class
     # implements most of the functionality needed to make that happen.
     #
     # Reconcilers take two files as input. Firstly, it takes an aforementioned input file. But, secondly, it takes a
-    # yaml file with transformation directives. What follows is a guide on those directives.
+    # yaml file with reconciliation directives. What follows is a guide on those directives.
     #
     # Most of your time spent in these files, will be spent adding rules to the income and expense sections (see
     # the 'Defining income and expense sections'). However, in order to get the reconciler far enough into the parsing
@@ -102,7 +102,7 @@ module RRA
     #     ...
     # - *tag_accounts* [Array<Hash>] - This feature is preliminary, and subject to change. The gist of this feature, is
     #   that it offers a second pass, after the income/expense rules have applied. This pass enables additional tags to
-    #   be applied to a posting, based on how that posting was transformed in the first pass. I'm not sure I like how
+    #   be applied to a posting, based on how that posting was reconciled in the first pass. I'm not sure I like how
     #   this feature came out, so, I'm disinclined to document it for now. If there's an interest in this feature, I can
     #   stabilize it's support, and better document it.
     #
@@ -209,7 +209,7 @@ module RRA
     #   string.
     #
     # *NOTE* Some matchers which support captures: This is a powerful feature that allows regexp captured values, to
-    # substitute in the :to field of the transformed transaction. Here's an example of how this feature works:
+    # substitute in the :to field of the reconciled transaction. Here's an example of how this feature works:
     #  - match: '/^Reservation\: (?<unit>[^ ]+)/'
     #    to: AirBNB:Income:$unit
     # In this example, the text that existed in the "(?<unit>[^ ]+)" section of the 'match' field, is substituted in
@@ -458,7 +458,7 @@ module RRA
       end
 
       # @!visibility private
-      def transform_posting(rule, posting)
+      def reconcile_posting(rule, posting)
         # NOTE: The shorthand(s) produce more than one tx per csv line, sometimes:
 
         to = rule[:to].dup
@@ -554,15 +554,15 @@ module RRA
           # See what rule applies to this posting:
           rule = match_rule source_posting.commodity.positive? ? expense_rules : income_rules, source_posting
 
-          # Transform the posting, according to that rule:
-          Array(transform_posting(rule, source_posting)).flatten.compact.map do |posting|
+          # Reconcile the posting, according to that rule:
+          Array(reconcile_posting(rule, source_posting)).flatten.compact.map do |posting|
             tag_accounts&.each do |tag_rule|
               # Note that we're operating under a kind of target model here, where
               # the posting itself isnt tagged, but the targets of the posting are.
-              # This is a bit different than the transform_posting
+              # This is a bit different than the reconcile_posting
               posting.targets.each do |target|
                 # NOTE: This section should possibly DRY up with the
-                # transform_posting() method
+                # reconcile_posting() method
                 next if yaml_rule_matches_string(tag_rule[:account_is_not], target[:to]) ||
                         yaml_rule_matches_string(tag_rule[:from_is_not], posting.from) ||
                         yaml_rule_matches_string(tag_rule[:account], target[:to], :!=) ||
@@ -598,7 +598,7 @@ module RRA
           end
 
           if rule.key? :account
-            # :account was added when we added journal_transform
+            # :account was added when we added journal_reconcile
             isnt_matching, captures = *yaml_rule_matches_string_with_capture(rule[:account], posting.to, :!=)
             next if isnt_matching
           end

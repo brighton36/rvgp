@@ -5,7 +5,7 @@ require_relative '../application/descendant_registry'
 module RRA
   module Base
     # This class contains methods shared by both {RRA::Base::JournalValidation} and {RRA::Base::SystemValidation}.
-    # Validations are run during a project build, after the transform tasks.
+    # Validations are run during a project build, after the reconcile tasks.
     #
     # Validations are typically defined inside a .rb in your project's app/validations folder, and should inherit from
     # JournalValidation or SystemValidation (though not this class itself). Your validations can be customized
@@ -18,7 +18,7 @@ module RRA
     # =Journal Validations
     # Validate the output of one reconciler at a time<br>
     #
-    # These validations are run immediately after the transform task, and before system validations
+    # These validations are run immediately after the reconcile task, and before system validations
     # are run. Each instance of these validations is applied to a reconcilers output file (typically located in
     # build/journal). And by default, any journal validations that are defined in a project's app/validations are
     # instantiated against every reconciler's output, in the project. This behavior can be overwritten, by defining a
@@ -78,7 +78,7 @@ module RRA
     # SystemValidations are largely identical to JournalValidations, with, the following exceptions:
     #
     # *Priority*
-    # Journal validations are run sooner in the rake process. Just after transformations have completed. System
+    # Journal validations are run sooner in the rake process. Just after reconciliations have completed. System
     # validations run immediately after all Journal validations have completed.
     #
     # *Input*

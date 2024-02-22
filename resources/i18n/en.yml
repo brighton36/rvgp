@@ -3,7 +3,7 @@ en:
     usage: 'Usage: %{program} [OPTION]... [COMMAND] [TARGET]...'
     indent: '  '
     description: >
-      rra : rra : Ruby Rake Accounting is a workflow tool for transforming,
+      rra : rra : Ruby Rake Accounting is a workflow tool for reconciling,
       validating, and reporting your finances in PTA (plain text accounting) and
       ruby. See the program github for more details.
     command_introduction: >
@@ -24,7 +24,7 @@ en:
       new_project:
         description: 'Create a new plain text accounting project, populated with random data, in the path specified by --dir.'
       rotate_year:
-        description: "Rotate the given transformers, for a new year. And, move the last year's input files into the historical directory under your project feeds."
+        description: "Rotate the given reconcilers, for a new year. And, move the last year's input files into the historical directory under your project feeds."
       plot:
         description: 'Build one or more gnuplots, based on a grid variant.'
         options:
@@ -40,25 +40,25 @@ en:
           title: 'The title of the Google doc being published. Defaults to "RRA Finance Report %m/%d/%y %H:%M". '
           sleep: 'Seconds to sleep, between each sheet upload. This sleep prevents Google from aborting the publish, under the auspice of api spamming. Defaults to 5.'
       ireconcile:
-        description: 'Open an interactive vim session, to edit and build a transform'
+        description: 'Open an interactive vim session, to edit and build a reconcile'
         options: 
-          all: 'Process all available transforms'
-          list: 'List all available transforms'
+          all: 'Process all available reconcilers'
+          list: 'List all available reconcilers'
           vsplit: 'Split the input and output panes vertically, instead of horizontally (the default)'
       grid:
         description: "Generate Grid csv's in build/grids"
         options: 
           all: 'Process all available grids'
           list: 'List all available grids'
-      transform:
-        description: 'Create/Update the build/*.journal, based on ./transformers/*.yml'
+      reconcile:
+        description: 'Create/Update the build/*.journal, based on ./reconcilers/*.yml'
         options: 
           stdout: 'Output build to STDOUT instead of output_file'
-          all: 'Process all available transforms'
-          list: 'List all available transforms'
+          all: 'Process all available reconcilers'
+          list: 'List all available reconcilers'
           concise: "Concise output mode. Strips output that's unrelated to errors and warnings. (Mostly used by the ireconcile command)"
       validate_journal:
-        description: 'Validate transformed journals, using the app/validations'
+        description: 'Validate reconciled journals, using the app/validations'
         options: 
           all: 'Process all available journals'
           list: 'List all available journals'
@@ -87,14 +87,14 @@ en:
       initialize:
         project_directory: "Project directory"
         bank_feeds: 'Randomized bank feeds'
-        transformers: 'Randomized transformers'
+        reconcilers: 'Randomized reconcilers'
       errors:
         missing_app_dir: "An application directory was not provided, and is required. Set this parameter via --dir argument, or via the LEDGER_FILE environment variable"
         directory_exists: "The directory \"%{dir}\" could not be created because it already exists."
     plot:
       target_description: 'Build the %{name} plot file, and its variants'
     rotate_year:
-      list_targets: 'The following transformers are eligible for annual rotation:'
+      list_targets: 'The following reconcilers are eligible for annual rotation:'
       operations_header: 'The following command(s) will be executed:'
       operation_rotate: 'Rotate "%{name}"'
       operation_mkdir: 'mkdir %{path}'
@@ -113,9 +113,9 @@ en:
       target_description: 'Re-scan the journal directory, and register previously unavaible grid targets into the running build'
     rescan_plots:
       target_description: 'Re-scan the grid directory, and register previously unavaible plot targets into the running build'
-    transform:
-      list_targets: 'The following transforms are available:'
-      target_description: 'Transform the "%{input_file}" journal'
+    reconcile:
+      list_targets: 'The following reconcilers are available:'
+      target_description: 'Reconcile the "%{input_file}" journal'
       errors:
         journal_missing: 'Journal(s) Missing.'
         either_concise_or_stdout: 'Either -concise or -stdout mode can be specified. But, alas, not both.'
@@ -149,7 +149,7 @@ en:
       attention1: '🟢'
       attention2: ' ▩ '
     commands:
-      transform:
+      reconcile:
         icon: '🏗️ '
         header: Building Journals from Feeds
         prefix: Expanding

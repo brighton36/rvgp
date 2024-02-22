@@ -22,7 +22,7 @@ module RRA
           s.email       = 'chris@chrisderose.com'
           s.metadata    = { 'source_code_uri' => 'https://github.com/brighton36/rra' }
 
-          s.summary = 'A workflow tool to: transform bank-downloaded csv\'s into ' \
+          s.summary = 'A workflow tool to: reconcile bank-downloaded csv\'s into ' \
                       'categorized pta journals. Run finance validations on those ' \
                       'journals. And generate csvs and plots on the output.'
           s.homepage = 'https://github.com/brighton36/rra'

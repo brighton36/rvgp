@@ -23,7 +23,7 @@ module RRA
     # We ended up needing most of this class to run {RRA::Validations::DuplicateTagsValidation}.
     # And, to ensure that we're able to mostly-validate the syntax of the journals. We don't actually
     # use many code paths here, otherwise. (Though we do use it to serialize currency conversion in
-    # the file_transform_investment.rb)
+    # the file shorthand/investment.rb)
     #
     # I'm not entirely sure what attribute names to use. We could go with intent
     # position, or with class. Either path seems to introduce exceptions. Possibly

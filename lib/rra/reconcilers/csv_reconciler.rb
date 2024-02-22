@@ -71,14 +71,14 @@ module RRA
         self.class.input_file_contents File.read(input_file, **open_args), skip_lines, trim_lines
       end
 
-      # We actually returned semi-transformed transactions here. That lets us do
+      # We actually returned semi-reconciled transactions here. That lets us do
       # some remedial parsing before rule application, as well as reversing the order
       # which, is needed for the to_shorthand to run in sequence.
       def source_postings
         @source_postings ||= begin
           rows = CSV.parse input_file_contents, **csv_format
           rows.collect.with_index do |csv_row, i|
-            # Set the object values, return the transformed row:
+            # Set the object values, return the reconciled row:
             tx = fields_format.collect do |field, formatter|
               # TODO: I think we can stick formatter as a key, if it's a string, or int
               [field.to_sym, formatter.respond_to?(:call) ? formatter.call(row: csv_row) : csv_row[field]]

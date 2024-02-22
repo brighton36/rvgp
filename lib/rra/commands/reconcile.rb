@@ -3,19 +3,19 @@
 module RRA
   module Commands
     # @!visibility private
-    # This class contains the dispatch logic of the 'transform' command and task.
-    class Transform < RRA::Base::Command
+    # This class contains the dispatch logic of the 'reconcile' command and task.
+    class Reconcile < RRA::Base::Command
       accepts_options OPTION_ALL, OPTION_LIST, %i[stdout s], %i[concise c]
 
       include RakeTask
-      rake_tasks :transform
+      rake_tasks :reconcile
 
       # @!visibility private
       def initialize(*args)
         super(*args)
 
         if %i[stdout concise].all? { |output| options[output] }
-          @errors << I18n.t('commands.transform.errors.either_concise_or_stdout')
+          @errors << I18n.t('commands.reconcile.errors.either_concise_or_stdout')
         end
       end
 
@@ -30,11 +30,11 @@ module RRA
       # most of the logic that this class inherits. Typically, these targets take the form
       # of "#\\{year}-#\\{reconciler_name}"
       class Target < RRA::Base::Command::ReconcilerTarget
-        for_command :transform
+        for_command :reconcile
 
         # @!visibility private
         def description
-          I18n.t 'commands.transform.target_description', input_file: @reconciler.input_file
+          I18n.t 'commands.reconcile.target_description', input_file: @reconciler.input_file
         end
 
         # @!visibility private

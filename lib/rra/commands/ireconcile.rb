@@ -21,20 +21,20 @@ module RRA
           checktime
         endfunction
 
-        function ExecuteTransform()
-          let transform_path = expand("%%")
+        function ExecuteReconcile()
+          let reconcile_path = expand("%%")
           let output_path = tempname()
           let pager = '/bin/less'
           if len($PAGER) > 0
             pager = $PAGER
           endif
 
-          execute('!%<rra_path>s transform --concise ' .
-            \\ shellescape(transform_path, 1) .
+          execute('!%<rra_path>s reconcile --concise ' .
+            \\ shellescape(reconcile_path, 1) .
             \\ ' 2>' . shellescape(output_path, 1) .
             \\ ' > ' . shellescape(output_path, 1))
           if v:shell_error
-            echoerr "The following error(s) occurred during transformation:"
+            echoerr "The following error(s) occurred during reconciliation:"
             execute '!' . pager . ' -r ' . shellescape(output_path, 1)
             redraw!
           endif
@@ -77,7 +77,7 @@ module RRA
         setl nomodifiable
         %<split>s
         edit %<input_file>s
-        autocmd BufWritePost * silent call ExecuteTransform()
+        autocmd BufWritePost * silent call ExecuteReconcile()
         VIMSCRIPT
 
         # @!visibility private

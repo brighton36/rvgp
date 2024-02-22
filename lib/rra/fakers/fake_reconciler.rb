@@ -37,7 +37,7 @@ module RRA
           expense: %<expense>s
         FEED_TEMPLATE
 
-        # Generates a basic reconciler, for use in transforming a basic_checking feed
+        # Generates a basic reconciler, for use in reconciling a basic_checking feed
         # @param from [String] The from parameter to write into our yaml
         # @param label [String] The label parameter to write into our yaml
         # @param format_path [String] A path to the format yaml, for use in the format parameter of our yaml
