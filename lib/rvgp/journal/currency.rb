@@ -8,8 +8,8 @@ module RRA
     # and by which their rules can be queried. An instance of this class, is an
     # entry in the currency table, that we support. The default currencies that RRA
     # supports can be found in:
-    # {https://github.com/brighton36/rra/blob/main/resources/iso-4217-currencies.json iso-4217-currencies.json}
-    # , and this file is typically loaded during rra initialization.
+    # {https://github.com/brighton36/rvgp/blob/main/resources/iso-4217-currencies.json iso-4217-currencies.json}
+    # , and this file is typically loaded during rvgp initialization.
     #
     # Here's what an entry in that file, looks like:
     #
@@ -75,7 +75,7 @@ module RRA
       end
 
       # Load and return a parsed RRA::Journal::Currency, out of the provided
-      # {https://github.com/brighton36/rra/blob/main/resources/iso-4217-currencies.json iso-4217-currencies.json}
+      # {https://github.com/brighton36/rvgp/blob/main/resources/iso-4217-currencies.json iso-4217-currencies.json}
       # file.
       # @param [String] str Either a three digit :alphabetic_code, or a single digit :symbol
       # @return [RRA::Journal::Currency] the requested currency, with its default parameters

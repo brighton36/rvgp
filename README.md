@@ -1,4 +1,4 @@
-# rra : Ruby Rake Accounting
+# rvgp : Ruby Rake Accounting
 A workflow tool to: reconcile bank-downloaded csv's into categorized pta journals. Run finance validations on those journals. And generate reports and graphs on the output.
 
 ## The Quick Pitch
@@ -37,7 +37,7 @@ Plus, you get a bunch of other nice features. Like...
 
 The quickest way to get started, once you've installed the gem, is by way of the 'new_project' command.  
 ```
-~> rra -d ~/ledger new_project
+~> rvgp -d ~/ledger new_project
 Whose project is this? A person's full name or a company name will work: Yukihiro Matsumoto
 You entered "Yukihiro Matsumoto". Is that correct? (Type "Yes" to continue) : Yes
 
@@ -54,7 +54,7 @@ You're ready to begin working on this project. Try cd'ing into its directory, an
 ~>
 ```
 
-Per the suggestion, you'll benefit from adding the LEDGER_FILE environment variable to your shell's startup script. This will keep you from having to specify the directory every time you run rra (or having to specify it to ledger and hledger). If you're working with more than one project, you may not want to use this feature. 
+Per the suggestion, you'll benefit from adding the LEDGER_FILE environment variable to your shell's startup script. This will keep you from having to specify the directory every time you run rvgp (or having to specify it to ledger and hledger). If you're working with more than one project, you may not want to use this feature. 
 
 > **Note**
 > You can specify a company name, instead of person's name. (If that's what you're intent on managing with this project)
@@ -89,7 +89,7 @@ The output of this process, is now visible in the `build` folder under your proj
 > **Note**
 > The "No balance checkpoints found." warning indicates that your reconciler definition, is missing a balance checkpoint. Since new_projects use 'fake' data, there's no balance checkpoint specified in the reconciler yaml. With your data, you'll want to enter the balance, and date, on some of your statements, into the 'balances' section of this file, to ensure accuracy against the financial institution's records. (Or, you can just disable this feature) More on that later. Nonetheless, these warnings are safe to ignore for now.
 
-Now you can begin to explore your build. If you'd like to see the net worth of your project, try running `gnuplot build/plots/all-wealth-growth.gpi`. If you'd like to publish some plots to google, you can populate your config/ directory with google API settings, and run `rra publish_gsheets -a`. Or, just run a `hledger bal` (or `ledger bal`) to see your account balances.
+Now you can begin to explore your build. If you'd like to see the net worth of your project, try running `gnuplot build/plots/all-wealth-growth.gpi`. If you'd like to publish some plots to google, you can populate your config/ directory with google API settings, and run `rvgp publish_gsheets -a`. Or, just run a `hledger bal` (or `ledger bal`) to see your account balances.
    
 From here, you're ready to start populating this project with your data, instead of the randomly generated feeds. The easiest way to get started, is to run a `rake clean` (Thus undo'ing the above rake work, and clearing the build/ directory). And to then, remove unnecessary files in your `feeds/` and `app/reconcilers/` directories. Go ahead from there, and download your banking institution's csv files into the `feeds/` directory. And create yaml files for each of them, in your `app/reconcilers` directory. Use an existing yaml file for quick reference. 
 
@@ -109,7 +109,7 @@ build:
  grids   journals   plots
 
 config:
- csv-format-acme-checking.yml   google-secrets.yml   rra.yml
+ csv-format-acme-checking.yml   google-secrets.yml   rvgp.yml
 
 feeds:
  2018-personal-basic-checking.csv   2020-personal-basic-checking.csv   2022-personal-basic-checking.csv
@@ -123,7 +123,7 @@ journals:
 In the root of this project, is your 'main' journal, alongside the Rakefile, and a few directories. Let's look at these directories one by one.
 * **journals** These are where your 'manually entered' PTA journals belong. As your project grows, you can insert as many .journal files in here as you'd like. These will be automatically included by the yukihiro-matsumoto.journal. And, to get you started, there is an opening-balances.journal, which, nearly every project should have.
 * **feeds** This folder exists to keep your 'source' files. Which, would principally be csv's that have been downloaded from banks. PTA '.journal' files are also supported. I synchronize the journal output from [cone](https://play.google.com/store/apps/details?id=info.tangential.cone&hl=en_US&gl=US), into journal files here.
-* **build** This folder, is where the output of rra goes. There's really no good reason to write to this folder, outside the rra libraries. Be careful about putting anything in here that you don't want to lose. A `rake clean` erases just about anything that's in here. We'll better address this folder, by examining the app folder, a bit further down.
+* **build** This folder, is where the output of rvgp goes. There's really no good reason to write to this folder, outside the rvgp libraries. Be careful about putting anything in here that you don't want to lose. A `rake clean` erases just about anything that's in here. We'll better address this folder, by examining the app folder, a bit further down.
 * **app** Here's where the magic happens. This folder contains the ruby and yaml, that reconciles the contents of your feeds, into a finished product. There are a number of subfolders, each containing logic dedicated to a specific part of the build process. (See below) 
 * **config** This is self explanatory. This directory exists to contain application feed settings. You can look through the default config files, for an overview of what's possible here.
 
@@ -133,9 +133,9 @@ Drilling into the app folder, we see the following sub-folders:
 * **app/validations** This folder contains ruby files, inside which, are tests that ensure validity of the output, for the above reconcilers. These ruby files contain classes which inherit from either the RRA::Base::SystemValidation, or, the RRA::Base::JournalValidation, depending on whether they validate the system as a whole (Perhaps, checking for any transactions tagged 'vacation', but which aren't also tagged with a 'location'). Or, whether they are specifically designed for a given reconciler's output file. There is no build output on these files. Validations either trigger an warning on the console, or abort a build from continuing (with an error on the console).
 * **app/grids** This folder contains ruby files, containing classes which build 'grids'. Grids, are csv files, that contain calculated outputs, based on your journals. These grids can be used for many purposes, but, probably should be considered 'excel sheets' that are later plotted, or referenced by a command elsewhere. Typically, these grids are composed of 'hledger monthly' queries. However, they can just as easily be generated independent of your journals. Which is useful for tracking 'business projections' and financial models that you wrote yourself. The output of these grids, are stored in your build/grids folder.
 * **app/plots** This folder contains the yaml files which contain the gnuplot and google settings that draw your plots. These settings determine what will gpi files are generated in your build/plots folder.
-* **app/commands** This folder contains any additional commands you wish to extend the rra app with. And which are then suitable for insertion into the rake workflow. These files are ruby files, containing classes which inherit from the RRA::Base::Command object.
+* **app/commands** This folder contains any additional commands you wish to extend the rvgp app with. And which are then suitable for insertion into the rake workflow. These files are ruby files, containing classes which inherit from the RRA::Base::Command object.
 
-These directories contain the bulk of your workload, in your rra projects. These components will be further documented further down in this README. In the meantime, it may help to illustrate the typical workflow cycle, that rra executes using these files.
+These directories contain the bulk of your workload, in your rvgp projects. These components will be further documented further down in this README. In the meantime, it may help to illustrate the typical workflow cycle, that rvgp executes using these files.
 
 > **Note**
 > Feel free to add as many directories to your project root as you'd like. Useful ideas for additional directories might include: 'bank statements', 'test', 'orgs', 'documents', etc
@@ -147,7 +147,7 @@ The significance of the Rakefile approach, to your accounting, can't be understa
 > **Note**
 > There shouldn't be any reason to avoid, or instigate, a `rake clean` when working on a project. The Rakefile is very smart about figuring out what to change. However, if you feel the need to recalculate the entire project - a rake clean won't hurt.
 
-To better understand how your files, are processed by rra, here's a diagram of how the rakefile processes your build. Hopefully this reduces confusion.
+To better understand how your files, are processed by rvgp, here's a diagram of how the rakefile processes your build. Hopefully this reduces confusion.
 
 ```mermaid
   graph TD;

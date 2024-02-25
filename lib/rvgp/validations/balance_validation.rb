@@ -12,7 +12,7 @@ module RRA
     #      '2022-10-01': $ 400.33
     # ```
     # These balances are expected to come from a bank statement, and this validation
-    # ensures that rra is matching the records of your financial institution
+    # ensures that rvgp is matching the records of your financial institution
     class BalanceValidation < RRA::Base::JournalValidation
       # If there are no checkpoints in the 'balances' line of the reconciler, this
       # fires a warning. If there are checkpoints, then, we scan the register to

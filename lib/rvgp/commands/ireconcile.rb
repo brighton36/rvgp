@@ -29,7 +29,7 @@ module RRA
             pager = $PAGER
           endif
 
-          execute('!%<rra_path>s reconcile --concise ' .
+          execute('!%<rvgp_path>s reconcile --concise ' .
             \\ shellescape(reconcile_path, 1) .
             \\ ' 2>' . shellescape(output_path, 1) .
             \\ ' > ' . shellescape(output_path, 1))
@@ -54,7 +54,7 @@ module RRA
       # @!visibility private
       def execute!
         Tempfile.create 'ireconcile.vim' do |file|
-          file.write [format(VIMSCRIPT_HEADER, rra_path: $PROGRAM_NAME),
+          file.write [format(VIMSCRIPT_HEADER, rvgp_path: $PROGRAM_NAME),
                       targets.map { |target| target.to_vimscript options[:vsplit] }.join("\ntabnew\n")].join
 
           file.close

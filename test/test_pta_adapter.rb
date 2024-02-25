@@ -61,14 +61,14 @@ require_relative '../lib/rvgp'
       end
 
       it 'returns the newest transaction date in the file' do
-        # This is a specific optimization, that enables us to use hledger stats in the rra/config.rb
+        # This is a specific optimization, that enables us to use hledger stats in the rvgp/config.rb
         value(subject.newest_transaction_date(from_s: journal)).must_equal Date.new(2002, 1, 1)
       end
     end
 
     describe "#{pta_klass}#files" do
       it 'returns all the files referenced in a journal' do
-        journals = 5.times.map { Tempfile.open %w[rra_test .journal] }
+        journals = 5.times.map { Tempfile.open %w[rvgp_test .journal] }
 
         journals[1...].each do |journal|
           journal.write(<<~JOURNAL)

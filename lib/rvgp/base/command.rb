@@ -5,15 +5,15 @@ require_relative '../application/descendant_registry'
 
 module RRA
   module Base
-    # If you're looking to write your own rra commands, or if you wish to add a rake task - this is the start of that
+    # If you're looking to write your own rvgp commands, or if you wish to add a rake task - this is the start of that
     # endeavor.
     #
-    # All of the built-in rra commands are descendants of this Base class. And, the easiest way to get started in
+    # All of the built-in rvgp commands are descendants of this Base class. And, the easiest way to get started in
     # writing your own, is simply to emulate one of these examples. You can see links to these examples listed under
     # {RRA::Commands}.
     #
     # When you're ready to start typing out your code, just place this code in a .rb file under the app/commands
-    # directory of your project - and rra will pick it up from there. An instance of a Command, that inherits from
+    # directory of your project - and rvgp will pick it up from there. An instance of a Command, that inherits from
     # this base, is initialized with the parsed contents of the command line, for any case when a user invokes the
     # command by its name on the CLI.
     #
@@ -39,7 +39,7 @@ module RRA
       # @attr_reader [String] name The target name, as it would be expected to be found on the CLI
       # @attr_reader [String] status_name The target name, as it would be expected to appear in the status output,
       #                                   which is generally displayed during the processing of this target during
-      #                                   the rake process and/or during an rra-triggered process.
+      #                                   the rake process and/or during an rvgp-triggered process.
       # @attr_reader [String] description A description of this target. Mostly this is used by rake, to describe
       #                                   this target in the 'rake -T' output.
       class Target
@@ -109,7 +109,7 @@ module RRA
 
         # This is a little goofy. But, it exists as a hack to support dispatching this target via the
         # {RRA::Base::Command::ReconcilerTarget.command} method. You can see an example of this at work in the
-        # {https://github.com/brighton36/rra/blob/main/lib/rra/commands/reconcile.rb reconcile.rb} file.
+        # {https://github.com/brighton36/rvgp/blob/main/lib/rvgp/commands/reconcile.rb reconcile.rb} file.
         # @param [Symbol] underscorized_command_name The command to return, when
         #                                            {RRA::Base::Command::ReconcilerTarget.command} is called.
         def self.for_command(underscorized_command_name)
@@ -270,9 +270,9 @@ module RRA
 
       attr_reader :errors, :options, :targets
 
-      # This is shortcut to a --all/-a option, which is common across the built-in rra commands
+      # This is shortcut to a --all/-a option, which is common across the built-in rvgp commands
       OPTION_ALL  = %i[all a].freeze
-      # This is shortcut to a --list/-l option, which is common across the built-in rra commands
+      # This is shortcut to a --list/-l option, which is common across the built-in rvgp commands
       OPTION_LIST = %i[list l].freeze
 
       # Create a new Command, suitable for execution, and initialized with command line arguments.

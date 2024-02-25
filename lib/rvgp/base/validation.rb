@@ -32,7 +32,7 @@ module RRA
     # A JournalValidation is passed the reconciler corresponding to it's instance in its initialize method. For further
     # details on how these validations work, see the documentation for this class here {RRA::Base::JournalValidation} or
     # check out an example implementation. Here's the BalanceValidation itself, which is a relatively easy example to
-    # {https://github.com/brighton36/rra/blob/main/lib/rra/validations/balance_validation.rb balance_validation.rb}
+    # {https://github.com/brighton36/rvgp/blob/main/lib/rvgp/validations/balance_validation.rb balance_validation.rb}
     # follow.
     #
     # =System Validations
@@ -41,7 +41,7 @@ module RRA
     # Unlike Journal validations, these Validations are run without a target, and are expected to generate warnings and
     # errors based on the state of queries spanning multiple journals.
     #
-    # There are no example SystemValidations included in the distribution of rra. However, here's an easy one, to serve
+    # There are no example SystemValidations included in the distribution of rvgp. However, here's an easy one, to serve
     # as reference. This validation ensures Transfers between accounts are always credited and
     # debited on both sides:
     #  class TransferAccountValidation < RRA::Base::SystemValidation
@@ -87,7 +87,7 @@ module RRA
     # reconciler yaml, and system validations have no such directive.
     #
     # *Labeling*
-    # With Journal validations, tasks are labeled automatically by rra, based on their class name. System validations
+    # With Journal validations, tasks are labeled automatically by rvgp, based on their class name. System validations
     # are expected to define a STATUS_LABEL and DESCRIPTION constant, in order to arrive at these labels.
     #
     # Note that for either type of validation, most/all of the integration functionality is provided by way of the

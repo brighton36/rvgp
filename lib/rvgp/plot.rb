@@ -7,7 +7,7 @@ module RRA
   # yaml. Once a grid is assembled, it's dispatched to a driver ({GoogleDrive} or {Gnuplot})
   # for rendering.
   # Here's an example plot specification, included in the default project build as
-  # {https://github.com/brighton36/rra/blob/main/resources/skel/app/plots/wealth-growth.yml wealth-growth.yml}, as
+  # {https://github.com/brighton36/rvgp/blob/main/resources/skel/app/plots/wealth-growth.yml wealth-growth.yml}, as
   # created by the new_project command:
   #   title: "Wealth Growth (%{year})"
   #   glob: "%{year}-wealth-growth.csv"
@@ -34,7 +34,7 @@ module RRA
   # the following parameter groups are supported: :grid_hacks, :gnuplot, and :google.
   #
   # The :gnuplot section of this file, is merged with the contents of
-  # {https://github.com/brighton36/rra/blob/main/resources/gnuplot/default.yml default.yml}, and passed to the {RRA::Plot::Gnuplot}
+  # {https://github.com/brighton36/rvgp/blob/main/resources/gnuplot/default.yml default.yml}, and passed to the {RRA::Plot::Gnuplot}
   # constructor. See the {RRA::Plot::Gnuplot::Plot#initialize} method for more details on what parameters are supported
   # in this section. NOTE: Depending on the kind of chart being specified, some initialize options are specific to the
   # chart being built, and those options will be documented in the constructor for that specific chart. ie:
@@ -64,7 +64,7 @@ module RRA
     # The required keys, expected to exist in the plot yaml
     REQUIRED_FIELDS = %i[glob title].freeze
 
-    # The path to rra's 'default' include file search path. Any '!!include' directives encountered in the plot yaml,
+    # The path to rvgp's 'default' include file search path. Any '!!include' directives encountered in the plot yaml,
     # will search this location for targets.
     GNUPLOT_RESOURCES_PATH = [RRA::Gem.root, '/resources/gnuplot'].join
 

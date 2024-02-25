@@ -10,7 +10,7 @@ module RRA
       attr_reader :prices_path, :project_journal_path
 
       # Given the provided project path, this object will parse and store the
-      # config/rra.yaml, as well as provide default values for otherwise unspecified attributes
+      # config/rvgp.yaml, as well as provide default values for otherwise unspecified attributes
       # in this file.
       # @param project_path [String] The path, to an RRA project directory.
       def initialize(project_path)
@@ -53,14 +53,14 @@ module RRA
         @grid_ending_at ||= default_grid_ending_at
       end
 
-      # Return the contents of the provided attr, from the project's config/rra.yaml
+      # Return the contents of the provided attr, from the project's config/rvgp.yaml
       # @return [Object] the value corresponding to the provided attr
       def [](attr)
         @yaml[attr]
       end
 
       # Returns a boolean indicating whether a value for the provided attr was specified in the project's
-      # config/rra.yaml
+      # config/rvgp.yaml
       # @return [TrueClass, FalseClass] whether the key was specified
       def key?(attr)
         @yaml.key? attr

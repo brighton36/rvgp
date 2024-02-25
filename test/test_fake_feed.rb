@@ -202,13 +202,13 @@ class TestFakeFeed < Minitest::Test
   end
 
   def reconcile_journal(feed, reconciler_opts)
-    journal_file = Tempfile.open %w[rra_test .journal]
+    journal_file = Tempfile.open %w[rvgp_test .journal]
 
-    feed_file = Tempfile.open %w[rra_test .csv]
+    feed_file = Tempfile.open %w[rvgp_test .csv]
     feed_file.write feed
     feed_file.close
 
-    yaml_file = Tempfile.open %w[rra_test .yaml]
+    yaml_file = Tempfile.open %w[rvgp_test .yaml]
 
     yaml_file.write RRA::Fakers::FakeReconciler.basic_checking(
       **{ label: 'Personal AcmeBank:Checking',

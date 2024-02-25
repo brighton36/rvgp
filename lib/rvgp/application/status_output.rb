@@ -7,7 +7,7 @@ require 'tty-screen'
 module RRA
   class Application
     # These methods output 'pretty' indications of the build process, and is used
-    # by both the rra standalone bin, as well as the rake processes themselves.
+    # by both the rvgp standalone bin, as well as the rake processes themselves.
     # This class manages colors, icons, indentation and thread syncronization
     # concerns, relating to status display.
     # NOTE: This class doesn't know if it wants to be a logger or something else... Let's

@@ -25,7 +25,7 @@ module RRA
       #       project_id: "ruby-rake-accounting"
       #       client_secret: ""
       #       token_path: "google-token.yml"
-      #       application_name: "rra"
+      #       application_name: "rvgp"
       #   * config/google-token.yml :
       #       ---
       #       default: '{"client_id":"","access_token":"","refresh_token":"","scope":["https://www.googleapis.com/auth/spreadsheets"],"expiration_time_millis":1682524731000}'
