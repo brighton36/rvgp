@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+
 require 'rvgp'
 
-RRA.initialize_app(File.dirname(__FILE__)).initialize_rake! self
+RVGP.initialize_app(File.dirname(__FILE__)).initialize_rake! self

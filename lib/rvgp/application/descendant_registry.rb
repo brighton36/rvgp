@@ -1,22 +1,22 @@
 # frozen_string_literal: true
 
-module RRA
+module RVGP
   class Application
-    # This module contains a system by which RRA maintains an application registry,
+    # This module contains a system by which RVGP maintains an application registry,
     # of child classes, for a given parent class. These registries are stored in
-    # the RRA namespace, under a provided name (usually something resembling the
+    # the RVGP namespace, under a provided name (usually something resembling the
     # superclass name), and facilitates an easy form of child class enumeration,
-    # throughout the RRA system.
+    # throughout the RVGP system.
     #
     # Thus far, the parent classes which are using this functionality, are:
-    # {RRA::Base::Command}, {RRA::Base::Grid}, {RRA::Base::JournalValidation}, and {RRA::Base::SystemValidation}.
+    # {RVGP::Base::Command}, {RVGP::Base::Grid}, {RVGP::Base::JournalValidation}, and {RVGP::Base::SystemValidation}.
     #
-    # This means that, for example, a class which inherits from {RRA::Base::Command},
-    # is added to the array of its siblings in {RRA.commands}. Similarly, there are
-    # containers for {RRA.grids}, {RRA.journal_validations}, and {RRA.system_validations}.
+    # This means that, for example, a class which inherits from {RVGP::Base::Command},
+    # is added to the array of its siblings in {RVGP.commands}. Similarly, there are
+    # containers for {RVGP.grids}, {RVGP.journal_validations}, and {RVGP.system_validations}.
     module DescendantRegistry
       # This basic class resembles an array, and is used to house a regsitry of
-      # children classes. Typically, this class is instantiated inside of RRA, at
+      # children classes. Typically, this class is instantiated inside of RVGP, at
       # the time a child inherits from a parent.
       #
       # @attr_reader [Array<Object>] classes The undecorated classes that are contained in this object

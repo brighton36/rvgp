@@ -3,11 +3,11 @@
 require_relative '../fakers/fake_feed'
 require_relative '../fakers/fake_reconciler'
 
-module RRA
+module RVGP
   module Commands
     # @!visibility private
-    # This class handles the request to create a new RRA project.
-    class NewProject < RRA::Base::Command
+    # This class handles the request to create a new RVGP project.
+    class NewProject < RVGP::Base::Command
       # @!visibility private
       PROJECT_FILE = <<~END_OF_PROJECT_FILE
         # vim:filetype=ledger
@@ -54,10 +54,10 @@ module RRA
         confirm_operation = I18n.t('commands.new_project.confirm_operation')
         # Let's make sure we don't accidently overwrite anything
         if File.directory? app_dir
-          print [RRA.pastel.yellow(I18n.t('error.warning')),
+          print [RVGP.pastel.yellow(I18n.t('error.warning')),
                  I18n.t('commands.new_project.directory_exists_prompt', dir: app_dir)].join(' : ')
           if $stdin.gets.chomp != confirm_operation
-            puts [RRA.pastel.red(I18n.t('error.error')),
+            puts [RVGP.pastel.red(I18n.t('error.error')),
                   I18n.t('commands.new_project.operation_aborted')].join(' : ')
             exit 1
           end
@@ -74,7 +74,7 @@ module RRA
           end
         end
 
-        logger = RRA::Application::StatusOutputRake.new pastel: RRA.pastel
+        logger = RVGP::Application::StatusOutputRake.new pastel: RVGP.pastel
         %i[project_directory bank_feeds reconcilers].each do |step|
           logger.info self.class.name, I18n.t(format('commands.new_project.initialize.%s', step)) do
             send format('initialize_%s', step).to_sym
@@ -105,7 +105,7 @@ module RRA
           end
         end
 
-        Dir.glob(RRA::Gem.root('resources/skel/*')) do |filename|
+        Dir.glob(RVGP::Gem.root('resources/skel/*')) do |filename|
           FileUtils.cp_r filename, app_dir
         end
 
@@ -143,7 +143,7 @@ module RRA
         each_year_in_project do |year|
           File.write destination_path('%<app_dir>s/app/reconcilers/%<year>d-personal-basic-checking.yml',
                                       year: year),
-                     RRA::Fakers::FakeReconciler.basic_checking(
+                     RVGP::Fakers::FakeReconciler.basic_checking(
                        label: format('Personal AcmeBank:Checking (%<year>s)', year: year),
                        input_path: format('%<year>d-personal-basic-checking.csv', year: year),
                        output_path: format('%<year>d-personal-basic-checking.journal', year: year),
@@ -185,7 +185,7 @@ module RRA
           # Rents go up every year:
           {
             'Personal:Expenses:Rent' => (0...num_months_in_project).map do |i|
-              marginal_rent = RRA::Journal::Commodity.from_symbol_and_amount '$', (50 * (i / 12).floor)
+              marginal_rent = RVGP::Journal::Commodity.from_symbol_and_amount '$', (50 * (i / 12).floor)
               '$ 1800.00'.to_commodity + marginal_rent
             end
           },
@@ -208,7 +208,7 @@ module RRA
           }.to_h do |cat, num_opts|
             [cat.to_s,
              num_months_in_project.times.map do
-               RRA::Journal::Commodity.from_symbol_and_amount '$', Faker::Number.normal(**num_opts).abs
+               RVGP::Journal::Commodity.from_symbol_and_amount '$', Faker::Number.normal(**num_opts).abs
              end]
           end,
           # 'Some months' Have these expenses.
@@ -227,14 +227,14 @@ module RRA
 
             [cat.to_s,
              num_months_in_project.times.map do
-               RRA::Journal::Commodity.from_symbol_and_amount '$', Faker::Number.normal(**opts).abs
+               RVGP::Journal::Commodity.from_symbol_and_amount '$', Faker::Number.normal(**opts).abs
              end]
           end.compact.to_h
         )
       end
 
       def bank_feed(year)
-        @bank_feed ||= CSV.parse RRA::Fakers::FakeFeed.personal_checking(
+        @bank_feed ||= CSV.parse RVGP::Fakers::FakeFeed.personal_checking(
           from: project_starts_on,
           to: today,
           expense_sources: expense_companies,
@@ -277,13 +277,13 @@ module RRA
 
       def liabilities_at_month(num)
         # I played with this until it offered a nice contrast with the assets curve
-        RRA::Journal::Commodity.from_symbol_and_amount('$',
+        RVGP::Journal::Commodity.from_symbol_and_amount('$',
                                                        (Math.sin((num.to_f + 40) / 24) * 30_000) + 30_000)
       end
 
       def assets_at_month(num)
         # This just happened to be an interesting graph... to me:
-        RRA::Journal::Commodity.from_symbol_and_amount('$',
+        RVGP::Journal::Commodity.from_symbol_and_amount('$',
                                                        (Math.sin((num.to_f - 32) / 20) * 40_000) + 50_000)
       end
 

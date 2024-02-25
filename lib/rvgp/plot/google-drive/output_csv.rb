@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-module RRA
+module RVGP
   class Plot
     module GoogleDrive
-      # This class is roughly, an kind of diagnostic alternative to RRA::GoogleDrive::ExportSheets,
-      # which implements the :csvdir option of the RRA::Commands::PublishGsheets command.
-      # Mostly, this object offers the methods that RRA::GoogleDrive::ExportSheets provides, and
+      # This class is roughly, an kind of diagnostic alternative to RVGP::GoogleDrive::ExportSheets,
+      # which implements the :csvdir option of the RVGP::Commands::PublishGsheets command.
+      # Mostly, this object offers the methods that RVGP::GoogleDrive::ExportSheets provides, and
       # writes the sheets that would have otherwise been published to google - into a
       # local directory, with csv files representing the Google sheet. This is mostly
       # a debugging and diagnostic function.
@@ -27,7 +27,7 @@ module RRA
         end
 
         # Ouput the provided sheet, into the destination path, as a csv
-        # @param [RRA::Plot::GoogleDrive::Sheet] sheet The options, and data, for this sheet
+        # @param [RVGP::Plot::GoogleDrive::Sheet] sheet The options, and data, for this sheet
         # @return [void]
         def sheet(sheet)
           shortname = sheet.title.tr('^a-zA-Z0-9', '_').gsub(/_+/, '_').downcase.chomp('_')

@@ -6,7 +6,7 @@ require 'minitest/autorun'
 
 require_relative '../lib/rvgp'
 
-# These tests ensure that RRA::Pta::Ledger parses the xml output, as we'd expect.
+# These tests ensure that RVGP::Pta::Ledger parses the xml output, as we'd expect.
 # Atm, most of these tests are in a private repo, since they test 'my' output,
 # that I can't share. However, as this projects is becoming public, we now have
 # the ability to start running these tests against faker output. So, for the time
@@ -41,7 +41,7 @@ class TestLedger < Minitest::Test
       ['2020-11-01', '- 20-Nov-30', 'Personal:Liabilities:AmericanExpress', '$ 262.42', '$ -7602.89']
       # NOTE: We're missing december's output, from ledger. This is... 'the bug' that necessitated switching
       # from --end to --display , in the reduce_postings_by_month
-    ], RRA::Pta::Ledger::Output::Register.new(asset_contents('ledger_total_monthly_liabilities_with_empty.xml'), opts)
+    ], RVGP::Pta::Ledger::Output::Register.new(asset_contents('ledger_total_monthly_liabilities_with_empty.xml'), opts)
 
     # This is really no different than the above register, other than the values are different, I guess
     #
@@ -62,7 +62,7 @@ class TestLedger < Minitest::Test
       ['2023-10-01', '- 23-Oct-31', nil,                                 '0',           '$ -53182.02'],
       ['2023-11-01', '- 23-Nov-30', 'Personal:Income:ThompsonHegmann',   '$ -5485.09',  '$ -58667.11'],
       ['2023-12-01', '- 23-Dec-31', 'Personal:Income:ThompsonHegmann',   '$ -6297.26',  '$ -64964.37']
-    ], RRA::Pta::Ledger::Output::Register.new(asset_contents('ledger_total_monthly_liabilities_with_empty2.xml'), opts)
+    ], RVGP::Pta::Ledger::Output::Register.new(asset_contents('ledger_total_monthly_liabilities_with_empty2.xml'), opts)
   end
 
   private

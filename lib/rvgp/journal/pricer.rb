@@ -2,7 +2,7 @@
 
 require 'bigdecimal'
 
-module RRA
+module RVGP
   class Journal
     # This class takes a value, denominated in one commodity, and returns the equivalent value, in another commodity.
     # This process is also known as price (or currency) exchange. The basis for exchanges are rates, affixed to a
@@ -29,11 +29,11 @@ module RRA
       # @attr_reader [String] lcode The character alphabetic code, or symbol for the left side of the exchange pair
       # @attr_reader [String] rcode The character alphabetic code, or symbol for the right side of the exchange pair.
       #                             This code should (always?) match the amount.code
-      # @attr_reader [RRA::Journal::Commodity] amount The ratio of lcode, to rcode. Aka: The exchange rate.
-      class Price < RRA::Base::Reader
+      # @attr_reader [RVGP::Journal::Commodity] amount The ratio of lcode, to rcode. Aka: The exchange rate.
+      class Price < RVGP::Base::Reader
         readers :at, :lcode, :rcode, :amount
 
-        # A shortcut, to {RRA::Journal::Pricer::Price.to_key}, if a caller is looking to use this price in a Hash
+        # A shortcut, to {RVGP::Journal::Pricer::Price.to_key}, if a caller is looking to use this price in a Hash
         # @return [String] A code, intended for use in Hash table lookups
         def to_key
           self.class.to_key lcode, rcode
@@ -111,14 +111,14 @@ module RRA
       #                  eligible entry, before this parameter, will be selected.
       # @param [String] from The three character alphabetic currency code, of the source currency
       # @param [String] to The three character alphabetic currency code, of the destination currency
-      # @return [RRA::Journal::Commodity] An exchange rate, denominated in units of the :to currency
+      # @return [RVGP::Journal::Commodity] An exchange rate, denominated in units of the :to currency
       def price(at, from, to)
         no_price! at, from, to if prices_db.nil? || prices_db.empty?
 
-        lcurrency = RRA::Journal::Currency.from_code_or_symbol from
+        lcurrency = RVGP::Journal::Currency.from_code_or_symbol from
         from_alpha = lcurrency ? lcurrency.alphabetic_code : from
 
-        rcurrency = RRA::Journal::Currency.from_code_or_symbol to
+        rcurrency = RVGP::Journal::Currency.from_code_or_symbol to
         to_alpha = rcurrency ? rcurrency.alphabetic_code : to
 
         prices = prices_db[Price.to_key(from_alpha, to_alpha)]
@@ -143,7 +143,7 @@ module RRA
         if price.lcode == from_alpha && price.amount.alphabetic_code == to_alpha
           price.amount
         else
-          RRA::Journal::Commodity.from_symbol_and_amount to,
+          RVGP::Journal::Commodity.from_symbol_and_amount to,
                                                          (1 / price.amount.quantity_as_bigdecimal).round(17).to_s('F')
         end
       end
@@ -151,14 +151,14 @@ module RRA
       # Convert the provided commodity, to another commodity, based on the rate at a given time.
       # @param [Time] at The time at which you want to query for an exchange rate. The most-recently-availble and
       #                  eligible entry, before this parameter, will be selected.
-      # @param [RRA::Journal::Commodity] from_commodity The commodity you wish to convert
+      # @param [RVGP::Journal::Commodity] from_commodity The commodity you wish to convert
       # @param [String] to_code_or_symbol The three character alphabetic currency code, or symbol, of the destination
       #                                   currency you wish to convert to.
-      # @return [RRA::Journal::Commodity] The resulting commodity, in units of :to_code_or_symbol
+      # @return [RVGP::Journal::Commodity] The resulting commodity, in units of :to_code_or_symbol
       def convert(at, from_commodity, to_code_or_symbol)
         rate = price at, from_commodity.code, to_code_or_symbol
 
-        RRA::Journal::Commodity.from_symbol_and_amount(
+        RVGP::Journal::Commodity.from_symbol_and_amount(
           to_code_or_symbol,
           (from_commodity.quantity_as_bigdecimal * rate.quantity_as_bigdecimal).to_s('F')
         )
@@ -167,11 +167,11 @@ module RRA
       # Add a conversion rate to the database
       # @param [Time] time The time at which this rate was discovered
       # @param [String] from_alpha The three character alphabetic currency code, of the source currency
-      # @param [RRA::Journal::Currency] to A commodity, expressing the quantity and commodity, that one
+      # @param [RVGP::Journal::Currency] to A commodity, expressing the quantity and commodity, that one
       #                                    unit of :from_alpha converts to
       # @return [void]
       def add(time, from_alpha, to)
-        lcurrency = RRA::Journal::Currency.from_code_or_symbol from_alpha
+        lcurrency = RVGP::Journal::Currency.from_code_or_symbol from_alpha
 
         price = Price.new time.to_time,
                           lcurrency ? lcurrency.alphabetic_code : from_alpha,
@@ -236,7 +236,7 @@ module RRA
               raise StandardError, MSG_INVALID_DATETIME % cite
             end
 
-            lcurrency = RRA::Journal::Currency.from_code_or_symbol ::Regexp.last_match(3)
+            lcurrency = RVGP::Journal::Currency.from_code_or_symbol ::Regexp.last_match(3)
             amount = ::Regexp.last_match(4).to_commodity
 
             Price.new time,

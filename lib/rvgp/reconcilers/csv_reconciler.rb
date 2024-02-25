@@ -3,9 +3,9 @@
 require 'csv'
 require_relative '../journal'
 
-module RRA
+module RVGP
   module Reconcilers
-    class CsvReconciler < RRA::Base::Reconciler
+    class CsvReconciler < RVGP::Base::Reconciler
       attr_reader :fields_format, :csv_format, :invert_amount, :skip_lines, :trim_lines
 
       def initialize(yaml)
@@ -34,7 +34,7 @@ module RRA
       end
 
       class << self
-        include RRA::Utilities
+        include RVGP::Utilities
 
         # Mostly this is a class mathed, to make testing easier
         def input_file_contents(contents, skip_lines = nil, trim_lines = nil)
@@ -86,14 +86,14 @@ module RRA
 
             # Amount is a special case, which, we have now converted into
             # commodity
-            if [RRA::Journal::ComplexCommodity, RRA::Journal::Commodity].any? { |klass| tx[:amount].is_a? klass }
+            if [RVGP::Journal::ComplexCommodity, RVGP::Journal::Commodity].any? { |klass| tx[:amount].is_a? klass }
               commodity = tx[:amount]
             end
-            commodity ||= RRA::Journal::Commodity.from_symbol_and_amount(default_currency, tx[:amount])
+            commodity ||= RVGP::Journal::Commodity.from_symbol_and_amount(default_currency, tx[:amount])
 
             commodity.invert! if invert_amount
 
-            RRA::Base::Reconciler::Posting.new i + 1,
+            RVGP::Base::Reconciler::Posting.new i + 1,
                                                date: tx[:date],
                                                description: tx[:description],
                                                commodity: transform_commodity(commodity),

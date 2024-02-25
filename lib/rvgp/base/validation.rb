@@ -2,9 +2,9 @@
 
 require_relative '../application/descendant_registry'
 
-module RRA
+module RVGP
   module Base
-    # This class contains methods shared by both {RRA::Base::JournalValidation} and {RRA::Base::SystemValidation}.
+    # This class contains methods shared by both {RVGP::Base::JournalValidation} and {RVGP::Base::SystemValidation}.
     # Validations are run during a project build, after the reconcile tasks.
     #
     # Validations are typically defined inside a .rb in your project's app/validations folder, and should inherit from
@@ -25,12 +25,12 @@ module RRA
     # 'disable_checks' array in the root of the reconciler's yaml, containing the name(s) of validations to disable
     # for that journal. These names are expected to be the classname of the validation, underscorized, lowercase, and
     # with the 'Validation' suffix removed from the class. For example, to disable the
-    # {RRA::Validations::BalanceValidation} in one of the reconcilers of your project, add the following lines to its
+    # {RVGP::Validations::BalanceValidation} in one of the reconcilers of your project, add the following lines to its
     # yaml:
     #   disable_checks:
     #     - balance
     # A JournalValidation is passed the reconciler corresponding to it's instance in its initialize method. For further
-    # details on how these validations work, see the documentation for this class here {RRA::Base::JournalValidation} or
+    # details on how these validations work, see the documentation for this class here {RVGP::Base::JournalValidation} or
     # check out an example implementation. Here's the BalanceValidation itself, which is a relatively easy example to
     # {https://github.com/brighton36/rvgp/blob/main/lib/rvgp/validations/balance_validation.rb balance_validation.rb}
     # follow.
@@ -44,14 +44,14 @@ module RRA
     # There are no example SystemValidations included in the distribution of rvgp. However, here's an easy one, to serve
     # as reference. This validation ensures Transfers between accounts are always credited and
     # debited on both sides:
-    #  class TransferAccountValidation < RRA::Base::SystemValidation
+    #  class TransferAccountValidation < RVGP::Base::SystemValidation
     #    STATUS_LABEL = 'Unbalanced inter-account transfers'
     #    DESCRIPTION = "Ensure that debits and credits through Transfer accounts, complete without remainders"
     #
     #    def validate
     #      warnings = pta.balance('Transfers').accounts.map do |account|
     #        account.amounts.map do |amount|
-    #          [ account.fullname, RRA.pastel.yellow('━'), amount.to_s(commatize: true) ].join(' ')
+    #          [ account.fullname, RVGP.pastel.yellow('━'), amount.to_s(commatize: true) ].join(' ')
     #        end
     #      end.compact.flatten
     #
@@ -82,7 +82,7 @@ module RRA
     # validations run immediately after all Journal validations have completed.
     #
     # *Input*
-    # Journal validations have one input, accessible via its {RRA::Base::JournalValidation#reconciler}. System
+    # Journal validations have one input, accessible via its {RVGP::Base::JournalValidation#reconciler}. System
     # validations have no preconfigured inputs at all. Journal Validations support a disable_checks attribute in the
     # reconciler yaml, and system validations have no such directive.
     #
@@ -91,7 +91,7 @@ module RRA
     # are expected to define a STATUS_LABEL and DESCRIPTION constant, in order to arrive at these labels.
     #
     # Note that for either type of validation, most/all of the integration functionality is provided by way of the
-    # {RRA::Base::Validation#error!} and {RRA::Base::Validation#warning!} methods, instigated in the class'
+    # {RVGP::Base::Validation#error!} and {RVGP::Base::Validation#warning!} methods, instigated in the class'
     # validate method.
     #
     # =Error and Warning formatting
@@ -109,7 +109,7 @@ module RRA
     # @attr_reader [Array<String,Array<String>>] warnings Warnings encountered by this validation. See the above note on
     #                                                     'Error and Warning formatting'
     class Validation
-      include RRA::Pta::AvailabilityHelper
+      include RVGP::Pta::AvailabilityHelper
 
       # @!visibility private
       NAME_CAPTURE = /([^:]+)Validation\Z/.freeze
@@ -138,7 +138,7 @@ module RRA
       end
 
       # @!visibility public
-      # Add an error to our {RRA::Base::Validation#errors} collection. The format of this error is expected to match the
+      # Add an error to our {RVGP::Base::Validation#errors} collection. The format of this error is expected to match the
       # formatting indicated in the 'Error and Warning formatting' above.
       # @param msg [String] A description of the error.
       # @param citations [Array<String>] Supporting details, subordinate error citations, denotated 'below' the :msg
@@ -147,7 +147,7 @@ module RRA
       end
 
       # @!visibility public
-      # Add a warning to our {RRA::Base::Validation#warnings} collection. The format of this warning is expected to
+      # Add a warning to our {RVGP::Base::Validation#warnings} collection. The format of this warning is expected to
       # match the formatting indicated in the 'Error and Warning formatting' above.
       # @param msg [String] A description of the warning.
       # @param citations [Array<String>] Supporting details, subordinate warning citations, denotated 'below' the :msg
@@ -157,19 +157,19 @@ module RRA
     end
 
     # A base class, from which your journal validations should inherit. For more information on validations, and your
-    # options, see the documentation notes on {RRA::Base::JournalValidation}.
-    # @attr_reader [RRA::Reconcilers::CsvReconciler,RRA::Reconcilers::JournalReconciler] reconciler
+    # options, see the documentation notes on {RVGP::Base::JournalValidation}.
+    # @attr_reader [RVGP::Reconcilers::CsvReconciler,RVGP::Reconcilers::JournalReconciler] reconciler
     #   The reconciler whose output will be inspected by this journal validation instance.
     class JournalValidation < Validation
-      include RRA::Application::DescendantRegistry
+      include RVGP::Application::DescendantRegistry
 
-      register_descendants RRA, :journal_validations, name_capture: NAME_CAPTURE
+      register_descendants RVGP, :journal_validations, name_capture: NAME_CAPTURE
 
       attr_reader :reconciler
 
       # Create a new Journal Validation
-      # @param [RRA::Reconcilers::CsvReconciler,RRA::Reconcilers::JournalReconciler] reconciler
-      #    see {RRA::Base::JournalValidation#reconciler}
+      # @param [RVGP::Reconcilers::CsvReconciler,RVGP::Reconcilers::JournalReconciler] reconciler
+      #    see {RVGP::Base::JournalValidation#reconciler}
       def initialize(reconciler)
         super()
         @reconciler = reconciler
@@ -179,7 +179,7 @@ module RRA
       # returned, the supplied error message will be added to our :errors colection, citing the transactions
       # that were encountered.
       # @param [String] with_error_msg A description of the error that corresponds to the returned transactions.
-      # @param [Array<Object>] args These arguments are supplied directly to {RRA::Pta::AvailabilityHelper#pta}'s
+      # @param [Array<Object>] args These arguments are supplied directly to {RVGP::Pta::AvailabilityHelper#pta}'s
       #                             #register method
       def validate_no_transactions(with_error_msg, *args)
         ledger_opts = args.last.is_a?(Hash) ? args.pop : {}
@@ -198,13 +198,13 @@ module RRA
       # This helper method will supply the provided account to pta.balance. And if there is a balance returned,
       # the supplied error message will be added to our :errors colection, citing the balance that was encountered.
       # @param [String] with_error_msg A description of the error that corresponds to the returned balances.
-      # @param [Array<String>] account This arguments is supplied directly to {RRA::Pta::AvailabilityHelper#pta}'s
+      # @param [Array<String>] account This arguments is supplied directly to {RVGP::Pta::AvailabilityHelper#pta}'s
       #                                #balance method
       def validate_no_balance(with_error_msg, account)
         results = pta.balance account, file: reconciler.output_file
 
         error_citations = results.accounts.map do |ra|
-          ra.amounts.map { |commodity| [ra.fullname, RRA.pastel.red('━'), commodity.to_s].join(' ') }
+          ra.amounts.map { |commodity| [ra.fullname, RVGP.pastel.red('━'), commodity.to_s].join(' ') }
         end
 
         error_citations.flatten!
@@ -214,12 +214,12 @@ module RRA
     end
 
     # A base class, from which your system validations should inherit. For more information on validations, and your
-    # options, see the documentation notes on {RRA::Base::JournalValidation}.
+    # options, see the documentation notes on {RVGP::Base::JournalValidation}.
     class SystemValidation < Validation
-      include RRA::Application::DescendantRegistry
+      include RVGP::Application::DescendantRegistry
 
       task_names = ->(registry) { registry.names.map { |name| format('validate_system:%s', name) } }
-      register_descendants RRA, :system_validations,
+      register_descendants RVGP, :system_validations,
                            name_capture: NAME_CAPTURE,
                            accessors: { task_names: task_names }
 
@@ -231,8 +231,8 @@ module RRA
       # @!visibility private
       def self.validated?
         FileUtils.uptodate? build_validation_file_path, [
-          RRA.app.config.build_path('journals/*.journal'),
-          RRA.app.config.project_path('journals/*.journal')
+          RVGP.app.config.build_path('journals/*.journal'),
+          RVGP.app.config.project_path('journals/*.journal')
         ].map { |glob| Dir.glob glob }.flatten
       end
 
@@ -248,7 +248,7 @@ module RRA
 
       # @!visibility private
       def self.build_validation_file_path
-        RRA.app.config.build_path(format('journals/system-validation-%s.valid', name.to_s))
+        RVGP.app.config.build_path(format('journals/system-validation-%s.valid', name.to_s))
       end
     end
   end

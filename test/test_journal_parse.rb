@@ -5,7 +5,7 @@ require 'minitest/autorun'
 
 require_relative '../lib/rvgp'
 
-# Tests for RRA::Journal
+# Tests for RVGP::Journal
 class TestJournalParse < Minitest::Test
   SAMPLE_TAG_FORMATS_JOURNAL = <<~JOURNAL
     2021-01-20 Lawn Mowing
@@ -98,7 +98,7 @@ class TestJournalParse < Minitest::Test
   JOURNAL
 
   def test_journal_tag_parsing
-    journal = RRA::Journal.parse SAMPLE_TAG_FORMATS_JOURNAL
+    journal = RVGP::Journal.parse SAMPLE_TAG_FORMATS_JOURNAL
 
     assert_equal 6, journal.postings.length
 
@@ -206,7 +206,7 @@ class TestJournalParse < Minitest::Test
   end
 
   def test_currency_purchase_parsing
-    journal = RRA::Journal.parse SAMPLE_CURRENCY_DECLARATION_JOURNAL
+    journal = RVGP::Journal.parse SAMPLE_CURRENCY_DECLARATION_JOURNAL
 
     assert_equal 11, journal.postings.length
 

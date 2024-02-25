@@ -6,9 +6,9 @@ require 'minitest/autorun'
 require_relative '../lib/rvgp'
 require_relative '../lib/rvgp/utilities'
 
-# RRA::Utilities tests
+# RVGP::Utilities tests
 class TestUtilities < Minitest::Test
-  include RRA::Utilities
+  include RVGP::Utilities
 
   # This is kind of a weird function... just sayin...
   def test_months_through

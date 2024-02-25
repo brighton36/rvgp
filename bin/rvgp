@@ -5,4 +5,4 @@
 
 require_relative '../lib/rvgp/commands'
 
-RRA::Commands.dispatch!(*ARGV)
+RVGP::Commands.dispatch!(*ARGV)

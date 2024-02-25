@@ -24,20 +24,20 @@ require_relative 'rvgp/base/grid'
 # Gem Paths / Resources:
 require_relative 'rvgp/gem'
 
-I18n.load_path << Dir[RRA::Gem.root('resources/i18n/*.yml')]
-RRA::Journal::Currency.currencies_config = RRA::Gem.root('resources/iso-4217-currencies.json')
+I18n.load_path << Dir[RVGP::Gem.root('resources/i18n/*.yml')]
+RVGP::Journal::Currency.currencies_config = RVGP::Gem.root('resources/iso-4217-currencies.json')
 
-# The base module, under which all RRA code is filed
-module RRA
-  # @param from_path [String] The directory path, to an RRA project.
-  # @return [RRA::Application] The initialized application, that was stored in RRA.app
+# The base module, under which all RVGP code is filed
+module RVGP
+  # @param from_path [String] The directory path, to an RVGP project.
+  # @return [RVGP::Application] The initialized application, that was stored in RVGP.app
   def self.initialize_app(from_path)
     raise StandardError, 'Application is already initialized' if @app
 
     @app = Application.new from_path
   end
 
-  # @return [RRA::Application] The currently-initialized RRA:Application
+  # @return [RVGP::Application] The currently-initialized RVGP:Application
   def self.app
     @app
   end
@@ -48,15 +48,15 @@ module RRA
   end
 
   # @!attribute [r] self.commands
-  #   Contains an array of all available objects, with parent of type {RRA::Base::Command}.
-  #   @return [Array<RRA::Base::Command>] the commands that are available in this project
+  #   Contains an array of all available objects, with parent of type {RVGP::Base::Command}.
+  #   @return [Array<RVGP::Base::Command>] the commands that are available in this project
   # @!attribute [r] self.grids
-  #   Contains an array of all available objects, with parent of type {RRA::Base::Grid}.
-  #   @return [Array<RRA::Base::Grid>] the grids that are available in this project
+  #   Contains an array of all available objects, with parent of type {RVGP::Base::Grid}.
+  #   @return [Array<RVGP::Base::Grid>] the grids that are available in this project
   # @!attribute [r] self.journal_validations
-  #   Contains an array of all available objects, with parent of type {RRA::Base::JournalValidation}.
-  #   @return [Array<RRA::Base::JournalValidation>] the journal validations that are available in this project
+  #   Contains an array of all available objects, with parent of type {RVGP::Base::JournalValidation}.
+  #   @return [Array<RVGP::Base::JournalValidation>] the journal validations that are available in this project
   # @!attribute [r] self.system_validations
-  #   Contains an array of all available objects, with parent of type {RRA::Base::SystemValidation}.
-  #   @return [Array<RRA::Base::SystemValidation>] the system validations that are available in this project
+  #   Contains an array of all available objects, with parent of type {RVGP::Base::SystemValidation}.
+  #   @return [Array<RVGP::Base::SystemValidation>] the system validations that are available in this project
 end

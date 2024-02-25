@@ -2,13 +2,13 @@
 
 require 'tempfile'
 
-module RRA
+module RVGP
   module Commands
     # @!visibility private
     # This class contains the handling of the 'rotate_year' command. Note that
     # there is no rake integration in this command, as that function is irrelevent
     # to the notion of an 'export'.
-    class RotateYear < RRA::Base::Command
+    class RotateYear < RVGP::Base::Command
       accepts_options OPTION_ALL, OPTION_LIST
 
       # @!visibility private
@@ -30,23 +30,23 @@ module RRA
         print I18n.t('commands.rotate_year.confirm_operation_prompt')
 
         if $stdin.gets.chomp != I18n.t('commands.rotate_year.confirm_operation')
-          puts [RRA.pastel.red(I18n.t('error.error')), I18n.t('commands.rotate_year.operation_aborted')].join(' : ')
+          puts [RVGP.pastel.red(I18n.t('error.error')), I18n.t('commands.rotate_year.operation_aborted')].join(' : ')
           exit 1
         end
 
-        RRA.app.ensure_build_dir! 'feeds/historical'
+        RVGP.app.ensure_build_dir! 'feeds/historical'
 
         super
       end
 
       def self.historical_path
-        RRA.app.config.project_path('feeds/historical')
+        RVGP.app.config.project_path('feeds/historical')
       end
 
       # @!visibility private
       # This class represents a reconciler that's not 'historical'. Which, makes it different from the
       # ReconcilerTarget. 'historical' is determined by whether its input_file is located in a '/historical/' basedir.
-      class Target < RRA::Base::Command::Target
+      class Target < RVGP::Base::Command::Target
         attr_reader :reconciler
 
         # @!visibility private
@@ -55,8 +55,8 @@ module RRA
         end
 
         # Create a new RotateYear::Target
-        # @param [RRA::Base::Reconciler] reconciler An instance of either {RRA::Reconcilers::CsvReconciler}, or
-        #                                             {RRA::Reconcilers::JournalReconciler}, to use as the basis
+        # @param [RVGP::Base::Reconciler] reconciler An instance of either {RVGP::Reconcilers::CsvReconciler}, or
+        #                                             {RVGP::Reconcilers::JournalReconciler}, to use as the basis
         #                                             for this target.
         def initialize(reconciler)
           super reconciler.as_taskname, reconciler.label
@@ -100,7 +100,7 @@ module RRA
             output, exit_code = Open3.capture2 'which git'
             raise GitError, output unless exit_code.to_i.zero?
 
-            [output.chomp, '-C', Shellwords.escape(RRA.app.project_path)]
+            [output.chomp, '-C', Shellwords.escape(RVGP.app.project_path)]
           end
 
           output, exit_code = Open3.capture2((@git_prefix + args.map { |a| Shellwords.escape a }).join(' '))
@@ -113,7 +113,7 @@ module RRA
         # @!visibility private
         # This move will use git, if the source file is in a repo. If not, it'll use the system mv
         def mv!(source, dest)
-          raise GitError if !git_repo? || !%r{^#{RRA.app.project_path}/(.+)}.match(source)
+          raise GitError if !git_repo? || !%r{^#{RVGP.app.project_path}/(.+)}.match(source)
 
           project_relative_source = Regexp.last_match 1
 
@@ -173,9 +173,9 @@ module RRA
         end
 
         # All possible Reconciler Targets that the project has defined.
-        # @return [Array<RRA::Base::Command::ReconcilerTarget>] A collection of targets.
+        # @return [Array<RVGP::Base::Command::ReconcilerTarget>] A collection of targets.
         def self.all
-          RRA.app.reconcilers.map do |reconciler|
+          RVGP.app.reconcilers.map do |reconciler|
             new reconciler unless File.dirname(reconciler.input_file).split('/').last == 'historical'
           end.compact
         end

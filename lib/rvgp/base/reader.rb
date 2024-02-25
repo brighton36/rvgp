@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RRA
+module RVGP
   module Base
     # This base class exists as a shorthand, for classes whose public readers are populated via
     # #initialize(). Think of this as an lighter-weight alternative to OpenStruct.

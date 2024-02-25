@@ -2,9 +2,9 @@
 
 require_relative '../utilities'
 
-module RRA
+module RVGP
   module Base
-    # Reconcilers are a cornerstone of the RRA build, and an integral part of your project. Reconcilers, take an input
+    # Reconcilers are a cornerstone of the RVGP build, and an integral part of your project. Reconcilers, take an input
     # file (Either a csv file or a journal file), and reconcile them into a reconciled pta journal. This class
     # implements most of the functionality needed to make that happen.
     #
@@ -90,11 +90,11 @@ module RRA
     #       '2023-01-15': $ 2345.67
     #       '2023-06-15': $ 3456,78
     #     ...
-    #   This feature is mostly implemented by the {RRA::Validations::BalanceValidation}, and is provided as a fail-safe,
+    #   This feature is mostly implemented by the {RVGP::Validations::BalanceValidation}, and is provided as a fail-safe,
     #   in which you can input the balance reported by the statements from your financial institution, and ensure your
     #   build is consistent with the expectation of that institution.
     # - *disable_checks* [Array<String>] - This declaration can be used to disable one or more of your journal
-    #   validations. This is described in greater depth in the {RRA::Base::Validation} documentation. Here's a sample
+    #   validations. This is described in greater depth in the {RVGP::Base::Validation} documentation. Here's a sample
     #   of this feature, which can be used to disable the balances section that was explained above:
     #     ...
     #     disable_checks:
@@ -119,7 +119,7 @@ module RRA
     #   keys is evaluated (in ruby), and provided a single parameter, 'row' which contains a row as returned from ruby's
     #   CSV.parse method. The example project, supplied by the new_project command, contains an easy implementation
     #   of this feature in action.
-    # - *invert_amount* [bool] (default: false) - Whether to call the {RRA::Journal::Commodity#invert!} on every
+    # - *invert_amount* [bool] (default: false) - Whether to call the {RVGP::Journal::Commodity#invert!} on every
     #   amount that's encountered in the input file
     # - *encoding* [String] - This parameter is passed to the :encoding parameter of File.read, during the parsing of
     #   the supplied input_file. This can be used to prevent CSV::MalformedCSVError in cases such as a bom encoded
@@ -182,13 +182,13 @@ module RRA
     #   :description of the feed transaction against the regex provided.
     #   If a regex is provided, captures are supported. (see the note below)
     # - *account* [Regexp,String] - This matcher is useful for reconcilers that support the :to field.
-    #   (see {RRA::Reconcilers::JournalReconciler}). If a string is provided, compares the
+    #   (see {RVGP::Reconcilers::JournalReconciler}). If a string is provided, compares the
     #   account :to which a transaction was assigned, to the value provided. And matches if
     #   they're equal. If a regex is provided, matches the account :to which a transaction
     #   was assigned, against the regex provided.
     #   If a regex is provided, captures are supported. (see the note below)
     # - *account_is_not* [String] - This matcher is useful for reconcilers that support the :to field.
-    #   (see {RRA::Reconcilers::JournalReconciler}). This field matches any transaction
+    #   (see {RVGP::Reconcilers::JournalReconciler}). This field matches any transaction
     #   whose account :to, does not equal the provided string.
     # - *amount_less_than* [Commodity] - This field compares it's value to the transaction :amount , and matches if
     #   that amount is less than the provided amount.
@@ -231,11 +231,11 @@ module RRA
     #   following fields:
     #   - *to* [String] - As with the above :to, this field will provide the account to reconcile the transfer to.
     #   - *amount* [Commodity] - The amount to ascribe to this transfer. While the sum of the targets 'should' equal the
-    #     input transaction amount, there is no validation performed by RRA to do so. So, excercize discretion when
+    #     input transaction amount, there is no validation performed by RVGP to do so. So, excercize discretion when
     #     manually breaking out input transactions into multiple transfers.
     #   - *complex_commodity* [ComplexCommodity] - A complex commodity to ascribe to this transfer, instead of an
-    #     :amount. See {RRA::Journal::ComplexCommodity.from_s} for more details on this feature.
-    #   - *tags* [Array<String>] - An array of tags to assign to this transfer. See {RRA::Journal::Posting::Tag.from_s}
+    #     :amount. See {RVGP::Journal::ComplexCommodity.from_s} for more details on this feature.
+    #   - *tags* [Array<String>] - An array of tags to assign to this transfer. See {RVGP::Journal::Posting::Tag.from_s}
     #     for more details on tag formatting.
     # - *to_shorthand* [String] - Reconciler Shorthand are a powerful feature that can reduce duplication, and manual
     #   calculations from your reconciler yaml. The value provided here, must correlate with an
@@ -279,7 +279,7 @@ module RRA
     # @attr_reader [Date] starts_on The contents of the yaml :starts_on parameter (see above)
     # @attr_reader [Hash<String, String>] balances A hash of dates (in 'YYYY-MM-DD') to commodities (as string)
     #                                              corresponding to the balance that are expected on those dates.
-    #                                              See {RRA::Validations::BalanceValidation} for details on this
+    #                                              See {RVGP::Validations::BalanceValidation} for details on this
     #                                              feature.
     # @attr_reader [Array<String>] disable_checks The JournalValidations that are disabled on this reconciler (see
     #                                             above)
@@ -294,7 +294,7 @@ module RRA
     # @attr_reader [TrueClass,FalseClass] reverse_order The contents of the yaml :reverse_order parameter (see above)
     # @attr_reader [String] default_currency The contents of the yaml :default_currency parameter (see above)
     class Reconciler
-      include RRA::Utilities
+      include RVGP::Utilities
 
       # This error is thrown when a reconciler yaml is missing one or more require parameters
       class MissingFields < StandardError
@@ -325,16 +325,16 @@ module RRA
         # @!visibility private
         def to_journal_posting
           transfers = targets.map do |target|
-            RRA::Journal::Posting::Transfer.new target[:to],
+            RVGP::Journal::Posting::Transfer.new target[:to],
                                                 commodity: target[:commodity],
                                                 complex_commodity: target[:complex_commodity],
                                                 tags: target[:tags] ? target[:tags].map(&:to_tag) : nil
           end
 
-          RRA::Journal::Posting.new date,
+          RVGP::Journal::Posting.new date,
                                     description,
                                     tags: tags ? tags.map(&:to_tag) : nil,
-                                    transfers: transfers + [RRA::Journal::Posting::Transfer.new(from)]
+                                    transfers: transfers + [RVGP::Journal::Posting::Transfer.new(from)]
         end
       end
 
@@ -346,7 +346,7 @@ module RRA
       HEADER = "; -*- %s -*-¬\n; vim: syntax=ledger"
 
       # Create a Reconciler from the provided yaml
-      # @param [RRA::Utilities::Yaml] yaml A file containing the settings to use in the construction of this reconciler
+      # @param [RVGP::Utilities::Yaml] yaml A file containing the settings to use in the construction of this reconciler
       #                                   . (see above)
       def initialize(yaml)
         @label = yaml[:label]
@@ -359,12 +359,12 @@ module RRA
 
         raise MissingFields.new(*missing_fields) unless missing_fields.empty?
 
-        if RRA.app
-          @output_file = RRA.app.config.build_path format('journals/%s', yaml[:output])
-          @input_file = RRA.app.config.project_path format('feeds/%s', yaml[:input])
+        if RVGP.app
+          @output_file = RVGP.app.config.build_path format('journals/%s', yaml[:output])
+          @input_file = RVGP.app.config.project_path format('feeds/%s', yaml[:input])
         else
           # ATM this path is found in the test environment... possibly we should
-          # decouple RRA.app from this class....
+          # decouple RVGP.app from this class....
           @output_file = yaml[:output]
           @input_file = yaml[:input]
         end
@@ -487,7 +487,7 @@ module RRA
           mod = @shorthand[rule_key][rule[:index]]
 
           unless mod
-            shorthand_klass = format 'RRA::Reconcilers::Shorthand::%s', rule[:to_shorthand]
+            shorthand_klass = format 'RVGP::Reconcilers::Shorthand::%s', rule[:to_shorthand]
 
             unless Object.const_defined?(shorthand_klass)
               raise StandardError, format('Unknown shorthand %s', shorthand_klass)
@@ -509,12 +509,12 @@ module RRA
 
           posting.targets = rule[:targets].map do |rule_target|
             if rule_target.key? :currency
-              commodity = RRA::Journal::Commodity.from_symbol_and_amount(
+              commodity = RVGP::Journal::Commodity.from_symbol_and_amount(
                 rule_target[:currency] || default_currency,
                 rule_target[:amount].to_s
               )
             elsif rule_target.key? :complex_commodity
-              complex_commodity = RRA::Journal::ComplexCommodity.from_s(rule_target[:complex_commodity])
+              complex_commodity = RVGP::Journal::ComplexCommodity.from_s(rule_target[:complex_commodity])
             else
               commodity = rule_target[:amount].to_s.to_commodity
             end
@@ -532,7 +532,7 @@ module RRA
           residual_commodity = posting.commodity
 
           if cash_back&.match(posting.description)
-            cash_back_commodity = RRA::Journal::Commodity.from_symbol_and_amount(
+            cash_back_commodity = RVGP::Journal::Commodity.from_symbol_and_amount(
               ::Regexp.last_match(1), Regexp.last_match(2)
             )
             residual_commodity -= cash_back_commodity
@@ -632,7 +632,7 @@ module RRA
 
       # Returns an array of all of the reconcilers found in the specified path.
       # @param [String] directory_path The path containing your yml reconciler files
-      # @return [Array<RRA::Reconcilers::CsvReconciler, RRA::Reconcilers::JournalReconciler>]
+      # @return [Array<RVGP::Reconcilers::CsvReconciler, RVGP::Reconcilers::JournalReconciler>]
       #   An array of parsed reconcilers.
       def self.all(directory_path)
         # NOTE: I'm not crazy about this method. Probably we should have
@@ -641,7 +641,7 @@ module RRA
         # driver, we can renovate it, and add some kind of registry for drivers.
 
         Dir.glob(format('%s/app/reconcilers/*.yml', directory_path)).map do |path|
-          yaml = RRA::Utilities::Yaml.new path, RRA.app.config.project_path
+          yaml = RVGP::Utilities::Yaml.new path, RVGP.app.config.project_path
 
           raise MissingFields.new, :input unless yaml.key? :input
 
@@ -649,8 +649,8 @@ module RRA
           # web addresses eventually. So, probably this designe pattern would
           # have to just be reconsidered entirely around that time.
           case File.extname(yaml[:input])
-          when '.csv' then RRA::Reconcilers::CsvReconciler.new(yaml)
-          when '.journal' then RRA::Reconcilers::JournalReconciler.new(yaml)
+          when '.csv' then RVGP::Reconcilers::CsvReconciler.new(yaml)
+          when '.journal' then RVGP::Reconcilers::JournalReconciler.new(yaml)
           else
             raise StandardError, format('Unrecognized file extension for input file "%s"', yaml[:input])
           end

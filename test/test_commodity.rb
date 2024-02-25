@@ -5,7 +5,7 @@ require 'minitest/autorun'
 
 require_relative '../lib/rvgp'
 
-# Minitest class, used to test RRA::Journal::Commodity
+# Minitest class, used to test RVGP::Journal::Commodity
 class TestCommodity < Minitest::Test
   def test_commodity_comparision_when_precision_not_equal
     assert_equal commodity('$ 23.01'), commodity('$ 23.010')
@@ -250,7 +250,7 @@ class TestCommodity < Minitest::Test
   # appears. I don't know what the 'best' thing to do is here. But, atm, I think
   # this output suffices....
   def test_commodity_from_string_of_zero
-    zero = RRA::Journal::Commodity.from_symbol_and_amount(nil, '0')
+    zero = RVGP::Journal::Commodity.from_symbol_and_amount(nil, '0')
 
     assert_equal 0, zero.quantity
     assert_nil zero.alphabetic_code
@@ -261,7 +261,7 @@ class TestCommodity < Minitest::Test
   private
 
   def commodity(str)
-    RRA::Journal::Commodity.from_s str
+    RVGP::Journal::Commodity.from_s str
   end
 
   def commodity_op(lstr, operation, rstr)

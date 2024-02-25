@@ -2,7 +2,7 @@
 
 module Finance
   # The default functionality in this class, specified in the finance gem, is
-  # overwritten, to support the additional_payments feature of RRA::Reconcilers::Shorthand::Mortgage
+  # overwritten, to support the additional_payments feature of RVGP::Reconcilers::Shorthand::Mortgage
   class Amortization
     def balance=(val)
       @balance = DecNum.new val

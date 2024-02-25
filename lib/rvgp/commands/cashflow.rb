@@ -3,19 +3,19 @@
 require_relative '../utilities/grid_query'
 require_relative '../dashboard'
 
-module RRA
+module RVGP
   module Commands
     # @!visibility private
     # This class contains the logic necessary to display the 'cashflow' dashboard
-    class Cashflow < RRA::Base::Command
+    class Cashflow < RVGP::Base::Command
       accepts_options OPTION_ALL, OPTION_LIST, [:date, :d, { has_value: 'DATE' }]
 
       # @!visibility private
       # This class handles the target argument, passed on the cli
-      class Target < RRA::Base::Command::Target
+      class Target < RVGP::Base::Command::Target
         # @!visibility private
         def self.all
-          RRA::Commands::Cashflow.grids_by_targetname.keys.map { |s| new s }
+          RVGP::Commands::Cashflow.grids_by_targetname.keys.map { |s| new s }
         end
       end
 
@@ -25,7 +25,7 @@ module RRA
 
         options[:date] = Date.strptime options[:date] if options.key? :date
 
-        minimum_width = RRA::Dashboard.table_width_given_column_widths(column_widths[0..1])
+        minimum_width = RVGP::Dashboard.table_width_given_column_widths(column_widths[0..1])
 
         unless TTY::Screen.width > minimum_width
           @errors << I18n.t(
@@ -56,7 +56,7 @@ module RRA
 
       # @!visibility private
       def self.cashflow_grid_files
-        Dir.glob RRA.app.config.build_path('grids/*-cashflow-*.csv')
+        Dir.glob RVGP.app.config.build_path('grids/*-cashflow-*.csv')
       end
 
       # @!visibility private
@@ -79,12 +79,12 @@ module RRA
 
       def dashboards
         @dashboards ||= targets.map do |target|
-          RRA::Dashboard.new(
+          RVGP::Dashboard.new(
             target.name,
-            RRA::Utilities::GridQuery.new(
+            RVGP::Utilities::GridQuery.new(
               self.class.grids_by_targetname[target.name],
               store_cell: lambda { |cell|
-                cell ? RRA::Journal::Commodity.from_symbol_and_amount('$', cell) : cell
+                cell ? RVGP::Journal::Commodity.from_symbol_and_amount('$', cell) : cell
               },
               select_columns: lambda { |col, column|
                 if options.key?(:date)
@@ -94,26 +94,26 @@ module RRA
                 end
               }
             ),
-            { pastel: RRA.pastel,
+            { pastel: RVGP.pastel,
               series_column_label: I18n.t('commands.cashflow.account'),
               format_data_cell: ->(cell) { cell&.to_s commatize: true, precision: 2 },
               columns_ordered_by: ->(a, b) { [b, a].map { |d| Date.strptime d, '%m-%y' }.reduce :<=> },
               summaries: [
                 {
                   label: I18n.t('commands.cashflow.expenses'),
-                  prettify: ->(row) { [RRA.pastel.bold(row[0])] + row[1..].map { |s| RRA.pastel.red(s) } },
+                  prettify: ->(row) { [RVGP.pastel.bold(row[0])] + row[1..].map { |s| RVGP.pastel.red(s) } },
                   contents: ->(series, data) { sum_column 'Expenses', series, data }
                 },
                 {
                   label: I18n.t('commands.cashflow.income'),
-                  prettify: ->(row) { [RRA.pastel.bold(row[0])] + row[1..].map { |s| RRA.pastel.green(s) } },
+                  prettify: ->(row) { [RVGP.pastel.bold(row[0])] + row[1..].map { |s| RVGP.pastel.green(s) } },
                   contents: ->(series, data) { sum_column 'Income', series, data }
                 },
                 {
                   label: I18n.t('commands.cashflow.cash_flow'),
                   prettify: lambda { |row|
-                    [RRA.pastel.bold(row[0])] + row[1..].map do |cell|
-                      /\$ *-/.match(cell) ? RRA.pastel.red(cell) : RRA.pastel.green(cell)
+                    [RVGP.pastel.bold(row[0])] + row[1..].map do |cell|
+                      /\$ *-/.match(cell) ? RVGP.pastel.red(cell) : RVGP.pastel.green(cell)
                     end
                   },
                   contents: lambda { |series, data|
@@ -141,7 +141,7 @@ module RRA
         # Now let's calculate how many columns fit on screen:
         @show_columns = 0
         0.upto(column_widths.length - 1) do |i|
-          break if RRA::Dashboard.table_width_given_column_widths(column_widths[0..i]) > TTY::Screen.width
+          break if RVGP::Dashboard.table_width_given_column_widths(column_widths[0..i]) > TTY::Screen.width
 
           @show_columns += 1
         end

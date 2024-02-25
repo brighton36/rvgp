@@ -7,7 +7,7 @@ require 'minitest/autorun'
 require_relative '../lib/rvgp'
 require_relative '../lib/rvgp/plot'
 
-# Tests for RRA::Plot
+# Tests for RVGP::Plot
 class TestPlot < Minitest::Test
   YEAR_ONLY_CORPUS = [
     '/path/to/ledger/2018-wealth-growth.csv',
@@ -41,7 +41,7 @@ class TestPlot < Minitest::Test
   ].freeze
 
   def test_globber
-    matches = RRA::Plot.glob_variants '%{year}-wealth-growth.csv', YEAR_ONLY_CORPUS # rubocop:disable Style/FormatStringToken
+    matches = RVGP::Plot.glob_variants '%{year}-wealth-growth.csv', YEAR_ONLY_CORPUS # rubocop:disable Style/FormatStringToken
 
     assert_equal 5, matches.length
 
@@ -52,7 +52,7 @@ class TestPlot < Minitest::Test
       assert_equal({ year: year.to_s }, matches[i][:pairs])
     end
 
-    matches = RRA::Plot.glob_variants '%{year}-cashflow-%{intention}.csv', YEAR_AND_INTENTION_CORPUS # rubocop:disable Style/FormatStringToken
+    matches = RVGP::Plot.glob_variants '%{year}-cashflow-%{intention}.csv', YEAR_AND_INTENTION_CORPUS # rubocop:disable Style/FormatStringToken
 
     assert_equal 9, matches.length
 
@@ -94,7 +94,7 @@ class TestPlot < Minitest::Test
   end
 
   def test_all_year_globber
-    matches = RRA::Plot.glob_variants '%{year}-wealth-growth.csv', YEAR_ONLY_CORPUS, year: 'all' # rubocop:disable Style/FormatStringToken
+    matches = RVGP::Plot.glob_variants '%{year}-wealth-growth.csv', YEAR_ONLY_CORPUS, year: 'all' # rubocop:disable Style/FormatStringToken
 
     assert_equal 1, matches.length
 
@@ -106,7 +106,7 @@ class TestPlot < Minitest::Test
     assert_equal 'all-wealth-growth', matches[0][:name]
     assert_equal({ year: 'all' }, matches[0][:pairs])
 
-    matches = RRA::Plot.glob_variants '%{year}-cashflow-%{intention}.csv', YEAR_AND_INTENTION_CORPUS, year: 'all' # rubocop:disable Style/FormatStringToken
+    matches = RVGP::Plot.glob_variants '%{year}-cashflow-%{intention}.csv', YEAR_AND_INTENTION_CORPUS, year: 'all' # rubocop:disable Style/FormatStringToken
 
     assert_equal 5, matches.length
 

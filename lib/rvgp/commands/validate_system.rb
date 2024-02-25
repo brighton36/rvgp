@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-module RRA
+module RVGP
   module Commands
     # @!visibility private
     # This class contains dispatch logic for the 'validate_system' command and task.
-    class ValidateSystem < RRA::Base::Command
+    class ValidateSystem < RVGP::Base::Command
       accepts_options OPTION_ALL, OPTION_LIST
 
       include RakeTask
@@ -14,7 +14,7 @@ module RRA
       # This class principally represents the system validations, that are defined
       # in the application directory. Unlike the journal validations, these
       # targets are not specific to years, or reconcilers.
-      class Target < RRA::Base::Command::Target
+      class Target < RVGP::Base::Command::Target
         # @!visibility private
         def initialize(validation_klass)
           @validation_klass = validation_klass
@@ -36,7 +36,7 @@ module RRA
 
         # @!visibility private
         def self.all
-          RRA.system_validations.collect { |klass| new klass }
+          RVGP.system_validations.collect { |klass| new klass }
         end
       end
     end

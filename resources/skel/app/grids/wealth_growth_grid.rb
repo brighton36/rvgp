@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # This class writes the wealth growth grid, by month
-class WealthGrowthGrid < RRA::Base::Grid
+class WealthGrowthGrid < RVGP::Base::Grid
   grid 'wealth_growth', 'Generate Wealth Growth Grids', 'Wealth Growth by month (%s)',
        output_path_template: '%s-wealth-growth'
 

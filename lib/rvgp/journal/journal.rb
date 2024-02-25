@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-module RRA
+module RVGP
   # This class parses a pta journal, and offers that journal in its constitutent
   # parts. See the {Journal.parse} for the typical entry point, into this class.
   # This class itself, really only offers the one method, .parse, to parse a pta
   # journal's contents. Most of the functionality in this class, is provided
   # by the classes contained within it.
-  # @attr_reader [Array<RRA::Journal::Posting>] postings The postings that were encountered in this journal
+  # @attr_reader [Array<RVGP::Journal::Posting>] postings The postings that were encountered in this journal
   class Journal
     # @!visibility private
     MSG_MISSING_POSTING_SEPARATOR = 'Missing a blank line before line %d: %s'
@@ -32,7 +32,7 @@ module RRA
     attr :postings
 
     # Declare and initialize this Journal.
-    # @param [Array[RRA::Journal::Posting]] postings An array of postings that this instance represents
+    # @param [Array[RVGP::Journal::Posting]] postings An array of postings that this instance represents
     def initialize(postings)
       @postings = postings
     end
@@ -45,7 +45,7 @@ module RRA
 
     # Given a pta journal, already read from the filesystem, return a parsed representation of its contents.
     # @param [String] contents A pta journal, as a string
-    # @return [RRA::Journal] The parsed representation of the provided string
+    # @return [RVGP::Journal] The parsed representation of the provided string
     def self.parse(contents)
       postings = []
 
@@ -95,7 +95,7 @@ module RRA
 
           begin
             posting.append_transfer ::Regexp.last_match(1), ::Regexp.last_match(2)
-          rescue RRA::Journal::Commodity::Error
+          rescue RVGP::Journal::Commodity::Error
             raise StandardError, MSG_INVALID_TRANSFER_COMMODITY % cite
           end
         when /\A[ \t]*\Z/

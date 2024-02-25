@@ -6,10 +6,10 @@ require 'minitest/autorun'
 require_relative '../lib/rvgp'
 require_relative '../lib/rvgp/fakers/fake_reconciler'
 
-# Minitest class, used to test RRA::Fakers::FakeReconciler
+# Minitest class, used to test RVGP::Fakers::FakeReconciler
 class TestFakeReconciler < Minitest::Test
   def test_basic_reconciler_with_format_path
-    reconciler = Psych.load RRA::Fakers::FakeReconciler.basic_checking(
+    reconciler = Psych.load RVGP::Fakers::FakeReconciler.basic_checking(
       label: 'Personal AcmeBank:Checking (2020)',
       input_path: '2020-personal-basic-checking.csv',
       output_path: '2020-personal-basic-checking.journal',
@@ -30,7 +30,7 @@ class TestFakeReconciler < Minitest::Test
   end
 
   def test_basic_reconciler_without_format
-    reconciler = Psych.load RRA::Fakers::FakeReconciler.basic_checking(
+    reconciler = Psych.load RVGP::Fakers::FakeReconciler.basic_checking(
       label: 'Personal AcmeBank:Checking (2020)',
       input_path: '2020-personal-basic-checking.csv',
       output_path: '2020-personal-basic-checking.journal',

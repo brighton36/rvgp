@@ -3,14 +3,14 @@
 require_relative '../../rvgp'
 require_relative '../application/descendant_registry'
 
-module RRA
+module RVGP
   module Base
     # If you're looking to write your own rvgp commands, or if you wish to add a rake task - this is the start of that
     # endeavor.
     #
     # All of the built-in rvgp commands are descendants of this Base class. And, the easiest way to get started in
     # writing your own, is simply to emulate one of these examples. You can see links to these examples listed under
-    # {RRA::Commands}.
+    # {RVGP::Commands}.
     #
     # When you're ready to start typing out your code, just place this code in a .rb file under the app/commands
     # directory of your project - and rvgp will pick it up from there. An instance of a Command, that inherits from
@@ -46,8 +46,8 @@ module RRA
         attr_reader :name, :status_name, :description
 
         # Create a new Target
-        # @param [String] name see {RRA::Base::Command::Target#name}
-        # @param [String] status_name see {RRA::Base::Command::Target#status_name}
+        # @param [String] name see {RVGP::Base::Command::Target#name}
+        # @param [String] status_name see {RVGP::Base::Command::Target#status_name}
         def initialize(name, status_name = nil)
           @name = name
           @status_name = status_name
@@ -81,43 +81,43 @@ module RRA
       #
       # Any class that operates by way of a reconciler-defined target, can use this implementation, in lieu of
       # re-implementing the wheel.
-      class ReconcilerTarget < RRA::Base::Command::Target
+      class ReconcilerTarget < RVGP::Base::Command::Target
         # Create a new ReconcilerTarget
-        # @param [RRA::Base::Reconciler] reconciler An instance of either {RRA::Reconcilers::CsvReconciler}, or
-        #                                             {RRA::Reconcilers::JournalReconciler}, to use as the basis
+        # @param [RVGP::Base::Reconciler] reconciler An instance of either {RVGP::Reconcilers::CsvReconciler}, or
+        #                                             {RVGP::Reconcilers::JournalReconciler}, to use as the basis
         #                                             for this target.
         def initialize(reconciler)
           super reconciler.as_taskname, reconciler.label
           @reconciler = reconciler
         end
 
-        # (see RRA::Base::Command::Target#matches?)
+        # (see RVGP::Base::Command::Target#matches?)
         def matches?(identifier)
           @reconciler.matches_argument? identifier
         end
 
-        # (see RRA::Base::Command::Target#description)
+        # (see RVGP::Base::Command::Target#description)
         def description
           I18n.t format('commands.%s.target_description', self.class.command), input_file: @reconciler.input_file
         end
 
         # All possible Reconciler Targets that the project has defined.
-        # @return [Array<RRA::Base::Command::ReconcilerTarget>] A collection of targets.
+        # @return [Array<RVGP::Base::Command::ReconcilerTarget>] A collection of targets.
         def self.all
-          RRA.app.reconcilers.map { |reconciler| new reconciler }
+          RVGP.app.reconcilers.map { |reconciler| new reconciler }
         end
 
         # This is a little goofy. But, it exists as a hack to support dispatching this target via the
-        # {RRA::Base::Command::ReconcilerTarget.command} method. You can see an example of this at work in the
+        # {RVGP::Base::Command::ReconcilerTarget.command} method. You can see an example of this at work in the
         # {https://github.com/brighton36/rvgp/blob/main/lib/rvgp/commands/reconcile.rb reconcile.rb} file.
         # @param [Symbol] underscorized_command_name The command to return, when
-        #                                            {RRA::Base::Command::ReconcilerTarget.command} is called.
+        #                                            {RVGP::Base::Command::ReconcilerTarget.command} is called.
         def self.for_command(underscorized_command_name)
           @for_command = underscorized_command_name
         end
 
         # Returns which command this class is defined for. See the note in
-        # #{RRA::Base::Command::ReconcilerTarget.for_command}.
+        # #{RVGP::Base::Command::ReconcilerTarget.for_command}.
         # @return [Symbol] The command this target is relevant for.
         def self.command
           @for_command
@@ -130,13 +130,13 @@ module RRA
       #
       # Any class that operates by way of a plot-defined target, can use this implementation, in lieu of
       # re-implementing the wheel.
-      # @attr_reader [RRA::Plot] plot An instance of the plot that offers our :name variant
-      class PlotTarget < RRA::Base::Command::Target
+      # @attr_reader [RVGP::Plot] plot An instance of the plot that offers our :name variant
+      class PlotTarget < RVGP::Base::Command::Target
         attr_reader :plot
 
         # Create a new PlotTarget
         # @param [String] name A plot variant
-        # @param [RRA::Plot] plot A plot instance which will handle this variant
+        # @param [RVGP::Plot] plot A plot instance which will handle this variant
         def initialize(name, plot)
           super name, name
           @plot = plot
@@ -156,9 +156,9 @@ module RRA
         end
 
         # All possible Plot Targets that the project has defined.
-        # @return [Array<RRA::Base::Command::PlotTarget>] A collection of targets.
+        # @return [Array<RVGP::Base::Command::PlotTarget>] A collection of targets.
         def self.all
-          RRA::Plot.all(RRA.app.config.project_path('app/plots')).map do |plot|
+          RVGP::Plot.all(RVGP.app.config.project_path('app/plots')).map do |plot|
             plot.variants.map { |params| new params[:name], plot }
           end.flatten
         end
@@ -185,8 +185,8 @@ module RRA
         attr_reader :short, :long
 
         # Create a new Option
-        # @param [String] short see {RRA::Base::Command::Option#short}
-        # @param [String] long see {RRA::Base::Command::Option#long}
+        # @param [String] short see {RVGP::Base::Command::Option#short}
+        # @param [String] long see {RVGP::Base::Command::Option#long}
         # @param [Hash] options additional parameters to configure this Option with
         # @option options [TrueClass,FalseClass] :has_value (false) This flag indicates that this option is expected to
         #                                                        have a corresponding value, for its key.
@@ -212,7 +212,7 @@ module RRA
 
         # Given program arguments, and an array of options that we wish to support, return the options and arguments
         # that were encountered.
-        # @param [Array<RRA::Base::Command::Option>] options The options to that we want to parse, from out of the
+        # @param [Array<RVGP::Base::Command::Option>] options The options to that we want to parse, from out of the
         #                                                    provided args
         # @param [Array<String>] args Program arguments, as would be provided by a typical ARGV
         # @return [Array<Hash<Symbol,Object>,Array<String>>] A two-element array. The first element is a Hash of Symbols
@@ -264,9 +264,9 @@ module RRA
         end
       end
 
-      include RRA::Application::DescendantRegistry
+      include RVGP::Application::DescendantRegistry
 
-      register_descendants RRA, :commands
+      register_descendants RVGP, :commands
 
       attr_reader :errors, :options, :targets
 
@@ -305,7 +305,7 @@ module RRA
 
         if options[:list] && target_klass
           indent = I18n.t 'status.indicators.indent'
-          puts ([RRA.pastel.bold(I18n.t(format('commands.%s.list_targets', self.class.name)))] +
+          puts ([RVGP.pastel.bold(I18n.t(format('commands.%s.list_targets', self.class.name)))] +
             target_klass.all.map { |target| indent + target.name }).join("\n")
           exit
         end
@@ -342,8 +342,8 @@ module RRA
         # expected to contain a :short and :long symbol, and optionally a third Hash element, specifying initialize
         # options.
         #
-        # Each of these arguments are supplied to {RRA::Base::Command::Option#initialize}.
-        # {RRA::Base::Command::OPTION_ALL} and {RRA::Base::Command::OPTION_LIST} are common parameters to supply as
+        # Each of these arguments are supplied to {RVGP::Base::Command::Option#initialize}.
+        # {RVGP::Base::Command::OPTION_ALL} and {RVGP::Base::Command::OPTION_LIST} are common parameters to supply as
         # arguments to this method.
         # @param [Array<Array<Symbol,Hash>>] args An array, of pairs of [:long, :short] Symbol(s).
         def accepts_options(*args)
@@ -351,27 +351,27 @@ module RRA
         end
 
         # Return the options that have been defined for this command
-        # @return [Array<RRA::Base::Command::Option] the options this command handles
+        # @return [Array<RVGP::Base::Command::Option] the options this command handles
         def options
           @options || []
         end
       end
 
       # This module contains helpers methods, for commands, that want to be inserted into the rake process. By including
-      # this module in your command, you'll gain access to {RRA::Base::Command::RakeTask::ClassMethods#rake_tasks},
+      # this module in your command, you'll gain access to {RVGP::Base::Command::RakeTask::ClassMethods#rake_tasks},
       # which will append the Target(s) of your command, to the rake process.
       #
       # If custom rake declarations are necessary for your command the
-      # {RRA::Base::Command::RakeTask::ClassMethods#initialize_rake} method can be overridden, in order to make those
+      # {RVGP::Base::Command::RakeTask::ClassMethods#initialize_rake} method can be overridden, in order to make those
       # declarations.
       #
-      # Probably you should just head over to {RRA::Base::Command::RakeTask::ClassMethods} to learn more about this
+      # Probably you should just head over to {RVGP::Base::Command::RakeTask::ClassMethods} to learn more about this
       # module.
       module RakeTask
         # @!visibility private
         def execute!
           targets.map do |target|
-            RRA.app.logger.info self.class.name, target.status_name do
+            RVGP.app.logger.info self.class.name, target.status_name do
               warnings, errors = target.execute options
               warnings ||= []
               errors ||= []
@@ -390,7 +390,7 @@ module RRA
         # in.
         module ClassMethods
           # The namespace in which this command's targets are defined. This value is
-          # set by {RRA::Base::Command::RakeTask::ClassMethods#rake_tasks}.
+          # set by {RVGP::Base::Command::RakeTask::ClassMethods#rake_tasks}.
           attr_reader :rake_namespace
 
           # This method is provided for classes that include this module. Calling this method, with a namespace,

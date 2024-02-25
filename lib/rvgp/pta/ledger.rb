@@ -7,7 +7,7 @@ require 'nokogiri'
 require_relative '../pta'
 require_relative '../journal/pricer'
 
-module RRA
+module RVGP
   class Pta
     # A plain text accounting adapter implementation, for the 'ledger' pta command.
     # This class conforms the ledger query, and output, interfaces in a ruby-like
@@ -15,29 +15,29 @@ module RRA
     #
     # For a more detailed example of these queries in action, take a look at the
     # {https://github.com/brighton36/rra/blob/main/test/test_pta_adapter.rb test/test_pta_adapter.rb}
-    class Ledger < RRA::Pta
+    class Ledger < RVGP::Pta
       # @!visibility private
       BIN_PATH = '/usr/bin/ledger'
 
       # This module contains intermediary parsing objects, used to represent the output of ledger in
       # a structured and hierarchial format.
       module Output
-        # This is a base class from which RRA::Pta::Ledger's outputs inherit. It mostly just provides
+        # This is a base class from which RVGP::Pta::Ledger's outputs inherit. It mostly just provides
         # helpers for dealing with the xml output that ledger produces.
         # @attr_reader [Nokogiri::XML] doc The document that was produced by ledger, to construct this object
-        # @attr_reader [Array<RRA::Pta::Ledger::Output::XmlBase::Commodity>] commodities The exchange rates that
+        # @attr_reader [Array<RVGP::Pta::Ledger::Output::XmlBase::Commodity>] commodities The exchange rates that
         #              were reportedly encountered, in the output of ledger.
-        # @attr_reader [RRA::Journal::Pricer] pricer A price exchanger, to use for any currency exchange lookups
+        # @attr_reader [RVGP::Journal::Pricer] pricer A price exchanger, to use for any currency exchange lookups
         class XmlBase
           # A commodity, as defined by ledger's xml meta-output. This is largely for the purpose of
           # tracking exchange rates that were automatically deduced by ledger during the parsing
-          # of a journal. And, which, are stored in the {RRA::Pta:::Ledger::Output::XmlBase#commodities}
+          # of a journal. And, which, are stored in the {RVGP::Pta:::Ledger::Output::XmlBase#commodities}
           # collection. hledger does not have this feature.
           #
           # @attr_reader [String] symbol A three letter currency code
           # @attr_reader [Time] date The datetime when this commodity was declared or deduced
-          # @attr_reader [RRA::Journal::Commodity] price The exchange price
-          class Commodity < RRA::Base::Reader
+          # @attr_reader [RVGP::Journal::Commodity] price The exchange price
+          class Commodity < RVGP::Base::Reader
             readers :symbol, :date, :price
           end
 
@@ -46,10 +46,10 @@ module RRA
           # Declare the class, and initialize with the relevant options
           # @param [String] xml The xml document this object is composed from
           # @param [Hash] options Additional options
-          # @option options [RRA::Journal::Pricer] :pricer see {RRA::Pta::Ledger::Output::XmlBase#pricer}
+          # @option options [RVGP::Journal::Pricer] :pricer see {RVGP::Pta::Ledger::Output::XmlBase#pricer}
           def initialize(xml, options)
             @doc = Nokogiri::XML xml, &:noblanks
-            @pricer = options[:pricer] || RRA::Journal::Pricer.new
+            @pricer = options[:pricer] || RVGP::Journal::Pricer.new
 
             @commodities = doc.search('//commodities//commodity[annotation]').collect do |xcommodity|
               next unless ['symbol', 'date', 'price', 'price/commodity/symbol',
@@ -57,7 +57,7 @@ module RRA
 
               symbol = xcommodity.at('symbol').content
               date = Date.strptime(xcommodity.at('date').content, '%Y/%m/%d')
-              commodity = RRA::Journal::Commodity.from_symbol_and_amount(
+              commodity = RVGP::Journal::Commodity.from_symbol_and_amount(
                 xcommodity.at('price/commodity/symbol').content,
                 xcommodity.at('price/quantity').content
               )
@@ -69,15 +69,15 @@ module RRA
         end
 
         # An xml parser, to structure the output of balance queries to ledger. This object exists, as
-        # a return value, from the {RRA::Pta::Ledger#balance} method
-        # @attr_reader [RRA::Pta::BalanceAccount] accounts The accounts, and their components, that were
+        # a return value, from the {RVGP::Pta::Ledger#balance} method
+        # @attr_reader [RVGP::Pta::BalanceAccount] accounts The accounts, and their components, that were
         #                                                  returned by ledger.
         class Balance < XmlBase
           attr_reader :accounts
 
           # Declare the registry, and initialize with the relevant options
-          # @param [String] xml see {RRA::Pta::Ledger::Output::XmlBase#initialize}
-          # @param [Hash] options see {RRA::Pta::Ledger::Output::XmlBase#initialize}
+          # @param [String] xml see {RVGP::Pta::Ledger::Output::XmlBase#initialize}
+          # @param [Hash] options see {RVGP::Pta::Ledger::Output::XmlBase#initialize}
           def initialize(xml, options = {})
             super xml, options
 
@@ -97,10 +97,10 @@ module RRA
 
                 next unless fullname
 
-                RRA::Pta::BalanceAccount.new(
+                RVGP::Pta::BalanceAccount.new(
                   fullname,
                   xaccount.xpath('account-amount/amount|account-amount/*/amount').collect do |amount|
-                    commodity = RRA::Journal::Commodity.from_symbol_and_amount(
+                    commodity = RVGP::Journal::Commodity.from_symbol_and_amount(
                       amount.at('symbol').content, amount.at('quantity').content
                     )
                     commodity if commodity.quantity != 0
@@ -112,28 +112,28 @@ module RRA
         end
 
         # An xml parser, to structure the output of register queries to ledger. This object exists, as
-        # a return value, from the {RRA::Pta::Ledger#register} method
-        # @attr_reader [RRA::Pta::RegisterTransaction] transactions The transactions, and their components, that were
+        # a return value, from the {RVGP::Pta::Ledger#register} method
+        # @attr_reader [RVGP::Pta::RegisterTransaction] transactions The transactions, and their components, that were
         #                                                           returned by ledger.
         class Register < XmlBase
           attr_reader :transactions
 
           # Declare the registry, and initialize with the relevant options
-          # @param [String] xml see {RRA::Pta::Ledger::Output::XmlBase#initialize}
-          # @param [Hash] options see {RRA::Pta::Ledger::Output::XmlBase#initialize}
+          # @param [String] xml see {RVGP::Pta::Ledger::Output::XmlBase#initialize}
+          # @param [Hash] options see {RVGP::Pta::Ledger::Output::XmlBase#initialize}
           def initialize(xml, options = {})
             super xml, options
 
             @transactions = doc.xpath('//transactions/transaction').collect do |xt|
               date = Date.strptime(xt.at('date').content, '%Y/%m/%d')
 
-              RRA::Pta::RegisterTransaction.new(
+              RVGP::Pta::RegisterTransaction.new(
                 date,
                 xt.at('payee').content,
                 xt.xpath('postings/posting').collect do |xp|
                   amounts, totals = *%w[post-amount total].collect do |attr|
                     xp.at(attr).search('amount').collect do |xa|
-                      RRA::Journal::Commodity.from_symbol_and_amount(
+                      RVGP::Journal::Commodity.from_symbol_and_amount(
                         xa.at('commodity/symbol')&.content,
                         xa.at('quantity').content
                       )
@@ -158,7 +158,7 @@ module RRA
                     end
                   end
 
-                  RRA::Pta::RegisterPosting.new(
+                  RVGP::Pta::RegisterPosting.new(
                     account,
                     amounts,
                     totals,
@@ -185,7 +185,7 @@ module RRA
       # without denotating their key.
       #
       # This method will simply parse the output of ledger, and return that.
-      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RVGP::Pta#args_and_opts} for
       #                             details
       # @return [Array<String>] An array of the lines returned by ledger, split into strings. In most cases, this
       #                         could also be described as simply 'an array of the filtered tags'.
@@ -204,7 +204,7 @@ module RRA
       # Return the files that were encountered, when parsing the provided arguments.
       # The output of this method should be identical, regardless of the Pta Adapter that resolves the request.
       #
-      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RVGP::Pta#args_and_opts} for
       #                             details
       # @return [Array<String>] An array of paths that were referenced when fetching data in provided arguments.
       def files(*args)
@@ -223,32 +223,32 @@ module RRA
       # method may produce counterintutive results, if you override the sort: option.
       #
       # NOTE: For almost any case you think you want to use this method, {#newest_transaction_date} is probably
-      # more efficient. Particularly since this method has accelerated implementation in its {RRA::Pta::Hledger}
+      # more efficient. Particularly since this method has accelerated implementation in its {RVGP::Pta::Hledger}
       # counterpart
       #
-      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RVGP::Pta#args_and_opts} for
       #                             details.
-      # @return [RRA::Pta::RegisterTransaction] The newest transaction in the set
+      # @return [RVGP::Pta::RegisterTransaction] The newest transaction in the set
       def newest_transaction(*args)
         args, opts = args_and_opts(*args)
         first_transaction(*args, opts.merge(sort: 'date', tail: 1))
       end
 
       # Returns the oldest transaction, retured in set of transactions filtered with the provided arguments.
-      # This method is mostly a wrapper around {RRA::Pta::Ledger#register} with the \\{head: 1} option passed to that
+      # This method is mostly a wrapper around {RVGP::Pta::Ledger#register} with the \\{head: 1} option passed to that
       # method. This method may produce counterintutive results, if you override the sort: option.
       #
-      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RVGP::Pta#args_and_opts} for
       #                             details.
-      # @return [RRA::Pta::RegisterTransaction] The oldest transaction in the set
+      # @return [RVGP::Pta::RegisterTransaction] The oldest transaction in the set
       def oldest_transaction(*args)
         args, opts = args_and_opts(*args)
         first_transaction(*args, opts.merge(sort: 'date', head: 1))
       end
 
-      # Returns the value of the 'Time Period' key, of the #{RRA::Pta#stats} method. This method is a fast query to
+      # Returns the value of the 'Time Period' key, of the #{RVGP::Pta#stats} method. This method is a fast query to
       # resolve.
-      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RVGP::Pta#args_and_opts} for
       #                             details.
       # @return [Date] The date of the newest transaction found in your files.
       def newest_transaction_date(*args)
@@ -256,19 +256,19 @@ module RRA
       end
 
       # Run the 'ledger balance' command, and return it's output.
-      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RVGP::Pta#args_and_opts} for
       #                             details.
-      # @return [RRA::Pta::Ledger::Output::Balance] A parsed, hierarchial, representation of the output
+      # @return [RVGP::Pta::Ledger::Output::Balance] A parsed, hierarchial, representation of the output
       def balance(*args)
         args, opts = args_and_opts(*args)
 
-        RRA::Pta::Ledger::Output::Balance.new command('xml', *args, opts)
+        RVGP::Pta::Ledger::Output::Balance.new command('xml', *args, opts)
       end
 
       # Run the 'ledger register' command, and return it's output.
       #
       # This method also supports the following options, for additional handling:
-      # - *:pricer* (RRA::Journal::Pricer) - If provided, this option will use the specified pricer object when
+      # - *:pricer* (RVGP::Journal::Pricer) - If provided, this option will use the specified pricer object when
       #   calculating exchange rates.
       # - *:empty* (TrueClass, FalseClass) - If false, we'll remove any accounts and totals, that have
       #   quantities of zero.
@@ -276,9 +276,9 @@ module RRA
       #   and '<Total>' to :total. This is mostly to useful when trying to preserve uniform behaviors between pta
       #   adapters. (hledger seems to offer us nil, in cases where ledger offers us '<None>')
       #
-      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+      # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RVGP::Pta#args_and_opts} for
       #                             details.
-      # @return [RRA::Pta::Ledger::Output::Register] A parsed, hierarchial, representation of the output
+      # @return [RVGP::Pta::Ledger::Output::Register] A parsed, hierarchial, representation of the output
       def register(*args)
         args, opts = args_and_opts(*args)
 
@@ -287,7 +287,7 @@ module RRA
 
         # We stipulate, by default, a date sort. Mostly because it makes sense. But, also so
         # that this matches HLedger's default sort order
-        RRA::Pta::Ledger::Output::Register.new command('xml', *args, { sort: 'date' }.merge(opts)),
+        RVGP::Pta::Ledger::Output::Register.new command('xml', *args, { sort: 'date' }.merge(opts)),
                                                monthly: (opts[:monthly] == true),
                                                empty: opts[:empty],
                                                pricer: pricer,
@@ -299,7 +299,7 @@ module RRA
       def first_transaction(*args)
         reg = register(*args)
 
-        raise RRA::Pta::AssertionError, 'Expected a single transaction' unless reg.transactions.length == 1
+        raise RVGP::Pta::AssertionError, 'Expected a single transaction' unless reg.transactions.length == 1
 
         reg.transactions.first
       end

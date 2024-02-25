@@ -7,10 +7,10 @@ require_relative '../lib/rvgp'
 require_relative '../lib/rvgp/fakers/fake_feed'
 require_relative '../lib/rvgp/fakers/fake_reconciler'
 
-# Minitest class, used to test RRA::Fakers::FakeJournal
+# Minitest class, used to test RVGP::Fakers::FakeJournal
 class TestFakeFeed < Minitest::Test
   def test_basic_feed
-    feed = RRA::Fakers::FakeFeed.basic_checking from: Date.new(2020, 1, 1),
+    feed = RVGP::Fakers::FakeFeed.basic_checking from: Date.new(2020, 1, 1),
                                                 to: Date.new(2020, 3, 31),
                                                 post_count: 300
 
@@ -44,7 +44,7 @@ class TestFakeFeed < Minitest::Test
   def test_descriptions_param
     expense_descriptions = %w[Walmart Amazon Apple CVS Exxon Berkshire Google Microsoft Costco]
     income_descriptions = %w[Uber Cyberdyne]
-    feed = RRA::Fakers::FakeFeed.basic_checking post_count: 50,
+    feed = RVGP::Fakers::FakeFeed.basic_checking post_count: 50,
                                                 expense_descriptions: expense_descriptions,
                                                 income_descriptions: income_descriptions
 
@@ -79,7 +79,7 @@ class TestFakeFeed < Minitest::Test
 
     starting_balance = '$ 10000.00'.to_commodity
 
-    feed = RRA::Fakers::FakeFeed.basic_checking from: Date.new(2020, 1, 1),
+    feed = RVGP::Fakers::FakeFeed.basic_checking from: Date.new(2020, 1, 1),
                                                 to: Date.new(2020, 3, 31),
                                                 post_count: 300,
                                                 starting_balance: starting_balance,
@@ -110,7 +110,7 @@ class TestFakeFeed < Minitest::Test
     liability_sources = [Faker::Company.name.tr('^a-zA-Z0-9 ', '')]
     liabilities, assets = 2.times.map do |_|
       duration_in_months.times.map do
-        RRA::Journal::Commodity.from_symbol_and_amount '$', Faker::Number.between(from: 0, to: 2_000_000)
+        RVGP::Journal::Commodity.from_symbol_and_amount '$', Faker::Number.between(from: 0, to: 2_000_000)
       end
     end
 
@@ -122,14 +122,14 @@ class TestFakeFeed < Minitest::Test
     monthly_expenses = (category_to_company.keys.map do |category|
       [category_to_company[category],
        12.times.map do |_|
-         RRA::Journal::Commodity.from_symbol_and_amount '$', Faker::Number.between(from: 10, to: 1000)
+         RVGP::Journal::Commodity.from_symbol_and_amount '$', Faker::Number.between(from: 10, to: 1000)
        end]
     end).to_h
 
     # This one, we'll just try something different with:
     monthly_expenses[category_to_company['Personal:Expenses:Rent']] = ['$ 1500.00'.to_commodity] * 12
 
-    feed = RRA::Fakers::FakeFeed.personal_checking from: from,
+    feed = RVGP::Fakers::FakeFeed.personal_checking from: from,
                                                    to: from >> (duration_in_months - 1),
                                                    expense_sources: expense_sources,
                                                    income_sources: income_sources,
@@ -193,7 +193,7 @@ class TestFakeFeed < Minitest::Test
   private
 
   def account_by_month(acct, journal_s, accrue_by = :total_in)
-    ledger = RRA::Pta::Ledger.new
+    ledger = RVGP::Pta::Ledger.new
     ledger.register(acct, monthly: true, from_s: journal_s)
           .transactions.map do |tx|
             assert_equal 1, tx.postings.length
@@ -210,7 +210,7 @@ class TestFakeFeed < Minitest::Test
 
     yaml_file = Tempfile.open %w[rvgp_test .yaml]
 
-    yaml_file.write RRA::Fakers::FakeReconciler.basic_checking(
+    yaml_file.write RVGP::Fakers::FakeReconciler.basic_checking(
       **{ label: 'Personal AcmeBank:Checking',
           input_path: feed_file.path,
           output_path: journal_file.path }.merge(reconciler_opts)
@@ -218,7 +218,7 @@ class TestFakeFeed < Minitest::Test
 
     yaml_file.close
 
-    RRA::Reconcilers::CsvReconciler.new(RRA::Utilities::Yaml.new(yaml_file.path)).to_ledger
+    RVGP::Reconcilers::CsvReconciler.new(RVGP::Utilities::Yaml.new(yaml_file.path)).to_ledger
   ensure
     [feed_file, yaml_file, journal_file].each do |f|
       f.close

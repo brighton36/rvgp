@@ -5,7 +5,7 @@ require 'faker'
 require_relative '../journal'
 require_relative '../journal/commodity'
 
-module RRA
+module RVGP
   module Fakers
     # This module offers code that is shared by a number of our fakers. Mostly,
     # this just keeps those fakers DRY.

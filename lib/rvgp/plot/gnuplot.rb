@@ -2,7 +2,7 @@
 
 require 'open3'
 
-module RRA
+module RVGP
   class Plot
     # This module contains the code needed to produce Gnuplot .gpi files, from a grid, and
     # styling options.
@@ -87,7 +87,7 @@ module RRA
         # @option opts [Integer,Date] :xrange_start The plot domain origin, either the number 1, or a date
         # @option opts [Date] :xrange_end The end of the plot domain
         # @option opts [Hash<Symbol, String>] :axis Axis labels. At the moment, :bottom and :left are supported keys.
-        # @param [RRA::Plot::Gnuplot::Plot] gnuplot A Plot to attach this Chart to
+        # @param [RVGP::Plot::Gnuplot::Plot] gnuplot A Plot to attach this Chart to
         def initialize(opts, gnuplot)
           # TODO: At some point, we probably want to support inverting the key order.
           #       which, as best I can tell, will involve writing a 'fake' chart,
@@ -317,7 +317,7 @@ module RRA
       end
 
       # This class represents, and generates, a gnuplot gpi file. Either to string, or, to the filesystem.
-      # This class will typically work with classes derived from {RRA::Plot::Gnuplot::ChartBuilder}, and
+      # This class will typically work with classes derived from {RVGP::Plot::Gnuplot::ChartBuilder}, and
       # an instance of this class is provided as a parameter to the #initialize method of a ChartBuilder.
       # @attr_reader [Array<String>] additional_lines Arbitrary lines, presumably of gnuplot code, that are appended to
       #                                               the generated gpi, after the settings, and before the plot
@@ -329,7 +329,7 @@ module RRA
       #                                              For more details on what options are supported in the :colors key,
       #                                              see the colors section of:
       #                                              {https://github.com/brighton36/rra/blob/main/resources/gnuplot/default.yml default.yml}
-      # @attr_reader [RRA::Plot::Gnuplot::ChartBuilder] element An instance of {Plot::ELEMENTS}, to which plot directive
+      # @attr_reader [RVGP::Plot::Gnuplot::ChartBuilder] element An instance of {Plot::ELEMENTS}, to which plot directive
       #                                                         generation is delegated.
       # @attr_reader [Array<Array<String>>] dataset A grid, whose first row contains the headers, and in which each
       #                                             additional row's first element, is a keystone.

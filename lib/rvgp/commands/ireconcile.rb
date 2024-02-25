@@ -2,13 +2,13 @@
 
 require 'tempfile'
 
-module RRA
+module RVGP
   module Commands
     # @!visibility private
     # This class contains the handling of the 'ireconcile' command. Note that
     # there is no rake integration in this command, as that function is irrelevent
     # to the notion of an 'export'.
-    class Ireconcile < RRA::Base::Command
+    class Ireconcile < RVGP::Base::Command
       accepts_options OPTION_ALL, OPTION_LIST, %i[vsplit v]
 
       # There's a bug here where we scroll to the top of the file sometimes, on
@@ -64,10 +64,10 @@ module RRA
       end
 
       # @!visibility private
-      # This class represents a reconciler. See RRA::Base::Command::ReconcilerTarget, for
+      # This class represents a reconciler. See RVGP::Base::Command::ReconcilerTarget, for
       # most of the logic that this class inherits. Typically, these targets take the form
       # of "#\\{year}-#\\{reconciler_name}"
-      class Target < RRA::Base::Command::ReconcilerTarget
+      class Target < RVGP::Base::Command::ReconcilerTarget
         # @!visibility private
         VIMSCRIPT_TEMPLATE = <<-VIMSCRIPT
         edit %<output_file>s

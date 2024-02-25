@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-module RRA
-  # This module contains helper methods used throughout RRA. These are just common
+module RVGP
+  # This module contains helper methods used throughout RVGP. These are just common
   # codepaths, that have little in common, save for their general utility.
   module Utilities
     # This returns each month in a series from the first date, to the last, in the

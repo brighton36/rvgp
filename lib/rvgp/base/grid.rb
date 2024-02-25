@@ -4,7 +4,7 @@ require 'csv'
 require_relative '../application/descendant_registry'
 require_relative '../utilities'
 
-module RRA
+module RVGP
   # This module largely exists as a folder, in which to group Parent classes, that are used throughout the project.
   # There's nothing else interesting happening here in this module, other than its use as as namespace.
   module Base
@@ -16,16 +16,16 @@ module RRA
     # Users are expected to inherit from this class, in their grid bulding implementations, inside ruby classes defined
     # in your project's app/grids directory. This class offers helpers for working with pta_adapters (particularly for
     # use with by-month queries). Additionally, this class offers code to detect and produce annual, and otherwise
-    # arbitary(see {RRA::Base::Grid::HasMultipleSheets}) segmentation of grids.
+    # arbitary(see {RVGP::Base::Grid::HasMultipleSheets}) segmentation of grids.
     #
     # The function and purpose of grids, in your project, is as follows:
     # - Store a state of our data in the project's build, and thus its git history.
-    # - Provide the data used by a subsequent {RRA::Plot}.
-    # - Provide the data used by a subsequent {RRA::Utilities::GridQuery}.
+    # - Provide the data used by a subsequent {RVGP::Plot}.
+    # - Provide the data used by a subsequent {RVGP::Utilities::GridQuery}.
     #
     # Each instance of Grid, in your build is expected to represent a segment of the data. Typically this segment will
     # be as simple as a date range (either a specific year, or 'all dates'). However, the included
-    # {RRA::Base::Grid::HasMultipleSheets} module, allows you to add additional arbitrary segments (perhaps a segment
+    # {RVGP::Base::Grid::HasMultipleSheets} module, allows you to add additional arbitrary segments (perhaps a segment
     # for each value of a tag), that may be used to produce additional grids in your build, on top of the dated
     # segments.
     #
@@ -33,7 +33,7 @@ module RRA
     # Perhaps the easiest way to understand what this class does, is to look at one of the sample grids produced by
     # the new_project command. Here's the contents of an app/grids/wealth_growth_grid.rb, that you can use in your
     # projects:
-    #    class WealthGrowthGrid < RRA::Base::Grid
+    #    class WealthGrowthGrid < RVGP::Base::Grid
     #      grid 'wealth_growth', 'Generate Wealth Growth Grids', 'Wealth Growth by month (%s)',
     #           output_path_template: '%s-wealth-growth'
     #
@@ -77,14 +77,14 @@ module RRA
     # @attr_reader [Integer] year The year segmentation, for an instance of this Grid. This value is pulled from the
     #                             year of :ending_at.
     class Grid
-      include RRA::Application::DescendantRegistry
-      include RRA::Pta::AvailabilityHelper
-      include RRA::Utilities
+      include RVGP::Application::DescendantRegistry
+      include RVGP::Pta::AvailabilityHelper
+      include RVGP::Utilities
 
-      register_descendants RRA, :grids, accessors: {
+      register_descendants RVGP, :grids, accessors: {
         task_names: lambda { |registry|
           registry.names.map do |name|
-            RRA.app.config.grid_years.map do |year|
+            RVGP.app.config.grid_years.map do |year|
               format 'grid:%<year>d-%<name>s', year: year, name: name.tr('_', '-')
             end
           end.flatten
@@ -94,8 +94,8 @@ module RRA
       attr_reader :starting_at, :ending_at, :year
 
       # Create a Grid, given the following date segment
-      # @param [Date] starting_at See {RRA::Base::Grid#starting_at}.
-      # @param [Date] ending_at See {RRA::Base::Grid#ending_at}.
+      # @param [Date] starting_at See {RVGP::Base::Grid#starting_at}.
+      # @param [Date] ending_at See {RVGP::Base::Grid#ending_at}.
       def initialize(starting_at, ending_at)
         # NOTE: It seems that with monthly queries, the ending date works a bit
         # differently. It's not necessariy to add one to the day here. If you do,
@@ -121,7 +121,7 @@ module RRA
       private
 
       # @!visibility public
-      # The provided args are passed to {RRA::Pta::AvailabilityHelper#pta}'s '#register. The total amounts returned  by
+      # The provided args are passed to {RVGP::Pta::AvailabilityHelper#pta}'s '#register. The total amounts returned  by
       # this query are reduced by account, then month. This means that the return value is a Hash, whose keys correspond
       # to each of the accounts that were encounted. The values for each of those keys, is itself a Hash indexed by
       # month, whose value is the total amount returned, for that month.
@@ -133,16 +133,16 @@ module RRA
       # - *initial* [Hash] - defaults to ({}). This is the value we begin to map values from. Typically we want to
       #   start that process from nil, this allows us to decorate the starting point.
       # - *in_code* [String] - defaults to ('$') . This value, expected to be a commodity code, is ultimately passed
-      #   to {RRA::Pta::RegisterPosting#total_in}
-      # @param [Array<Object>] args See {RRA::Pta::HLedger#register}, {RRA::Pta::Ledger#register} for details
-      # @return [Hash<String,Hash<Date,RRA::Journal::Commodity>>] all totals, indexed by month. Months are indexed by
+      #   to {RVGP::Pta::RegisterPosting#total_in}
+      # @param [Array<Object>] args See {RVGP::Pta::HLedger#register}, {RVGP::Pta::Ledger#register} for details
+      # @return [Hash<String,Hash<Date,RVGP::Journal::Commodity>>] all totals, indexed by month. Months are indexed by
       #                                                          account.
       def monthly_totals_by_account(*args)
         reduce_monthly_by_account(*args, :total_in)
       end
 
       # @!visibility public
-      # The provided args are passed to {RRA::Pta::AvailabilityHelper#pta}'s #register. The amounts returned  by this
+      # The provided args are passed to {RVGP::Pta::AvailabilityHelper#pta}'s #register. The amounts returned  by this
       # query are reduced by account, then month. This means that the return value is a Hash, whose keys correspond to
       # each of the accounts that were encounted. The values for each of those keys, is itself a Hash indexed by month,
       # whose value is the amount amount returned, for that month.
@@ -154,16 +154,16 @@ module RRA
       # - *initial* [Hash] - defaults to ({}). This is the value we begin to map values from. Typically we want to
       #   start that process from nil, this allows us to decorate the starting point.
       # - *in_code* [String] - defaults to ('$') . This value, expected to be a commodity code, is ultimately passed
-      #   to {RRA::Pta::RegisterPosting#amount_in}
-      # @param [Array<Object>] args See {RRA::Pta::HLedger#register}, {RRA::Pta::Ledger#register} for details
-      # @return [Hash<String,Hash<Date,RRA::Journal::Commodity>>] all amounts, indexed by month. Months are indexed by
+      #   to {RVGP::Pta::RegisterPosting#amount_in}
+      # @param [Array<Object>] args See {RVGP::Pta::HLedger#register}, {RVGP::Pta::Ledger#register} for details
+      # @return [Hash<String,Hash<Date,RVGP::Journal::Commodity>>] all amounts, indexed by month. Months are indexed by
       #                                                          account.
       def monthly_amounts_by_account(*args)
         reduce_monthly_by_account(*args, :amount_in)
       end
 
       # @!visibility public
-      # The provided args are passed to {RRA::Pta::AvailabilityHelper#pta}'s #register. The total amounts returned  by
+      # The provided args are passed to {RVGP::Pta::AvailabilityHelper#pta}'s #register. The total amounts returned  by
       # this query are reduced by month. This means that the return value is a Hash, indexed by month (in the form of a
       # Date class) whose value is itself a Commodity, which indicates the total for that month.
       #
@@ -174,16 +174,16 @@ module RRA
       # - *initial* [Hash] - defaults to ({}). This is the value we begin to map values from. Typically we want to
       #   start that process from nil, this allows us to decorate the starting point.
       # - *in_code* [String] - defaults to ('$') . This value, expected to be a commodity code, is ultimately passed
-      #   to {RRA::Pta::RegisterPosting#total_in}
-      # @param [Array<Object>] args See {RRA::Pta::HLedger#register}, {RRA::Pta::Ledger#register} for details
-      # @return [Hash<Date,RRA::Journal::Commodity>] all amounts, indexed by month. Months are indexed by
+      #   to {RVGP::Pta::RegisterPosting#total_in}
+      # @param [Array<Object>] args See {RVGP::Pta::HLedger#register}, {RVGP::Pta::Ledger#register} for details
+      # @return [Hash<Date,RVGP::Journal::Commodity>] all amounts, indexed by month. Months are indexed by
       #                                                          account.
       def monthly_totals(*args)
         reduce_monthly(*args, :total_in)
       end
 
       # @!visibility public
-      # The provided args are passed to {RRA::Pta::AvailabilityHelper#pta}'s #register. The amounts returned  by this
+      # The provided args are passed to {RVGP::Pta::AvailabilityHelper#pta}'s #register. The amounts returned  by this
       # query are reduced by month. This means that the return value is a Hash, indexed by month (in the form of a Date
       # class) whose value is itself a Commodity, which indicates the amount for that month.
       #
@@ -194,9 +194,9 @@ module RRA
       # - *initial* [Hash] - defaults to ({}). This is the value we begin to map values from. Typically we want to
       #   start that process from nil, this allows us to decorate the starting point.
       # - *in_code* [String] - defaults to ('$') . This value, expected to be a commodity code, is ultimately passed
-      #   to {RRA::Pta::RegisterPosting#amount_in}
-      # @param [Array<Object>] args See {RRA::Pta::HLedger#register}, {RRA::Pta::Ledger#register} for details
-      # @return [Hash<Date,RRA::Journal::Commodity>] all amounts, indexed by month. Months are indexed by
+      #   to {RVGP::Pta::RegisterPosting#amount_in}
+      # @param [Array<Object>] args See {RVGP::Pta::HLedger#register}, {RVGP::Pta::Ledger#register} for details
+      # @return [Hash<Date,RVGP::Journal::Commodity>] all amounts, indexed by month. Months are indexed by
       #                                                          account.
       def monthly_amounts(*args)
         reduce_monthly(*args, :amount_in)
@@ -258,11 +258,11 @@ module RRA
         # from the hledger help, on what historical is...
         accrue_before_begin = opts.delete :accrue_before_begin
 
-        opts.merge!({ pricer: RRA.app.pricer,
+        opts.merge!({ pricer: RVGP.app.pricer,
                       monthly: true,
                       empty: false, # This applies to Ledger, and ensures it's results match HLedger's exactly
                       # TODO: I don't think I need this file: here
-                      file: RRA.app.config.project_journal_path })
+                      file: RVGP.app.config.project_journal_path })
 
         opts[:hledger_opts] ||= {}
         opts[:ledger_opts] ||= {}
@@ -297,7 +297,7 @@ module RRA
       def write!(path, rows)
         CSV.open(path, 'w') do |csv|
           rows.each do |row|
-            csv << row.map { |val| val.is_a?(RRA::Journal::Commodity) ? val.to_s(no_code: true, precision: 2) : val }
+            csv << row.map { |val| val.is_a?(RVGP::Journal::Commodity) ? val.to_s(no_code: true, precision: 2) : val }
           end
         end
       end
@@ -310,20 +310,20 @@ module RRA
       #                                            formatter is expected, which, will be substituted with the year of
       #                                            a segment or the string 'all'.
       class << self
-        include RRA::Utilities
-        include RRA::Pta::AvailabilityHelper
+        include RVGP::Utilities
+        include RVGP::Pta::AvailabilityHelper
 
         attr_reader :name, :description, :output_path_template
 
         # This helper method is provided for child classes, to easily establish a definition of this grid, that
         # can be used to produce it's instances, and their resulting output.
-        # @param [String] name See {RRA::Base::Grid.name}.
-        # @param [String] description See {RRA::Base::Grid.description}.
+        # @param [String] name See {RVGP::Base::Grid.name}.
+        # @param [String] description See {RVGP::Base::Grid.description}.
         # @param [String] status_name_template A template to use, when composing the build status. A single '%s'
         #                                      formatter is expected, which, will be substituted with the year
         #                                      of a segment or the string 'all'.
         # @param [String] options what options to configure this registry with
-        # @option options [String] :output_path_template See {RRA::Base::Grid.output_path_template}.
+        # @option options [String] :output_path_template See {RVGP::Base::Grid.output_path_template}.
         # @return [void]
         def grid(name, description, status_name_template, options = {})
           @name = name
@@ -341,7 +341,7 @@ module RRA
           # But, if we start using this before the journals are built, we're going to
           # need to clear this cache, thereafter. So, maybe we want to take a parameter
           # here, or figure something out then, to prevent problems.
-          @dependency_paths ||= pta.files(file: RRA.app.config.project_journal_path)
+          @dependency_paths ||= pta.files(file: RVGP.app.config.project_journal_path)
         end
 
         # Whether this grid's outputs are fresh. This is determined, by examing the mtime's of our #dependency_paths.
@@ -356,7 +356,7 @@ module RRA
         def output_path(year)
           raise StandardError, 'Missing output_path_template' unless output_path_template
 
-          [RRA.app.config.build_path('grids'), '/', output_path_template % year, '.csv'].join
+          [RVGP.app.config.build_path('grids'), '/', output_path_template % year, '.csv'].join
         end
 
         # Given a year, compute the status label for an instance of this grid
@@ -367,7 +367,7 @@ module RRA
         end
       end
 
-      # This module can be included into classes descending from RRA::Base::Grid, in order to add support for multiple
+      # This module can be included into classes descending from RVGP::Base::Grid, in order to add support for multiple
       # sheets, per year. These sheets can be declared using the provided 'has_sheets' class method, like so:
       #   has_sheets('cashflow') { %w(personal business) }
       # This declaration will ensure the creation of "#\\{year}-cashflow-business.csv" and
@@ -379,7 +379,7 @@ module RRA
       # expense correlates with, is determined by the value of it's property tag (should one exist).
       # This grid will build a separate grid for every property that we've tagged expenses for, with the expenses for
       # that tag, separated by year.
-      #   class PropertyExpensesGrid < RRA::Base::Grid
+      #   class PropertyExpensesGrid < RVGP::Base::Grid
       #     include HasMultipleSheets
       #
       #     grid 'expenses_by_property', 'Generate Property Expense Grids', 'Property Expenses by month (%s)'
@@ -459,7 +459,7 @@ module RRA
           nil
         end
 
-        # see (RRA::Base::Grid::HasMultipleSheets.sheets)
+        # see (RVGP::Base::Grid::HasMultipleSheets.sheets)
         def sheets(year)
           self.class.sheets year
         end
@@ -470,7 +470,7 @@ module RRA
         end
 
         # This module contains the Class methods, that are automatically included,
-        # at the time RRA::Base::Grid::HasMultipleSheets is included into a class.
+        # at the time RVGP::Base::Grid::HasMultipleSheets is included into a class.
         module ClassMethods
           # Define what additional sheets, this Grid will handle.
           # @param [String] sheet_output_prefix This is used in constructing the output file, and is expected to be
@@ -503,7 +503,7 @@ module RRA
           # @!visibility private
           def output_path(year, sheet)
             format '%<path>s/%<year>s-%<prefix>s-%<sheet>s.csv',
-                   path: RRA.app.config.build_path('grids'),
+                   path: RVGP.app.config.build_path('grids'),
                    year: year,
                    prefix: sheet_output_prefix,
                    sheet: sheet.to_s.downcase

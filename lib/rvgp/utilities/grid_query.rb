@@ -2,7 +2,7 @@
 
 require 'csv'
 
-module RRA
+module RVGP
   module Utilities
     # This class provides a number of utility functions to query, and merge, grids
     # that have been built. The primary purpose of these tools, is to decrease
@@ -23,7 +23,7 @@ module RRA
       # Setup a GridQuery
       # @param [Array<String>] from_files An array of paths, to grid files
       # @param [Hash] options Additional options
-      # @option options [String] keystone see {RRA::Utilities::GridQuery#keystone}
+      # @option options [String] keystone see {RVGP::Utilities::GridQuery#keystone}
       # @option options [Proc] store_cell  This proc is provided one parameter, a data cell. The return value of this
       #                                    proc is then stored in :data, in lieu of the parameter.
       # @option options [Proc] select_columns This proc is provided two parameters, a header (String), and the cells

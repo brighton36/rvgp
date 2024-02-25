@@ -5,7 +5,7 @@ require 'googleauth'
 require 'googleauth/stores/file_token_store'
 require 'google/apis/sheets_v4'
 
-module RRA
+module RVGP
   class Plot
     # This module contains the classes which support our 'Publish to Google' features.
     module GoogleDrive
@@ -117,7 +117,7 @@ module RRA
         end
 
         # Add the provided sheet, to the Spreadsheet document
-        # @param [RRA::Plot::GoogleDrive::Sheet] sheet The options, and data, for this sheet
+        # @param [RVGP::Plot::GoogleDrive::Sheet] sheet The options, and data, for this sheet
         # @return [void]
         def sheet(sheet)
           raise StandardError, 'Too many columns...' if sheet.columns.length > 26

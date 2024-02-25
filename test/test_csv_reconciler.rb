@@ -5,7 +5,7 @@ require 'minitest/autorun'
 
 require_relative '../lib/rvgp'
 
-# Minitest class, used to test RRA::Reconcilers::CsvReconciler
+# Minitest class, used to test RVGP::Reconcilers::CsvReconciler
 class TestCsvReconciler < Minitest::Test
   THREE_LINES = "Line 1\nLine 2\nLine 3\n"
   THREE_LINES_WO_ENDLINE = "Line 1\nLine 2\nLine 3"
@@ -55,6 +55,6 @@ class TestCsvReconciler < Minitest::Test
 
   # This is just to may the tests a bit easier to type
   def input_file_contents(*args)
-    RRA::Reconcilers::CsvReconciler.input_file_contents(*args)
+    RVGP::Reconcilers::CsvReconciler.input_file_contents(*args)
   end
 end

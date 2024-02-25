@@ -6,7 +6,7 @@ require 'minitest/autorun'
 
 require_relative '../lib/rvgp'
 
-# Tests for RRA::Journal::Pricer
+# Tests for RVGP::Journal::Pricer
 class TestPricer < Minitest::Test
   TEST_PRICES_DB_FORMAT1 = <<~DB_FORMAT1
     P 2004/06/25 00:00:00 FEQTX $24.00
@@ -32,11 +32,11 @@ class TestPricer < Minitest::Test
   LARGE_ASSETS
 
   def test_price_format1
-    p = RRA::Journal::Pricer.new TEST_PRICES_DB_FORMAT1
+    p = RVGP::Journal::Pricer.new TEST_PRICES_DB_FORMAT1
 
-    assert_raises(RRA::Journal::Pricer::NoPriceError) { price_on p, '1900-01-01', 'FEQTX', 'USD' }
-    assert_raises(RRA::Journal::Pricer::NoPriceError) { price_on p, '2004-06-20', 'FEQTX', '$' }
-    assert_raises(RRA::Journal::Pricer::NoPriceError) { price_on p, '2004-06-21', 'FEQTX', 'USD' }
+    assert_raises(RVGP::Journal::Pricer::NoPriceError) { price_on p, '1900-01-01', 'FEQTX', 'USD' }
+    assert_raises(RVGP::Journal::Pricer::NoPriceError) { price_on p, '2004-06-20', 'FEQTX', '$' }
+    assert_raises(RVGP::Journal::Pricer::NoPriceError) { price_on p, '2004-06-21', 'FEQTX', 'USD' }
 
     assert_equal '$ 22.49', price_on(p, '2004-06-21 12:00:00', 'FEQTX', '$')
     assert_equal '$ 22.49', price_on(p, '2004-06-21 14:14:59', 'FEQTX', 'USD')
@@ -49,9 +49,9 @@ class TestPricer < Minitest::Test
     # This is the same set of tests as above, but ,inverted:
     # Probably this doesn't make much sense in production, but, we use it with
     # fiat currencies later:
-    assert_raises(RRA::Journal::Pricer::NoPriceError) { price_on p, '1900-01-01', 'USD', 'FEQTX' }
-    assert_raises(RRA::Journal::Pricer::NoPriceError) { price_on p, '2004-06-20', '$', 'FEQTX' }
-    assert_raises(RRA::Journal::Pricer::NoPriceError) { price_on p, '2004-06-21', 'USD', 'FEQTX' }
+    assert_raises(RVGP::Journal::Pricer::NoPriceError) { price_on p, '1900-01-01', 'USD', 'FEQTX' }
+    assert_raises(RVGP::Journal::Pricer::NoPriceError) { price_on p, '2004-06-20', '$', 'FEQTX' }
+    assert_raises(RVGP::Journal::Pricer::NoPriceError) { price_on p, '2004-06-21', 'USD', 'FEQTX' }
 
     assert_equal '0.0444642063139173 FEQTX', price_on(p, '2004-06-21 12:00:00', 'USD', 'FEQTX')
     assert_equal '0.0444642063139173 FEQTX', price_on(p, '2004-06-21 14:14:59', '$', 'FEQTX')
@@ -63,10 +63,10 @@ class TestPricer < Minitest::Test
   end
 
   def test_price_format2
-    p = RRA::Journal::Pricer.new TEST_PRICES_DB_FORMAT2
+    p = RVGP::Journal::Pricer.new TEST_PRICES_DB_FORMAT2
 
-    assert_raises(RRA::Journal::Pricer::NoPriceError) { price_on p, '2019-12-31', 'EUR', 'USD' }
-    assert_raises(RRA::Journal::Pricer::NoPriceError) { price_on p, '2019-12-31', 'USD', 'EUR' }
+    assert_raises(RVGP::Journal::Pricer::NoPriceError) { price_on p, '2019-12-31', 'EUR', 'USD' }
+    assert_raises(RVGP::Journal::Pricer::NoPriceError) { price_on p, '2019-12-31', 'USD', 'EUR' }
 
     assert_equal '1.11959640788688494 USD', price_on(p, '2020-01-01', 'EUR', 'USD')
     assert_equal '0.893179 EUR', price_on(p, '2020-01-01', 'USD', 'EUR')
@@ -85,7 +85,7 @@ class TestPricer < Minitest::Test
   end
 
   def test_price_format3
-    p = RRA::Journal::Pricer.new TEST_PRICES_LARGE_ASSETS
+    p = RVGP::Journal::Pricer.new TEST_PRICES_LARGE_ASSETS
 
     # Make sure the database is parsed ok:
     assert_equal '$ 500000.00', price_on(p, '2020-01-01 12:00:00', 'FLORIDAHOME', '$')
@@ -111,7 +111,7 @@ class TestPricer < Minitest::Test
   end
 
   def test_price_insert
-    pricer = RRA::Journal::Pricer.new
+    pricer = RVGP::Journal::Pricer.new
     pricer.add(Date.new(2020, 8, 1), 'ABC', '$ 0.80'.to_commodity)
     pricer.add(Date.new(2020, 1, 1), 'ABC', '0.10 USD'.to_commodity)
     pricer.add(Date.new(2020, 2, 1), 'ABC', '$0.20'.to_commodity)

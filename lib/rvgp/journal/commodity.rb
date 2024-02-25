@@ -2,7 +2,7 @@
 
 require 'bigdecimal'
 
-module RRA
+module RVGP
   class Journal
     # This abstraction defines a simple commodity entry, as would be found in a pta journal.
     # Such commodities can appear in the form of currency, such as '$ 1.30' or in any other
@@ -19,7 +19,7 @@ module RRA
     # commodities.
     #
     # A number of constants, relating to the built-in support of various currencies, are
-    # available as part of RRA, in the form of the
+    # available as part of RVGP, in the form of the
     # {https://github.com/brighton36/rra/blob/main/resources/iso-4217-currencies.json iso-4217-currencies.json}
     # file. Which, is loaded automatically during initialization.
     #
@@ -147,28 +147,28 @@ module RRA
       end
 
       # Multiply the quantity by -1. This mutates the state of self.
-      # @return [RRA::Journal::Commodity] self, after the transformation is applied
+      # @return [RVGP::Journal::Commodity] self, after the transformation is applied
       def invert!
         @quantity *= -1
         self
       end
 
       # Returns a copy of the current Commodity, with the absolute value of quanity.
-      # @return [RRA::Journal::Commodity] self, with quantity.abs applied
+      # @return [RVGP::Journal::Commodity] self, with quantity.abs applied
       def abs
-        RRA::Journal::Commodity.new code, alphabetic_code, quantity.abs, precision
+        RVGP::Journal::Commodity.new code, alphabetic_code, quantity.abs, precision
       end
 
       # This method returns a new Commodity, with :floor applied to its :quantity.
       # @param [Integer] to_digit Which digit to floor to
-      # @return [RRA::Journal::Commodity] A new copy of self, with quantity :floor'd
+      # @return [RVGP::Journal::Commodity] A new copy of self, with quantity :floor'd
       def floor(to_digit)
         round_or_floor to_digit, :floor
       end
 
       # This method returns a new Commodity, with :round applied to its :quantity.
       # @param [Integer] to_digit Which digit to round to
-      # @return [RRA::Journal::Commodity] A new copy of self, with quantity :rounded
+      # @return [RVGP::Journal::Commodity] A new copy of self, with quantity :rounded
       def round(to_digit)
         round_or_floor to_digit, :round
       end
@@ -176,43 +176,43 @@ module RRA
       # @!method >(rvalue)
       # Ensure that rvalue is a commodity. Then return a boolean indicating whether self.quantity
       # is greater than rvalue's quantity.
-      # @param [RRA::Journal::Commodity] rvalue Another commodity to compare our quantity to
+      # @param [RVGP::Journal::Commodity] rvalue Another commodity to compare our quantity to
       # @return [TrueClass,FalseClass] Result of comparison.
 
       # @!method <(rvalue)
       # Ensure that rvalue is a commodity. Then return a boolean indicating whether self.quantity
       # is less than rvalue's quantity.
-      # @param [RRA::Journal::Commodity] rvalue Another commodity to compare our quantity to
+      # @param [RVGP::Journal::Commodity] rvalue Another commodity to compare our quantity to
       # @return [TrueClass,FalseClass] Result of comparison.
 
       # @!method <=>(rvalue)
       # Ensure that rvalue is a commodity. Then returns an integer indicating whether self.quantity
       # is (spaceship) rvalue's quantity. More specifically: -1 on <, 0 on ==, 1 on >.
-      # @param [RRA::Journal::Commodity] rvalue Another commodity to compare our quantity to
+      # @param [RVGP::Journal::Commodity] rvalue Another commodity to compare our quantity to
       # @return [Integer] Result of comparison: -1, 0, or 1.
 
       # @!method >=(rvalue)
       # Ensure that rvalue is a commodity. Then return a boolean indicating whether self.quantity
       # is greater than or equal to rvalue's quantity.
-      # @param [RRA::Journal::Commodity] rvalue Another commodity to compare our quantity to
+      # @param [RVGP::Journal::Commodity] rvalue Another commodity to compare our quantity to
       # @return [TrueClass,FalseClass] Result of comparison.
 
       # @!method <=(rvalue)
       # Ensure that rvalue is a commodity. Then return a boolean indicating whether self.quantity
       # is less than or equal to rvalue's quantity.
-      # @param [RRA::Journal::Commodity] rvalue Another commodity to compare our quantity to
+      # @param [RVGP::Journal::Commodity] rvalue Another commodity to compare our quantity to
       # @return [TrueClass,FalseClass] Result of comparison.
 
       # @!method ==(rvalue)
       # Ensure that rvalue is a commodity. Then return a boolean indicating whether self.quantity
       # is equal to rvalue's quantity.
-      # @param [RRA::Journal::Commodity] rvalue Another commodity to compare our quantity to
+      # @param [RVGP::Journal::Commodity] rvalue Another commodity to compare our quantity to
       # @return [TrueClass,FalseClass] Result of comparison.
 
       # @!method !=(rvalue)
       # Ensure that rvalue is a commodity. Then return a boolean indicating whether self.quantity
       # is not equal to rvalue's quantity.
-      # @param [RRA::Journal::Commodity] rvalue Another commodity to compare our quantity to
+      # @param [RVGP::Journal::Commodity] rvalue Another commodity to compare our quantity to
       # @return [TrueClass,FalseClass] Result of comparison.
       %i[> < <=> >= <= == !=].each do |operation|
         define_method(operation) do |rvalue|
@@ -228,15 +228,15 @@ module RRA
       # If the rvalue is a commodity, assert that we share the same commodity code, and if so
       # multiple our quantity by the rvalue quantity. If rvalue is numeric, multiply our quantity
       # by this numeric.
-      # @param [RRA::Journal::Commodity,Numeric] rvalue A multiplicand
-      # @return [RRA::Journal::Commodity] A new Commodity, composed of self.code, and the resulting quantity
+      # @param [RVGP::Journal::Commodity,Numeric] rvalue A multiplicand
+      # @return [RVGP::Journal::Commodity] A new Commodity, composed of self.code, and the resulting quantity
 
       # @!method /(rvalue)
       # If the rvalue is a commodity, assert that we share the same commodity code, and if so
       # divide our quantity by the rvalue quantity. If rvalue is numeric, divide our quantity
       # by this numeric.
-      # @param [RRA::Journal::Commodity,Numeric] rvalue A divisor
-      # @return [RRA::Journal::Commodity] A new Commodity, composed of self.code, and the resulting quantity
+      # @param [RVGP::Journal::Commodity,Numeric] rvalue A divisor
+      # @return [RVGP::Journal::Commodity] A new Commodity, composed of self.code, and the resulting quantity
       %i[* /].each do |operation|
         define_method(operation) do |rvalue|
           result = if rvalue.is_a? Numeric
@@ -249,21 +249,21 @@ module RRA
                      raise UnimplementedError
                    end
 
-          RRA::Journal::Commodity.from_symbol_and_amount code, result.round(MAX_DECIMAL_DIGITS).to_s('F')
+          RVGP::Journal::Commodity.from_symbol_and_amount code, result.round(MAX_DECIMAL_DIGITS).to_s('F')
         end
       end
 
       # @!method +(rvalue)
       # If the rvalue is a commodity, assert that we share the same commodity code, and if so
       # sum our quantity with the rvalue quantity.
-      # @param [RRA::Journal::Commodity] rvalue An operand
-      # @return [RRA::Journal::Commodity] A new Commodity, composed of self.code, and the resulting quantity
+      # @param [RVGP::Journal::Commodity] rvalue An operand
+      # @return [RVGP::Journal::Commodity] A new Commodity, composed of self.code, and the resulting quantity
 
       # @!method -(rvalue)
       # If the rvalue is a commodity, assert that we share the same commodity code, and if so
       # subtract the rvalue quantity from our quantity.
-      # @param [RRA::Journal::Commodity] rvalue An operand
-      # @return [RRA::Journal::Commodity] A new Commodity, composed of self.code, and the resulting quantity
+      # @param [RVGP::Journal::Commodity] rvalue An operand
+      # @return [RVGP::Journal::Commodity] A new Commodity, composed of self.code, and the resulting quantity
       %i[+ -].each do |operation|
         define_method(operation) do |rvalue|
           assert_commodity rvalue
@@ -274,10 +274,10 @@ module RRA
 
           # Adjust the dprecision. Probably there's a better way to do this, but,
           # this works
-          our_currency = RRA::Journal::Currency.from_code_or_symbol code
+          our_currency = RVGP::Journal::Currency.from_code_or_symbol code
 
           # This is a special case:
-          return RRA::Journal::Commodity.new code, alphabetic_code, result, our_currency.minor_unit if result.zero?
+          return RVGP::Journal::Commodity.new code, alphabetic_code, result, our_currency.minor_unit if result.zero?
 
           # If we're trying to remove more digits than minor_unit, we have to adjust
           # our cut
@@ -295,7 +295,7 @@ module RRA
             result /= 10**trim_length
           end
 
-          RRA::Journal::Commodity.new code, alphabetic_code, result, dprecision
+          RVGP::Journal::Commodity.new code, alphabetic_code, result, dprecision
         end
       end
 
@@ -303,7 +303,7 @@ module RRA
       def coerce(other)
         super unless other.is_a? Integer
 
-        [RRA::Journal::Commodity.new(code, alphabetic_code, other, precision), self]
+        [RVGP::Journal::Commodity.new(code, alphabetic_code, other, precision), self]
       end
 
       def respond_to_missing?(name, _include_private = false)
@@ -315,8 +315,8 @@ module RRA
       # provided commodity.
       # @overload method_missing(attr, rvalue)
       #   @param [Symbol] attr An unhandled method
-      #   @param [RRA::Journal::Commodity] rvalue The operand
-      #   @return [RRA::Journal::Commodity] A new Commodity object, created using our code, and the resulting quantity.
+      #   @param [RVGP::Journal::Commodity] rvalue The operand
+      #   @return [RVGP::Journal::Commodity] A new Commodity object, created using our code, and the resulting quantity.
       def method_missing(name, *args, &blk)
         # This handles most all of the numeric methods
         if @quantity.respond_to?(name) && args.length == 1 && args[0].is_a?(self.class)
@@ -326,7 +326,7 @@ module RRA
             raise UnimplementedError, format('Unimplemented operation %s Wot do?', name.inspect)
           end
 
-          RRA::Journal::Commodity.new code, alphabetic_code, @quantity.send(name, args[0].quantity, &blk), precision
+          RVGP::Journal::Commodity.new code, alphabetic_code, @quantity.send(name, args[0].quantity, &blk), precision
         else
           super
         end
@@ -334,7 +334,7 @@ module RRA
 
       # Given a string, such as "$ 20.57", or "1 MERCEDESBENZ", Construct and return a commodity representation
       # @param [String] str The commodity, as would be found in a PTA journal
-      # @return [RRA::Journal::Commodity]
+      # @return [RVGP::Journal::Commodity]
       def self.from_s(str)
         commodity_parts_from_string str
       end
@@ -342,7 +342,7 @@ module RRA
       # @!visibility private
       # This parses a commodity in the same way that from_s parses, but, returns the strin that remains after the
       # commodity. Mostly this is here to keep ComplexCommodity DRY. Probably you shouldn't use this method
-      # @return [Array<RRA::Journal::Commodity, String>] A two element array, containing a commodity, and the unparsed
+      # @return [Array<RVGP::Journal::Commodity, String>] A two element array, containing a commodity, and the unparsed
       #                                                  string, that remained after the commodity.
       def self.from_s_with_remainder(str)
         commodity_parts_from_string str, with_remainder: true
@@ -353,9 +353,9 @@ module RRA
       # @param [Integer, String] amount The commodity quantity. If this is a string, we search for periods, and
       #                                 calculate precision. If this is an int, we assume a precision based on
       #                                 the commodity code.
-      # @return [RRA::Journal::Commodity]
+      # @return [RVGP::Journal::Commodity]
       def self.from_symbol_and_amount(symbol, amount = 0)
-        currency = RRA::Journal::Currency.from_code_or_symbol symbol
+        currency = RVGP::Journal::Currency.from_code_or_symbol symbol
         precision, quantity = *precision_and_quantity_from_amount(amount)
         #   NOTE: Sometimes (say shares) we deal with fractions of a penny. If this
         #   is such a case, we preserve the larger precision
@@ -418,7 +418,7 @@ module RRA
           new_quantity += 1 if round_determinant >= 5
         end
 
-        RRA::Journal::Commodity.new code, alphabetic_code, positive? ? new_quantity : new_quantity * -1, to_digit
+        RVGP::Journal::Commodity.new code, alphabetic_code, positive? ? new_quantity : new_quantity * -1, to_digit
       end
 
       # This returns our quantity, and rvalue.quantity, after adjusting both

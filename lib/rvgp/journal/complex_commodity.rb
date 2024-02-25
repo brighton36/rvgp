@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RRA
+module RVGP
   class Journal
     # These 'complex currency' specifications appear to be mostly for non-register
     # and non-balance reports. The ledger manual labels these 'Cost Expressions'.
@@ -20,7 +20,7 @@ module RRA
     #  -5 AAPL {$50.00} ((ten_dollars)) @@ $375.00
     #  -5 AAPL {$50.00} ((s, d, t -> market($10, date, t))) @@ $375.00
     #
-    # We ended up needing most of this class to run {RRA::Validations::DuplicateTagsValidation}.
+    # We ended up needing most of this class to run {RVGP::Validations::DuplicateTagsValidation}.
     # And, to ensure that we're able to mostly-validate the syntax of the journals. We don't actually
     # use many code paths here, otherwise. (Though we do use it to serialize currency conversion in
     # the file shorthand/investment.rb)
@@ -34,8 +34,8 @@ module RRA
     # for now this works well enough, again mostly because we're not using most
     # of these code paths... Lets see if/how this evolves.
     #
-    # @attr_reader [RRA::Commodity::Journal] left The 'left' component of the complex commodity
-    # @attr_reader [RRA::Commodity::Journal] right The 'right' component of the complex commodity
+    # @attr_reader [RVGP::Commodity::Journal] left The 'left' component of the complex commodity
+    # @attr_reader [RVGP::Commodity::Journal] right The 'right' component of the complex commodity
     # @attr_reader [Symbol] operation The 'operation' component of the complex commodity, either :right_expression,
     #                                 :left_expression, :per_unit, or :per_lot
     # @attr_reader [Date] left_date The 'left_date' component of the complex commodity
@@ -83,8 +83,8 @@ module RRA
       # Create a complex commodity, from constituent parts
       # @param [Hash] opts The parts of this complex commodity
       # @option opts [String] code see {Commodity#code}
-      # @option opts [RRA::Journal::Commodity] left see {ComplexCommodity#left}
-      # @option opts [RRA::Journal::Commodity] right see {ComplexCommodity#right}
+      # @option opts [RVGP::Journal::Commodity] left see {ComplexCommodity#left}
+      # @option opts [RVGP::Journal::Commodity] right see {ComplexCommodity#right}
       # @option opts [Symbol] operation see {ComplexCommodity#operation}
       # @option opts [Date] left_date see {ComplexCommodity#left_date}
       # @option opts [String] left_lot see {ComplexCommodity#left_lot}
@@ -138,7 +138,7 @@ module RRA
 
       # Given a string, in one of the supported formats, construct and return a commodity representation.
       # @param [String] string The commodity, as would be found in a PTA journal
-      # @return [RRA::Journal::ComplexCommodity]
+      # @return [RVGP::Journal::ComplexCommodity]
       def self.from_s(string)
         tmp = string.dup
         opts = {}
@@ -179,8 +179,8 @@ module RRA
             tmp = ::Regexp.last_match(2)
           else
             begin
-              commodity, tmp = RRA::Journal::Commodity.from_s_with_remainder tmp
-            rescue RRA::Journal::Commodity::Error
+              commodity, tmp = RVGP::Journal::Commodity.from_s_with_remainder tmp
+            rescue RVGP::Journal::Commodity::Error
               raise Error, MSG_UNPARSEABLE % string
             end
 

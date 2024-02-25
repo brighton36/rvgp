@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RRA
+module RVGP
   class Plot
     module GoogleDrive
       # This class represents a csv-like matrix, that is to be sent to google, as a sheet

@@ -3,7 +3,7 @@ en:
     usage: 'Usage: %{program} [OPTION]... [COMMAND] [TARGET]...'
     indent: '  '
     description: >
-      rvgp : rvgp : Ruby Rake Accounting is a workflow tool for reconciling,
+      rvgp : (Reconcile, Validate, Grid, Plot) A workflow tool for reconciling,
       validating, and reporting your finances in PTA (plain text accounting) and
       ruby. See the program github for more details.
     command_introduction: >
@@ -37,7 +37,7 @@ en:
           all: 'Publish all available plots'
           list: 'List all available plot variants'
           csvdir: 'Output the provided plots, as csvs, with grid hacks applied, into the specified directory. Mostly useful for debugging.'
-          title: 'The title of the Google doc being published. Defaults to "RRA Finance Report %m/%d/%y %H:%M". '
+          title: 'The title of the Google doc being published. Defaults to "RVGP Finance Report %m/%d/%y %H:%M". '
           sleep: 'Seconds to sleep, between each sheet upload. This sleep prevents Google from aborting the publish, under the auspice of api spamming. Defaults to 5.'
       ireconcile:
         description: 'Open an interactive vim session, to edit and build a reconcile'

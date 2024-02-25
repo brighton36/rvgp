@@ -3,4 +3,4 @@
 
 require_relative 'lib/rvgp/gem'
 
-RRA::Gem.specification
+RVGP::Gem.specification

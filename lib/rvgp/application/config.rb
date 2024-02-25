@@ -2,25 +2,25 @@
 
 require_relative '../pta'
 
-module RRA
+module RVGP
   class Application
     # This class provides the app configuration options accessors and parsing logic.
     class Config
-      include RRA::Pta::AvailabilityHelper
+      include RVGP::Pta::AvailabilityHelper
       attr_reader :prices_path, :project_journal_path
 
       # Given the provided project path, this object will parse and store the
       # config/rvgp.yaml, as well as provide default values for otherwise unspecified attributes
       # in this file.
-      # @param project_path [String] The path, to an RRA project directory.
+      # @param project_path [String] The path, to an RVGP project directory.
       def initialize(project_path)
         @project_path = project_path
         @build_path = format('%s/build', project_path)
 
         config_path = project_path 'config/rvgp.yml'
-        @yaml = RRA::Utilities::Yaml.new config_path, project_path if File.exist? config_path
+        @yaml = RVGP::Utilities::Yaml.new config_path, project_path if File.exist? config_path
 
-        RRA::Pta.pta_adapter = @yaml[:pta_adapter].to_sym if @yaml.key? :pta_adapter
+        RVGP::Pta.pta_adapter = @yaml[:pta_adapter].to_sym if @yaml.key? :pta_adapter
 
         @prices_path = @yaml.key?(:prices_path) ? @yaml[:prices_path] : project_path('journals/prices.db')
 

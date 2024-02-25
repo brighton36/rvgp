@@ -3,7 +3,7 @@
 require_relative 'faker_helpers'
 require_relative '../journal/currency'
 
-module RRA
+module RVGP
   module Fakers
     # Contains faker implementations that produce CSV files, for use as a data feed
     class FakeFeed < Faker::Base
@@ -28,7 +28,7 @@ module RRA
         # @!visibility private
         FEED_COLUMNS = ['Date', 'Type', 'Description', 'Withdrawal (-)', 'Deposit (+)', 'RunningBalance'].freeze
         # @!visibility private
-        DEFAULT_CURRENCY = RRA::Journal::Currency.from_code_or_symbol('$')
+        DEFAULT_CURRENCY = RVGP::Journal::Currency.from_code_or_symbol('$')
 
         # Generates a basic csv feed string, that resembles thos
 
@@ -40,11 +40,11 @@ module RRA
         #                                    random selection
         # @param expense_descriptions [Array] Strings containing the pool of available expense descriptions, for use in
         #                                     random selection
-        # @param deposit_average [RRA::Journal::Commodity] The average deposit amount
+        # @param deposit_average [RVGP::Journal::Commodity] The average deposit amount
         # @param deposit_stddev [Float] The stand deviation, on random deposits
-        # @param withdrawal_average [RRA::Journal::Commodity] The average withdrawal amount
+        # @param withdrawal_average [RVGP::Journal::Commodity] The average withdrawal amount
         # @param withdrawal_stddev [Float] The stand deviation, on random withdrawals
-        # @param starting_balance [RRA::Journal::Commodity]
+        # @param starting_balance [RVGP::Journal::Commodity]
         #        The balance of the account, before generating the transactions in the feed
         # @param post_count [Numeric] The number of transactions to generate, in this csv feed
         # @param deposit_ratio [Float] The odds ratio, for a given transaction, to be a deposit
@@ -54,12 +54,12 @@ module RRA
                            to: from + DEFAULT_LENGTH_IN_DAYS,
                            expense_descriptions: nil,
                            income_descriptions: nil,
-                           deposit_average: RRA::Journal::Commodity.from_symbol_and_amount('$', 6000),
+                           deposit_average: RVGP::Journal::Commodity.from_symbol_and_amount('$', 6000),
                            deposit_stddev: 500.0,
-                           withdrawal_average: RRA::Journal::Commodity.from_symbol_and_amount('$', 300),
+                           withdrawal_average: RVGP::Journal::Commodity.from_symbol_and_amount('$', 300),
                            withdrawal_stddev: 24.0,
                            post_count: DEFAULT_POST_COUNT,
-                           starting_balance: RRA::Journal::Commodity.from_symbol_and_amount('$', 5000),
+                           starting_balance: RVGP::Journal::Commodity.from_symbol_and_amount('$', 5000),
                            deposit_ratio: 0.05,
                            entries: [])
 
@@ -98,7 +98,7 @@ module RRA
                    expense_descriptions ? expense_descriptions.sample : Faker::Company.name.upcase]
                 end)
 
-              amount = RRA::Journal::Commodity.from_symbol_and_amount(
+              amount = RVGP::Journal::Commodity.from_symbol_and_amount(
                 DEFAULT_CURRENCY.symbol,
                 Faker::Number.normal(mean: mean, standard_deviation: stddev)
               )
@@ -124,14 +124,14 @@ module RRA
         # @param income_sources [Array] Strings containing the pool of income companies, to use for growing our assets
         # @param expense_sources [Array] Strings containing the pool of available expense companies, to use for
         #                                shrinking our assets
-        # @param opening_liability_balance [RRA::Journal::Commodity] The opening balance of the liability account,
+        # @param opening_liability_balance [RVGP::Journal::Commodity] The opening balance of the liability account,
         #                                                            preceeding month zero
-        # @param opening_asset_balance [RRA::Journal::Commodity] The opening balance of the asset account, preceeding
+        # @param opening_asset_balance [RVGP::Journal::Commodity] The opening balance of the asset account, preceeding
         #                                                        month zero
         # @param liability_sources [Array] Strings containing the pool of available liability sources (aka 'companies')
-        # @param liabilities_by_month [Array] An array of RRA::Journal::Commodity entries, indicatiing the liability
+        # @param liabilities_by_month [Array] An array of RVGP::Journal::Commodity entries, indicatiing the liability
         #                                     balance for a month with offset n, from the from date
-        # @param assets_by_month [Array] An array of RRA::Journal::Commodity entries, indicating the asset
+        # @param assets_by_month [Array] An array of RVGP::Journal::Commodity entries, indicating the asset
         #                                balance for a month with offset n, from the from date
         # @return [String] A CSV, containing the generated transactions
         def personal_checking(from: ::Date.today,
@@ -143,10 +143,10 @@ module RRA
                               opening_asset_balance: '$ 0.00'.to_commodity,
                               liability_sources: [Faker::Company.name.tr('^a-zA-Z0-9 ', '')],
                               liabilities_by_month: months_in_range(from, to).map.with_index do |_, n|
-                                RRA::Journal::Commodity.from_symbol_and_amount('$', 200 + ((n + 1) * 800))
+                                RVGP::Journal::Commodity.from_symbol_and_amount('$', 200 + ((n + 1) * 800))
                               end,
                               assets_by_month: months_in_range(from, to).map.with_index do |_, n|
-                                RRA::Journal::Commodity.from_symbol_and_amount('$', 500 * ((n + 1) * 5))
+                                RVGP::Journal::Commodity.from_symbol_and_amount('$', 500 * ((n + 1) * 5))
                               end)
 
           num_months_in_range = ((to.year * 12) + to.month) - ((from.year * 12) + from.month) + 1
@@ -229,7 +229,7 @@ module RRA
             case field
             when Date
               field.strftime('%m/%d/%Y')
-            when RRA::Journal::Commodity
+            when RVGP::Journal::Commodity
               field.to_s(precision: DEFAULT_CURRENCY.minor_unit)
             else
               field

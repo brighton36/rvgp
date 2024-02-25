@@ -3,10 +3,10 @@
 require 'psych'
 require 'pathname'
 
-Psych.add_builtin_type('proc') { |_, val| RRA::Utilities::Yaml::PsychProc.new val }
-Psych.add_builtin_type('include') { |_, val| RRA::Utilities::Yaml::PsychInclude.new val }
+Psych.add_builtin_type('proc') { |_, val| RVGP::Utilities::Yaml::PsychProc.new val }
+Psych.add_builtin_type('include') { |_, val| RVGP::Utilities::Yaml::PsychInclude.new val }
 
-module RRA
+module RVGP
   module Utilities
     # This class wraps the Psych library, and adds functionality we need, to parse
     # yaml files.

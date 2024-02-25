@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RRA
+module RVGP
   class Journal
     # This class represents a single posting, in a PTA journal. A posting is
     # typically of the following form:
@@ -11,14 +11,14 @@ module RRA
     # ```
     # This is a simple example. There are a good number of permutations under which
     # posting components s appear. Nonetheless, a posting is typically comprised of
-    # a date, a description, and a number of RRA::Journal::Posting::Transfer lines,
+    # a date, a description, and a number of RVGP::Journal::Posting::Transfer lines,
     # indented below these fields. This object represents the parsed format,
-    # of a post, traveling around the RRA codebase.
+    # of a post, traveling around the RVGP codebase.
     # @attr_reader [Integer] line_number The line number, in a journal, that this posting was declared at.
     # @attr_reader [Date] date The date this posting occurred
     # @attr_reader [String] description The first line of this posting
-    # @attr_reader [Array<RRA::Journal::Posting::Transfer>] transfers An array of transfers, that apply to this posting.
-    # @attr_reader [Array<RRA::Journal::Posting::Tag>] tags An array of tags, that apply to this posting.
+    # @attr_reader [Array<RVGP::Journal::Posting::Transfer>] transfers An array of transfers, that apply to this posting.
+    # @attr_reader [Array<RVGP::Journal::Posting::Tag>] tags An array of tags, that apply to this posting.
     class Posting
       # This class represents an indented 'transfer' line, within a posting.
       # Typically, such lines takes the form of :
@@ -31,7 +31,7 @@ module RRA
       # @attr_reader [String] account The account this posting is crediting or debiting
       # @attr_reader [String] commodity The amount (expressed in commodity terms) being credit/debited
       # @attr_reader [String] complex_commodity The amount (expressed in complex commodity terms) being credit/debited
-      # @attr_reader [Array<RRA::Journal::Posting::Tag>] tags An array of tags, that apply to this posting.
+      # @attr_reader [Array<RVGP::Journal::Posting::Tag>] tags An array of tags, that apply to this posting.
       class Transfer
         attr :account, :commodity, :complex_commodity, :tags
 
@@ -40,7 +40,7 @@ module RRA
         # @param [Hash] opts Additional parts of this Transfer
         # @option opts [String] commodity see {Transfer#commodity}
         # @option opts [String] complex_commodity see {Transfer#complex_commodity}
-        # @option opts [Array<RRA::Journal::Posting::Tag>] tags ([]) see {Transfer#tags}
+        # @option opts [Array<RVGP::Journal::Posting::Tag>] tags ([]) see {Transfer#tags}
         def initialize(account, opts = {})
           @account = account
           @commodity = opts[:commodity]
@@ -85,8 +85,8 @@ module RRA
       # @param [Date] date see {Posting#date}
       # @param [String] description see {Posting#description}
       # @param [Hash] opts Additional parts of this Posting
-      # @option opts [Array<RRA::Journal::Posting::Transfer>] transfers see {Posting#transfers}
-      # @option opts [Array<RRA::Journal::Posting::Tag>] tags see {Posting#transfers}
+      # @option opts [Array<RVGP::Journal::Posting::Transfer>] transfers see {Posting#transfers}
+      # @option opts [Array<RVGP::Journal::Posting::Tag>] tags see {Posting#transfers}
       def initialize(date, description, opts = {})
         @line_number = opts[:line_number]
         @date = date
@@ -133,10 +133,10 @@ module RRA
         if commodity_part
           # Let's see if it'll parse as a commodity:
           begin
-            opts[:commodity] = RRA::Journal::Commodity.from_s commodity_part
-          rescue RRA::Journal::Commodity::UnimplementedError
+            opts[:commodity] = RVGP::Journal::Commodity.from_s commodity_part
+          rescue RVGP::Journal::Commodity::UnimplementedError
             # Then let's see if it parses as a commodity pair
-            opts[:complex_commodity] = RRA::Journal::ComplexCommodity.from_s commodity_part
+            opts[:complex_commodity] = RVGP::Journal::ComplexCommodity.from_s commodity_part
           end
         end
 

@@ -2,7 +2,7 @@
 
 require_relative 'faker_helpers'
 
-module RRA
+module RVGP
   module Fakers
     # Contains faker implementations that produce reconciler yamls
     class FakeReconciler < Faker::Base

@@ -2,7 +2,7 @@
 
 require_relative 'base/command'
 
-module RRA
+module RVGP
   # This module contains the implementation of each task in the rake process.
   # However, these commands aren't documented yet. And, may never be. They're
   # mostly not useful for any api purpose. Documentation for each of these
@@ -39,8 +39,8 @@ module RRA
         # handling here. The solution is not to have -d or --help in your
         # local commands. We don't detect that atm, but we may want to at some
         # point. For now, just, don't use these options
-        options, command_args = RRA::Base::Command::Option.remove_options_from_args(
-          [%i[help h], [:dir, :d, { has_value: true }]].map { |a| RRA::Base::Command::Option.new(*a) },
+        options, command_args = RVGP::Base::Command::Option.remove_options_from_args(
+          [%i[help h], [:dir, :d, { has_value: true }]].map { |a| RVGP::Base::Command::Option.new(*a) },
           args
         )
 
@@ -57,7 +57,7 @@ module RRA
         # we dispatch the new_project command in this way:
         if command_name == 'new_project'
           require_files!
-          dispatch_klass RRA::Commands::NewProject, app_dir
+          dispatch_klass RVGP::Commands::NewProject, app_dir
           exit
         end
 
@@ -69,7 +69,7 @@ module RRA
             # This will only show the help for built-in commands, as we were
             # not able to load the project_dir's commands
             require_files!
-            RRA::Commands.help!
+            RVGP::Commands.help!
           else
             error! 'error.no_application_dir', dir: app_dir
           end
@@ -77,33 +77,33 @@ module RRA
 
         # Initialize the provided app:
         begin
-          RRA.initialize_app app_dir unless command_name == 'new_project'
-        rescue RRA::Application::InvalidProjectDir
+          RVGP.initialize_app app_dir unless command_name == 'new_project'
+        rescue RVGP::Application::InvalidProjectDir
           error! 'error.invalid_application_dir', directory: app_dir
         end
 
         # If we were able to load the project directory, and help was requested,
         # we offer help here, as we can show them help for their user defined
         # commands, at this time:
-        RRA::Commands.help! if options[:help]
+        RVGP::Commands.help! if options[:help]
 
         # Dispatch the command:
-        dispatch_klass RRA.commands.find { |klass| klass.name == command_name }, command_args
+        dispatch_klass RVGP.commands.find { |klass| klass.name == command_name }, command_args
       end
 
       # @!visibility private
       def help!
         # Find the widest option's width, and use that for alignment.
-        widest_option = RRA.commands.map { |cmd| cmd.options.map(&:long) }.flatten.max.length
+        widest_option = RVGP.commands.map { |cmd| cmd.options.map(&:long) }.flatten.max.length
 
         indent = I18n.t('help.indent')
         puts [
           I18n.t('help.usage', program: File.basename($PROGRAM_NAME)),
           [indent, I18n.t('help.description')],
           I18n.t('help.command_introduction'),
-          RRA.commands.map do |command_klass|
+          RVGP.commands.map do |command_klass|
             [
-              [indent, RRA.pastel.bold(command_klass.name)].join,
+              [indent, RVGP.pastel.bold(command_klass.name)].join,
               [indent, I18n.t(format('help.commands.%s.description', command_klass.name))].join,
               if command_klass.options.empty?
                 nil
@@ -129,7 +129,7 @@ module RRA
       private
 
       def error!(i18n_key, **options)
-        puts [RRA.pastel.red(I18n.t('error.error')), I18n.t(i18n_key, **options)].join(': ')
+        puts [RVGP.pastel.red(I18n.t('error.error')), I18n.t(i18n_key, **options)].join(': ')
         exit 1
       end
 
@@ -143,9 +143,9 @@ module RRA
           if command.valid?
             command.execute!
           else
-            puts RRA.pastel.bold(I18n.t('error.command_errors', command: command_klass.name))
+            puts RVGP.pastel.bold(I18n.t('error.command_errors', command: command_klass.name))
             command.errors.each do |error|
-              puts RRA.pastel.red(I18n.t('error.command_error', error: error))
+              puts RVGP.pastel.red(I18n.t('error.command_error', error: error))
             end
             exit 1
           end

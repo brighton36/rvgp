@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-module RRA
+module RVGP
   module Reconcilers
     module Shorthand
       # This reconciler module will automatically allocate ATM components of a transaction, to constituent
       # accounts. This module is useful for tracking the myriad expenses that banks impose on your atm
       # withdrawals internationally. This module takes the total withdrawal, as reported in the input file
       # and deducts conversion_markup and operation_costs from that total. It then takes the remainder balance
-      # and constructs a {RRA::Journal::ComplexCommodity} with the provided :amount as the :left side of that
+      # and constructs a {RVGP::Journal::ComplexCommodity} with the provided :amount as the :left side of that
       # balance, and the remainder after fees on the right side. This seems to be how all ATM's (that I've
       # encountered) work. Note that not all atm, use all of the fees listed below. Some will use them all,
       # some will use a subset.
@@ -106,7 +106,7 @@ module RRA
 
           if conversion_markup
             conversion_markup_fees = (reported_amount - (reported_amount / conversion_markup)).round(
-              RRA::Journal::Currency.from_code_or_symbol(reported_amount.code).minor_unit
+              RVGP::Journal::Currency.from_code_or_symbol(reported_amount.code).minor_unit
             )
             targets << { to: conversion_markup_to, commodity: conversion_markup_fees }
           end
@@ -120,10 +120,10 @@ module RRA
             amount_after_conversion_fees = [reported_amount, conversion_markup_fees].compact.reduce(:-)
 
             operation_cost_fees = (amount_after_conversion_fees * operation_cost_fraction).round(
-              RRA::Journal::Currency.from_code_or_symbol(amount_after_conversion_fees.code).minor_unit
+              RVGP::Journal::Currency.from_code_or_symbol(amount_after_conversion_fees.code).minor_unit
             )
             targets << { to: operation_cost_to,
-                         complex_commodity: RRA::Journal::ComplexCommodity.new(left: operation_cost,
+                         complex_commodity: RVGP::Journal::ComplexCommodity.new(left: operation_cost,
                                                                                operation: :per_lot,
                                                                                right: operation_cost_fees) }
           end
@@ -131,11 +131,11 @@ module RRA
           remitted = [reported_amount, conversion_markup_fees, operation_cost_fees].compact.reduce(:-)
 
           targets << { to: to,
-                       complex_commodity: RRA::Journal::ComplexCommodity.new(left: amount,
+                       complex_commodity: RVGP::Journal::ComplexCommodity.new(left: amount,
                                                                              operation: :per_lot,
                                                                              right: remitted) }
 
-          RRA::Base::Reconciler::Posting.new from_posting.line_number,
+          RVGP::Base::Reconciler::Posting.new from_posting.line_number,
                                              date: from_posting.date,
                                              description: from_posting.description,
                                              from: from_posting.from,

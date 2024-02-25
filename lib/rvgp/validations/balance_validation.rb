@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RRA
+module RVGP
   module Validations
     # This validation asserts that the ledger-reported balance, matches a provided
     # balance, on a given day. These balances, should be stipulated in a section
@@ -13,7 +13,7 @@ module RRA
     # ```
     # These balances are expected to come from a bank statement, and this validation
     # ensures that rvgp is matching the records of your financial institution
-    class BalanceValidation < RRA::Base::JournalValidation
+    class BalanceValidation < RVGP::Base::JournalValidation
       # If there are no checkpoints in the 'balances' line of the reconciler, this
       # fires a warning. If there are checkpoints, then, we scan the register to
       # ensure that the balance of the reconciler.from, on the checkpoint date,
@@ -30,7 +30,7 @@ module RRA
             balances_on_day = pta.balance format('^%s$', reconciler.from),
                                           depth: 1,
                                           end: d.to_s,
-                                          file: RRA.app.config.project_journal_path
+                                          file: RVGP.app.config.project_journal_path
 
             balances_found = balances_on_day.accounts.map(&:amounts).flatten.find_all do |amount|
               amount.code == expected_balance.code
@@ -39,7 +39,7 @@ module RRA
             found = if balances_found.empty?
                       # Rather than operate from nil, we'll establish that we're '0' of units
                       # of the expected symbol
-                      RRA::Journal::Commodity.from_symbol_and_amount expected_balance.code, 0
+                      RVGP::Journal::Commodity.from_symbol_and_amount expected_balance.code, 0
                     else
                       balances_found.sum
                     end
@@ -47,7 +47,7 @@ module RRA
             found_as_s = if found
                            format('Found: %s', found.to_s)
                          else
-                           found = RRA::Journal::Commodity.from_symbol_and_amount expected_balance.code, 0
+                           found = RVGP::Journal::Commodity.from_symbol_and_amount expected_balance.code, 0
                            '(Nil)'
                          end
 
@@ -57,7 +57,7 @@ module RRA
             format('(%<day>s) Expected: %<expected>s %<indicator>s',
                    day: d.to_s,
                    expected: expected_balance.to_s,
-                   indicator: RRA.pastel.send(is_valid ? :green : :red, found_as_s))
+                   indicator: RVGP.pastel.send(is_valid ? :green : :red, found_as_s))
           end
 
           error! 'Failed Checkpoint(s):', cite_balances unless is_account_valid

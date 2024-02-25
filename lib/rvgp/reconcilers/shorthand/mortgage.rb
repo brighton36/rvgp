@@ -4,7 +4,7 @@ gem 'finance'
 require 'finance'
 require_relative './finance_gem_hacks'
 
-module RRA
+module RVGP
   module Reconcilers
     module Shorthand
       # This reconciler module will automatically allocate the the escrow, principal, and interest components of a
@@ -116,7 +116,7 @@ module RRA
               end
 
               @override_payments[ override[:at_installment] ] = {
-                interest: RRA::Journal::Commodity.from_symbol_and_amount(currency, override[:interest])
+                interest: RVGP::Journal::Commodity.from_symbol_and_amount(currency, override[:interest])
               }
             end
           end
@@ -139,8 +139,8 @@ module RRA
 
         # @!visibility private
         def to_tx(from_posting)
-          payment = RRA::Journal::Commodity.from_symbol_and_amount(currency, amortization.payments[@installment_i]).abs
-          interest = RRA::Journal::Commodity.from_symbol_and_amount(currency, amortization.interest[@installment_i])
+          payment = RVGP::Journal::Commodity.from_symbol_and_amount(currency, amortization.payments[@installment_i]).abs
+          interest = RVGP::Journal::Commodity.from_symbol_and_amount(currency, amortization.interest[@installment_i])
 
           interest = @override_payments[@installment_i][:interest] if @override_payments.key? @installment_i
 
@@ -152,14 +152,14 @@ module RRA
 
           intermediary_opts = { date: from_posting.date, from: intermediary_account, tags: from_posting.tags }
 
-          [RRA::Base::Reconciler::Posting.new(from_posting.line_number,
+          [RVGP::Base::Reconciler::Posting.new(from_posting.line_number,
                                               date: from_posting.date,
                                               description: from_posting.description,
                                               from: from_posting.from,
                                               tags: from_posting.tags,
                                               targets: [to: intermediary_account, commodity: total]),
            # Principal:
-           RRA::Base::Reconciler::Posting.new(
+           RVGP::Base::Reconciler::Posting.new(
              from_posting.line_number,
              intermediary_opts.merge({ description: format('%<label>s (#%<num>d) Principal',
                                                            label: label,
@@ -168,7 +168,7 @@ module RRA
            ),
 
            # Interest:
-           RRA::Base::Reconciler::Posting.new(
+           RVGP::Base::Reconciler::Posting.new(
              from_posting.line_number,
              intermediary_opts.merge({ description: format('%<label>s (#%<num>d) Interest',
                                                            label: label,
@@ -177,7 +177,7 @@ module RRA
            ),
 
            # Escrow:
-           RRA::Base::Reconciler::Posting.new(
+           RVGP::Base::Reconciler::Posting.new(
              from_posting.line_number,
              intermediary_opts.merge({ description: format('%<label>s (#%<num>d) Escrow',
                                                            label: label,

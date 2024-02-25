@@ -3,7 +3,7 @@
 gem 'tty-table'
 require 'tty-table'
 
-module RRA
+module RVGP
   # This class implements a basic graphical dashboard, for use on ansi terminals.
   # These dashboards resemble tables, with stylized headers and footers.
   # Here's a rough example, of what these dashboards look like:
@@ -25,11 +25,11 @@ module RRA
   #   └────────────────────────────────────────────────────┴─────────────┴─────────────┴─────────────┴─────────────┘
   #
   # There's a lot of functionality here, but, it's mostly unused at the moment, outside the cashflow command.
-  # Ultimately, this is probably going to end up becoming a {RRA::Grid} viewing tool on the cli.
+  # Ultimately, this is probably going to end up becoming a {RVGP::Grid} viewing tool on the cli.
   # @attr_reader [String] label The label for this dashboard. This is used in the first row, of the output
   # @attr_reader [String] series_column_label The label, describing what our series represents. This is also
   #                                           known as the 'keystone'.
-  # @attr_reader [RRA::Utilities::GridQuery] csv The grid and data that this Dashboard will output
+  # @attr_reader [RVGP::Utilities::GridQuery] csv The grid and data that this Dashboard will output
   class Dashboard
     # @!visibility private
     CELL_PADDING = [0, 1, 0, 1].freeze
@@ -137,7 +137,7 @@ module RRA
       prettify format('%s Dashboard', label.to_s), [header_row] + content_rows + footer_rows, column_widths
     end
 
-    # This helper is provided with the intention of being used with {RRA::Dashboard#column_data_widths}.
+    # This helper is provided with the intention of being used with {RVGP::Dashboard#column_data_widths}.
     # Given the return value of #column_data_widths, this method will return the width of a rendered
     # dashboard onto the console. That means we account for padding and cell separation character(s) in
     # this calculation.

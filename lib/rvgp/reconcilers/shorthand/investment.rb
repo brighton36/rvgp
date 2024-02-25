@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module RRA
+module RVGP
   module Reconcilers
     module Shorthand
       # This reconciler module will automatically allocate the proceeds (or losses) from a stock sale.
@@ -93,7 +93,7 @@ module RRA
             cost_basis = (total || (price * amount.to_f.abs)) - capital_gains
 
             income_targets << { to: to,
-                                complex_commodity: RRA::Journal::ComplexCommodity.new(
+                                complex_commodity: RVGP::Journal::ComplexCommodity.new(
                                   left: [amount, symbol].join(' ').to_commodity,
                                   operation: :per_lot,
                                   right: cost_basis
@@ -102,7 +102,7 @@ module RRA
             income_targets << { to: gains_account, commodity: capital_gains.dup.invert! } if capital_gains
           else
             income_targets << { to: to,
-                                complex_commodity: RRA::Journal::ComplexCommodity.new(
+                                complex_commodity: RVGP::Journal::ComplexCommodity.new(
                                   left: [amount, symbol].join(' ').to_commodity,
                                   operation: (price ? :per_unit : :per_lot),
                                   right: price || total
@@ -114,18 +114,18 @@ module RRA
               ret = { to: t[:to] }
               if t.key? :amount
                 # TODO: I think there's a bug here, in that amounts with commodities, won't parse...
-                ret[:commodity] = RRA::Journal::Commodity.from_symbol_and_amount t[:currency] || '$', t[:amount].to_s
+                ret[:commodity] = RVGP::Journal::Commodity.from_symbol_and_amount t[:currency] || '$', t[:amount].to_s
               end
 
               if t.key? :complex_commodity
-                ret[:complex_commodity] = RRA::Journal::ComplexCommodity.from_s t[:complex_commodity]
+                ret[:complex_commodity] = RVGP::Journal::ComplexCommodity.from_s t[:complex_commodity]
               end
 
               ret
             end
           end
 
-          RRA::Base::Reconciler::Posting.new from_posting.line_number,
+          RVGP::Base::Reconciler::Posting.new from_posting.line_number,
                                              date: from_posting.date,
                                              description: from_posting.description,
                                              from: from_posting.from,

@@ -4,7 +4,7 @@ require 'i18n'
 require 'pastel'
 require 'tty-screen'
 
-module RRA
+module RVGP
   class Application
     # These methods output 'pretty' indications of the build process, and is used
     # by both the rvgp standalone bin, as well as the rake processes themselves.
@@ -47,7 +47,7 @@ module RRA
       end
 
       # This is the only public interface, at this time, for use in outputting status.
-      # This is the only method that RRA needs implemented, on a status output object, should
+      # This is the only method that RVGP needs implemented, on a status output object, should
       # you choose to write your own.
       # @param [String] cmd The command that's emmitting this status message
       # @param [String] desc The I18n key, appended to 'status.commands.', that contains the message you wish to output

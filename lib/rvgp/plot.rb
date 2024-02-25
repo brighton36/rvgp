@@ -2,7 +2,7 @@
 
 require_relative 'plot/gnuplot'
 
-module RRA
+module RVGP
   # This class assembles grids into a series of plots, given a plot specification
   # yaml. Once a grid is assembled, it's dispatched to a driver ({GoogleDrive} or {Gnuplot})
   # for rendering.
@@ -34,22 +34,22 @@ module RRA
   # the following parameter groups are supported: :grid_hacks, :gnuplot, and :google.
   #
   # The :gnuplot section of this file, is merged with the contents of
-  # {https://github.com/brighton36/rvgp/blob/main/resources/gnuplot/default.yml default.yml}, and passed to the {RRA::Plot::Gnuplot}
-  # constructor. See the {RRA::Plot::Gnuplot::Plot#initialize} method for more details on what parameters are supported
+  # {https://github.com/brighton36/rvgp/blob/main/resources/gnuplot/default.yml default.yml}, and passed to the {RVGP::Plot::Gnuplot}
+  # constructor. See the {RVGP::Plot::Gnuplot::Plot#initialize} method for more details on what parameters are supported
   # in this section. NOTE: Depending on the kind of chart being specified, some initialize options are specific to the
   # chart being built, and those options will be documented in the constructor for that specific chart. ie:
-  # {RRA::Plot::Gnuplot::AreaChart#initialize} or {RRA::Plot::Gnuplot::ColumnAndLineChart#initialize}.
+  # {RVGP::Plot::Gnuplot::AreaChart#initialize} or {RVGP::Plot::Gnuplot::ColumnAndLineChart#initialize}.
   #
-  # The :google section of this file, is provided to {RRA::Plot::GoogleDrive::Sheet#initialize}. See this method for
+  # The :google section of this file, is provided to {RVGP::Plot::GoogleDrive::Sheet#initialize}. See this method for
   # details on supported options.
   #
   # The :grid_hacks section of this file, contains miscellaneous hacks to the dataset. These include: :keystone,
   # :store_cell, :select_rows, :sort_rows_by, :sort_columns_by, :truncate_rows, :switch_rows_columns, and
-  # :truncate_columns. These options are documented in: {RRA::Utilities::GridQuery#initialize} and
-  # {RRA::Utilities::GridQuery#to_grid}.
+  # :truncate_columns. These options are documented in: {RVGP::Utilities::GridQuery#initialize} and
+  # {RVGP::Utilities::GridQuery#to_grid}.
   #
   # @attr_reader [String] path A path to the location of the input yaml, as provided to #initialize
-  # @attr_reader [RRA::Utilities::Yaml] yaml The yaml object, containing the parameters of this plot
+  # @attr_reader [RVGP::Utilities::Yaml] yaml The yaml object, containing the parameters of this plot
   # @attr_reader [String] glob A string containing wildcards, used to match input grids in the filesystem. This
   #                            parameter is expected to be found inside the yaml[:glob], and will generally look
   #                            something like: "%\\{year}-wealth-growth.csv" or
@@ -57,7 +57,7 @@ module RRA
   #                            The variables which are supported, include 'the year' of a plot, as well as whatever
   #                            variables are defined in a plot's glob_variants ('property', as was the case
   #                            above.) glob_variants are output by grids, and detected in the filenames those grids
-  #                            produce by the {RRA::Plot.glob_variants} method.
+  #                            produce by the {RVGP::Plot.glob_variants} method.
   class Plot
     attr_reader :path, :yaml, :glob
 
@@ -66,7 +66,7 @@ module RRA
 
     # The path to rvgp's 'default' include file search path. Any '!!include' directives encountered in the plot yaml,
     # will search this location for targets.
-    GNUPLOT_RESOURCES_PATH = [RRA::Gem.root, '/resources/gnuplot'].join
+    GNUPLOT_RESOURCES_PATH = [RVGP::Gem.root, '/resources/gnuplot'].join
 
     # This exception is raised when a provided yaml file, is missing required
     # attributes.
@@ -95,7 +95,7 @@ module RRA
     def initialize(path)
       @path = path
 
-      @yaml = RRA::Utilities::Yaml.new path, [RRA.app.config.project_path, GNUPLOT_RESOURCES_PATH]
+      @yaml = RVGP::Utilities::Yaml.new path, [RVGP.app.config.project_path, GNUPLOT_RESOURCES_PATH]
 
       missing_attrs = REQUIRED_FIELDS.reject { |f| yaml.key? f }
       raise MissingYamlAttribute, yaml.path, missing_attrs unless missing_attrs.empty?
@@ -103,7 +103,7 @@ module RRA
       @glob = yaml[:glob] if yaml.key? :glob
       raise InvalidYamlGlob, yaml.path unless /%\{year\}/.match glob
 
-      grids_corpus = Dir[RRA.app.config.build_path('grids/*')]
+      grids_corpus = Dir[RVGP.app.config.build_path('grids/*')]
 
       @variants ||= self.class.glob_variants(glob, grids_corpus) +
                     self.class.glob_variants(glob, grids_corpus, year: 'all')
@@ -141,7 +141,7 @@ module RRA
     # @param [String] ext The file extension you wish to append, to the return
     # @return [String] The path to the output file, of the plot
     def output_file(name, ext)
-      RRA.app.config.build_path format('plots/%<name>s.%<ext>s', name: name, ext: ext)
+      RVGP.app.config.build_path format('plots/%<name>s.%<ext>s', name: name, ext: ext)
     end
 
     # Generate and return, a plot grid, for the given variant.
@@ -176,7 +176,7 @@ module RRA
           gopts[:sort_cols_by] = ->(column) { grid_hacks[:sort_columns_by].call column: column }
         end
 
-        RRA::Utilities::GridQuery.new(variant_files(variant_name), rvopts).to_grid(gopts)
+        RVGP::Utilities::GridQuery.new(variant_files(variant_name), rvopts).to_grid(gopts)
       end
     end
 
@@ -202,10 +202,10 @@ module RRA
 
     # Return the gnuplot object, for a given variant
     # @param [String] name The :name of the variant you're looking for
-    # @return [RRA::Plot::Gnuplot::Plot] The gnuplot
+    # @return [RVGP::Plot::Gnuplot::Plot] The gnuplot
     def gnuplot(name)
       @gnuplots ||= {}
-      @gnuplots[name] ||= RRA::Plot::Gnuplot::Plot.new title(name), grid(name), gnuplot_options
+      @gnuplots[name] ||= RVGP::Plot::Gnuplot::Plot.new title(name), grid(name), gnuplot_options
     end
 
     # Return the rendered gnuplot code, for a given variant
@@ -269,7 +269,7 @@ module RRA
 
     # Return all the plot objects, initialized from the yaml files in the plot_directory_path
     # @param [String] plot_directory_path A path to search, for (plot) yml files
-    # @return [Array<RRA::Plot>] An array of the plots, available in the provided directory
+    # @return [Array<RVGP::Plot>] An array of the plots, available in the provided directory
     def self.all(plot_directory_path)
       Dir.glob(format('%s/*.yml', plot_directory_path)).map { |path| new path }
     end
@@ -283,7 +283,7 @@ module RRA
     def gnuplot_options
       @gnuplot_options ||= begin
         gnuplot_options = yaml[:gnuplot] || {}
-        template = RRA::Utilities::Yaml.new(format('%s/default.yml', GNUPLOT_RESOURCES_PATH))
+        template = RVGP::Utilities::Yaml.new(format('%s/default.yml', GNUPLOT_RESOURCES_PATH))
         gnuplot_options.merge(template: template)
       end
     end

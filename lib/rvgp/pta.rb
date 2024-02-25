@@ -2,30 +2,30 @@
 
 require_relative 'base/reader'
 
-module RRA
+module RVGP
   # A base class, which offers functionality to plain text accounting adapters. At the moment,
   # that means either 'ledger', or 'hledger'. This class contains abstractions and code shared
-  # by the {RRA::Pta::HLedger} and {RRA::Pta::Ledger} classes.
+  # by the {RVGP::Pta::HLedger} and {RVGP::Pta::Ledger} classes.
   #
-  # In addition, this class contains the {RRA::Pta::AvailabilityHelper}, which can be included
+  # In addition, this class contains the {RVGP::Pta::AvailabilityHelper}, which can be included
   # by any class, in order to offer shorthand access to this entire suite of functions.
   class Pta
     # This module is intended for use in classes that wish to provide #ledger, #hledger,
     # and #pta methods, to its instances.
     module AvailabilityHelper
-      # (see RRA::Pta.ledger)
+      # (see RVGP::Pta.ledger)
       def ledger
-        RRA::Pta.ledger
+        RVGP::Pta.ledger
       end
 
-      # (see RRA::Pta.hledger)
+      # (see RVGP::Pta.hledger)
       def hledger
-        RRA::Pta.hledger
+        RVGP::Pta.hledger
       end
 
-      # (see RRA::Pta.pta)
+      # (see RVGP::Pta.pta)
       def pta
-        RRA::Pta.pta
+        RVGP::Pta.pta
       end
     end
 
@@ -35,8 +35,8 @@ module RRA
 
     # This class stores the Account details, as produced by the balance method of a pta adapter
     # @attr_reader fullname [String] The name of this account
-    # @attr_reader amounts [Array<RRA::Journal::Commodity>] The commodities in this account, as reported by balance
-    class BalanceAccount < RRA::Base::Reader
+    # @attr_reader amounts [Array<RVGP::Journal::Commodity>] The commodities in this account, as reported by balance
+    class BalanceAccount < RVGP::Base::Reader
       readers :fullname, :amounts
       # TODO: Implement and test the :pricer here
     end
@@ -44,33 +44,33 @@ module RRA
     # This class stores the Transaction details, as produced by the register method of a pta adapter
     # @attr_reader date [Date] The date this transaction occurred
     # @attr_reader payee [String] The payee (aka description) line of this transaction
-    # @attr_reader postings [Array<RRA::Pta::RegisterTransaction>] The postings in this transaction
-    class RegisterTransaction < RRA::Base::Reader
+    # @attr_reader postings [Array<RVGP::Pta::RegisterTransaction>] The postings in this transaction
+    class RegisterTransaction < RVGP::Base::Reader
       readers :date, :payee, :postings
     end
 
     # A posting, as output by the 'register' command. Typically these are available as items in a
-    # transaction, via the {RRA::Pta::RegisterTransaction#postings} method.
+    # transaction, via the {RVGP::Pta::RegisterTransaction#postings} method.
     # @attr_reader account [String] The account this posting was assigned to
-    # @attr_reader amounts [Array<RRA::Journal::Commodity>] The commodities that were encountered in the amount column
-    # @attr_reader totals [Array<RRA::Journal::Commodity>] The commodities that were encountered in the total column
+    # @attr_reader amounts [Array<RVGP::Journal::Commodity>] The commodities that were encountered in the amount column
+    # @attr_reader totals [Array<RVGP::Journal::Commodity>] The commodities that were encountered in the total column
     # @attr_reader tags [Hash<String,<String,TrueClass>>] A hash containing the tags that were encountered in this
     #                                                     posting. Values are either the string that was encountered,
     #                                                     for this tag. Or, true, if no specific string value was
     #                                                     assigned
-    class RegisterPosting < RRA::Base::Reader
+    class RegisterPosting < RVGP::Base::Reader
       readers :account, :amounts, :totals, :tags
 
       # This method will return the sum of all commodities in the amount column, in the specified currency.
       # @param [String] code A three digit currency code, or currency symbol, in which you want to express the amount
-      # @return [RRA::Journal::Commodity] The amount column, expressed as a sum
+      # @return [RVGP::Journal::Commodity] The amount column, expressed as a sum
       def amount_in(code)
         commodities_sum amounts, code
       end
 
       # This method will return the sum of all commodities in the total column, in the specified currency.
       # @param [String] code A three digit currency code, or currency symbol, in which you want to express the total
-      # @return [RRA::Journal::Commodity] The total column, expressed as a sum
+      # @return [RVGP::Journal::Commodity] The total column, expressed as a sum
       def total_in(code)
         commodities_sum totals, code
       end
@@ -80,9 +80,9 @@ module RRA
       # Bear in mind that code/conversion is required, because the only reason
       # we'd have multiple amounts, is if we have multiple currencies.
       def commodities_sum(commodities, code)
-        currency = RRA::Journal::Currency.from_code_or_symbol code
+        currency = RVGP::Journal::Currency.from_code_or_symbol code
 
-        pricer = options[:pricer] || RRA::Journal::Pricer.new
+        pricer = options[:pricer] || RVGP::Journal::Pricer.new
         # There's a whole section on default valuation behavior here :
         # https://hledger.org/hledger.html#valuation
         date = options[:price_date] || Date.today
@@ -93,13 +93,13 @@ module RRA
           next if a.quantity.zero?
 
           a.alphabetic_code == currency.alphabetic_code ? a : pricer.convert(date.to_time, a, code)
-        rescue RRA::Journal::Pricer::NoPriceError
+        rescue RVGP::Journal::Pricer::NoPriceError
           # This seems to be what we want...
-          raise RRA::Journal::Pricer::NoPriceError
+          raise RVGP::Journal::Pricer::NoPriceError
         end.compact
 
         # The case of [].sum will return an integer 0, which, isn't quite what
-        # we want. At one point, we returned RRA::Journal::Commodity.from_symbol_and_amount(code, 0).
+        # we want. At one point, we returned RVGP::Journal::Commodity.from_symbol_and_amount(code, 0).
         # However, for some queries, this distorted the output to produce '$ 0.00', when we
         # really expected nil. This seems to be the best return, that way the caller can just ||
         # whatever they want, in the case they want to override this behavior.
@@ -108,7 +108,7 @@ module RRA
     end
 
     # Returns the output of the 'stats' command, parsed into key/value pairs.
-    # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+    # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RVGP::Pta#args_and_opts} for
     #                             details
     # @return [Hash<String, <String,Array<String>>>] The journal statistics. Values are either a string, or an array
     #                                                of strings, depending on what was output.
@@ -132,7 +132,7 @@ module RRA
 
     # Returns the output of arguments to a pta adapter.
     #
-    # *NOTE:* If the RRA_LOG_COMMANDS environment variable is set. (say, to "1") this command will output diagnostic
+    # *NOTE:* If the RVGP_LOG_COMMANDS environment variable is set. (say, to "1") this command will output diagnostic
     # information to the console. This information will include the fully expanded command being run,
     # alongside its execution time.
     #
@@ -141,7 +141,7 @@ module RRA
     # - *:from_s* (String)- If a string is provided here, it's fed to the STDIN of the pta adapter. And "-f -" is added
     #   to the program's arguments. This instructs the command to treat STDIN as a journal.
     #
-    # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RRA::Pta#args_and_opts} for
+    # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RVGP::Pta#args_and_opts} for
     #                             details
     # @return [String] The output of a pta executable
     def command(*args)
@@ -158,7 +158,7 @@ module RRA
         end.flatten.compact
       end
 
-      is_logging = ENV.key?('RRA_LOG_COMMANDS') && !ENV['RRA_LOG_COMMANDS'].empty?
+      is_logging = ENV.key?('RVGP_LOG_COMMANDS') && !ENV['RVGP_LOG_COMMANDS'].empty?
 
       cmd = ([bin_path] + args.collect { |a| Shellwords.escape a }).join(' ')
 
@@ -166,7 +166,7 @@ module RRA
       output, error, status = Open3.capture3 cmd, open3_opts
       time_end = Time.now if is_logging
 
-      # Maybe We should send this to a RRA.logger.trace...
+      # Maybe We should send this to a RVGP.logger.trace...
       if is_logging
         pretty_cmd = ([bin_path] + args).join(' ')
 
@@ -255,26 +255,26 @@ module RRA
     end
 
     # Indicates whether or not this is a ledger pta adapter
-    # @return [TrueClass, FalseClass] True if this is an instance of {RRA::Pta::Ledger}
+    # @return [TrueClass, FalseClass] True if this is an instance of {RVGP::Pta::Ledger}
     def ledger?
       adapter_name == :ledger
     end
 
     # Indicates whether or not this is a hledger pta adapter
-    # @return [TrueClass, FalseClass] True if this is an instance of {RRA::Pta::HLedger}
+    # @return [TrueClass, FalseClass] True if this is an instance of {RVGP::Pta::HLedger}
     def hledger?
       adapter_name == :hledger
     end
 
     class << self
-      # Return a new instance of RRA::Pta::Ledger
-      # @return [RRA::Pta::Ledger]
+      # Return a new instance of RVGP::Pta::Ledger
+      # @return [RVGP::Pta::Ledger]
       def ledger
         Ledger.new
       end
 
-      # Return a new instance of RRA::Pta::HLedger
-      # @return [RRA::Pta::HLedger]
+      # Return a new instance of RVGP::Pta::HLedger
+      # @return [RVGP::Pta::HLedger]
       def hledger
         HLedger.new
       end
@@ -285,7 +285,7 @@ module RRA
       # 2. If ledger is installed on the system, then ledger is returned
       # 3. If hledger is installed on the system, then hledger is returned
       # If no pta adapters are available, an error is raised.
-      # @return [RRA::Pta::Ledger,RRA::Pta::HLedger]
+      # @return [RVGP::Pta::Ledger,RVGP::Pta::HLedger]
       def pta
         @pta ||= if @pta_adapter
                    send @pta_adapter
@@ -298,7 +298,7 @@ module RRA
                  end
       end
 
-      # Override the default adapter, used by {RRA::Pta.pta}.
+      # Override the default adapter, used by {RVGP::Pta.pta}.
       # This can be set to one of: nil, :hledger, or :ledger.
       # @param [Symbol] driver The adapter name, in a shorthand form. Downcased, and symbolized.
       # @return [void]

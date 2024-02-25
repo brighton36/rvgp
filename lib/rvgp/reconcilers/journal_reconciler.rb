@@ -2,15 +2,15 @@
 
 require_relative '../journal'
 
-module RRA
+module RVGP
   module Reconcilers
-    class JournalReconciler < RRA::Base::Reconciler
+    class JournalReconciler < RVGP::Base::Reconciler
       attr_reader :accounts
 
       private
 
       def journal
-        RRA::Journal.parse File.read(input_file)
+        RVGP::Journal.parse File.read(input_file)
       end
 
       def source_postings
@@ -21,12 +21,12 @@ module RRA
           end
 
           # For Journal:Posting's with multiple account transfer lines, we break it into
-          # multiple RRA::Base::Reconciler::Posting postings.
+          # multiple RVGP::Base::Reconciler::Posting postings.
           posting.transfers[0...-1].map do |transfer|
             # NOTE: The tags.dup appears to be needed, because otherwise the
             #       tags array ends up shared between the two entries, and
             #       operations on one, appear in the other's contents
-            RRA::Base::Reconciler::Posting.new posting.line_number,
+            RVGP::Base::Reconciler::Posting.new posting.line_number,
                                                date: posting.date,
                                                tags: posting.tags.dup,
                                                from: from,

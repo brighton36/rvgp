@@ -7,10 +7,10 @@ require 'minitest/autorun'
 require_relative '../lib/rvgp'
 require_relative '../lib/rvgp/journal'
 
-# Tests for RRA::Journal::Posting
+# Tests for RVGP::Journal::Posting
 class TestPosting < Minitest::Test
   def test_posting_to_ledger
-    posting = RRA::Journal::Posting.new(
+    posting = RVGP::Journal::Posting.new(
       Date.new(2021, 10, 2),
       'Heroes R Us',
       tags: ['Vacation: Seattle'.to_tag],
@@ -18,7 +18,7 @@ class TestPosting < Minitest::Test
         ['Expenses:Comics', { commodity: '$ 5.00'.to_commodity, tags: ['Publisher: Marvel'.to_tag] }],
         ['Expenses:Cards', { commodity: '$ 9.00'.to_commodity, tags: ['Collection: Baseball'.to_tag] }],
         ['Cash']
-      ].collect { |args| RRA::Journal::Posting::Transfer.new(*args) }
+      ].collect { |args| RVGP::Journal::Posting::Transfer.new(*args) }
     )
 
     assert_equal [
@@ -33,13 +33,13 @@ class TestPosting < Minitest::Test
   end
 
   def test_posting_with_complex_commodity_to_ledger
-    complex_commodity = RRA::Journal::ComplexCommodity.from_s(['-1000.0001 VBTLX', '@@', '$ 100000.00'].join(' '))
+    complex_commodity = RVGP::Journal::ComplexCommodity.from_s(['-1000.0001 VBTLX', '@@', '$ 100000.00'].join(' '))
 
-    posting = RRA::Journal::Posting.new(
+    posting = RVGP::Journal::Posting.new(
       '2022-03-28',
       'VANGUARD TOTAL BOND MARKET INDEX Sell',
-      transfers: [RRA::Journal::Posting::Transfer.new('Personal:Assets:Vanguard:VBTLX', commodity: complex_commodity),
-                  RRA::Journal::Posting::Transfer.new('Personal:Assets:Vanguard:MoneyMarket')]
+      transfers: [RVGP::Journal::Posting::Transfer.new('Personal:Assets:Vanguard:VBTLX', commodity: complex_commodity),
+                  RVGP::Journal::Posting::Transfer.new('Personal:Assets:Vanguard:MoneyMarket')]
     )
 
     assert_equal ['2022-03-28 VANGUARD TOTAL BOND MARKET INDEX Sell',

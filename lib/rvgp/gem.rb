@@ -2,7 +2,7 @@
 
 require 'open3'
 
-module RRA
+module RVGP
   # This class contains information relating to our Gem configuration, and is
   # used to produce a gemspec.
   class Gem

@@ -2,11 +2,11 @@
 
 require 'json'
 
-module RRA
+module RVGP
   class Journal
     # This abstraction offers a repository by which currencies can be defined,
     # and by which their rules can be queried. An instance of this class, is an
-    # entry in the currency table, that we support. The default currencies that RRA
+    # entry in the currency table, that we support. The default currencies that RVGP
     # supports can be found in:
     # {https://github.com/brighton36/rvgp/blob/main/resources/iso-4217-currencies.json iso-4217-currencies.json}
     # , and this file is typically loaded during rvgp initialization.
@@ -69,16 +69,16 @@ module RRA
 
       # Create a new commodity, from this currency, with the provided quantity
       # @param [Integer] quantity The quantity component, of the newly created commodity
-      # @return [RRA::Journal::Commodity]
+      # @return [RVGP::Journal::Commodity]
       def to_commodity(quantity)
-        RRA::Journal::Commodity.new symbol || alphabetic_code, alphabetic_code, quantity, minor_unit
+        RVGP::Journal::Commodity.new symbol || alphabetic_code, alphabetic_code, quantity, minor_unit
       end
 
-      # Load and return a parsed RRA::Journal::Currency, out of the provided
+      # Load and return a parsed RVGP::Journal::Currency, out of the provided
       # {https://github.com/brighton36/rvgp/blob/main/resources/iso-4217-currencies.json iso-4217-currencies.json}
       # file.
       # @param [String] str Either a three digit :alphabetic_code, or a single digit :symbol
-      # @return [RRA::Journal::Currency] the requested currency, with its default parameters
+      # @return [RVGP::Journal::Currency] the requested currency, with its default parameters
       def self.from_code_or_symbol(str)
         @currencies ||= begin
           unless currencies_config && File.readable?(currencies_config)
