@@ -44,7 +44,7 @@ You entered "Yukihiro Matsumoto". Is that correct? (Type "Yes" to continue) : Ye
 📖 New Project
    Initializing Project directory ........................................... 🟢
    Initializing Randomized bank feeds ....................................... 🟢
-   Initializing Randomized reconcilers ..................................... 🟢
+   Initializing Randomized reconcilers ...................................... 🟢
 
 The new project has been generated successfully.
 Though you may want to add the following line to your ~/.bashrc:
