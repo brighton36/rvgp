@@ -30,8 +30,8 @@ module RVGP
     #   disable_checks:
     #     - balance
     # A JournalValidation is passed the reconciler corresponding to it's instance in its initialize method. For further
-    # details on how these validations work, see the documentation for this class here {RVGP::Base::JournalValidation} or
-    # check out an example implementation. Here's the BalanceValidation itself, which is a relatively easy example to
+    # details on how these validations work, see the documentation for this class here {RVGP::Base::JournalValidation}
+    # or check out an example implementation. Here's the BalanceValidation itself, which is a relatively easy example to
     # {https://github.com/brighton36/rvgp/blob/main/lib/rvgp/validations/balance_validation.rb balance_validation.rb}
     # follow.
     #
@@ -138,8 +138,8 @@ module RVGP
       end
 
       # @!visibility public
-      # Add an error to our {RVGP::Base::Validation#errors} collection. The format of this error is expected to match the
-      # formatting indicated in the 'Error and Warning formatting' above.
+      # Add an error to our {RVGP::Base::Validation#errors} collection. The format of this error is expected to match
+      # the formatting indicated in the 'Error and Warning formatting' above.
       # @param msg [String] A description of the error.
       # @param citations [Array<String>] Supporting details, subordinate error citations, denotated 'below' the :msg
       def error!(msg, citations = nil)

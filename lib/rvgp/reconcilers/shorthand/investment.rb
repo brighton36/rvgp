@@ -126,11 +126,11 @@ module RVGP
           end
 
           RVGP::Base::Reconciler::Posting.new from_posting.line_number,
-                                             date: from_posting.date,
-                                             description: from_posting.description,
-                                             from: from_posting.from,
-                                             tags: from_posting.tags,
-                                             targets: income_targets
+                                              date: from_posting.date,
+                                              description: from_posting.description,
+                                              from: from_posting.from,
+                                              tags: from_posting.tags,
+                                              targets: income_targets
         end
       end
     end

@@ -39,6 +39,8 @@ module RVGP
         super
       end
 
+      # @!visibility private
+      # This method returns the full path to the historical feed directory
       def self.historical_path
         RVGP.app.config.project_path('feeds/historical')
       end

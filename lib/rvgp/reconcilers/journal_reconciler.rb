@@ -27,12 +27,12 @@ module RVGP
             #       tags array ends up shared between the two entries, and
             #       operations on one, appear in the other's contents
             RVGP::Base::Reconciler::Posting.new posting.line_number,
-                                               date: posting.date,
-                                               tags: posting.tags.dup,
-                                               from: from,
-                                               description: posting.description,
-                                               commodity: transform_commodity(transfer.commodity),
-                                               to: transfer.account
+                                                date: posting.date,
+                                                tags: posting.tags.dup,
+                                                from: from,
+                                                description: posting.description,
+                                                commodity: transform_commodity(transfer.commodity),
+                                                to: transfer.account
           end
         end.flatten
       end

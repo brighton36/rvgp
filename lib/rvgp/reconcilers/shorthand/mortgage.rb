@@ -153,11 +153,11 @@ module RVGP
           intermediary_opts = { date: from_posting.date, from: intermediary_account, tags: from_posting.tags }
 
           [RVGP::Base::Reconciler::Posting.new(from_posting.line_number,
-                                              date: from_posting.date,
-                                              description: from_posting.description,
-                                              from: from_posting.from,
-                                              tags: from_posting.tags,
-                                              targets: [to: intermediary_account, commodity: total]),
+                                               date: from_posting.date,
+                                               description: from_posting.description,
+                                               from: from_posting.from,
+                                               tags: from_posting.tags,
+                                               targets: [to: intermediary_account, commodity: total]),
            # Principal:
            RVGP::Base::Reconciler::Posting.new(
              from_posting.line_number,

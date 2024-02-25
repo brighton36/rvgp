@@ -288,10 +288,10 @@ module RVGP
         # We stipulate, by default, a date sort. Mostly because it makes sense. But, also so
         # that this matches HLedger's default sort order
         RVGP::Pta::Ledger::Output::Register.new command('xml', *args, { sort: 'date' }.merge(opts)),
-                                               monthly: (opts[:monthly] == true),
-                                               empty: opts[:empty],
-                                               pricer: pricer,
-                                               translate_meta_accounts: translate_meta_accounts
+                                                monthly: (opts[:monthly] == true),
+                                                empty: opts[:empty],
+                                                pricer: pricer,
+                                                translate_meta_accounts: translate_meta_accounts
       end
 
       private

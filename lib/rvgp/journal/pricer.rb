@@ -144,7 +144,7 @@ module RVGP
           price.amount
         else
           RVGP::Journal::Commodity.from_symbol_and_amount to,
-                                                         (1 / price.amount.quantity_as_bigdecimal).round(17).to_s('F')
+                                                          (1 / price.amount.quantity_as_bigdecimal).round(17).to_s('F')
         end
       end
 

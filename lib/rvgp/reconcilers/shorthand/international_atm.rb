@@ -124,23 +124,23 @@ module RVGP
             )
             targets << { to: operation_cost_to,
                          complex_commodity: RVGP::Journal::ComplexCommodity.new(left: operation_cost,
-                                                                               operation: :per_lot,
-                                                                               right: operation_cost_fees) }
+                                                                                operation: :per_lot,
+                                                                                right: operation_cost_fees) }
           end
 
           remitted = [reported_amount, conversion_markup_fees, operation_cost_fees].compact.reduce(:-)
 
           targets << { to: to,
                        complex_commodity: RVGP::Journal::ComplexCommodity.new(left: amount,
-                                                                             operation: :per_lot,
-                                                                             right: remitted) }
+                                                                              operation: :per_lot,
+                                                                              right: remitted) }
 
           RVGP::Base::Reconciler::Posting.new from_posting.line_number,
-                                             date: from_posting.date,
-                                             description: from_posting.description,
-                                             from: from_posting.from,
-                                             tags: from_posting.tags,
-                                             targets: targets.reverse
+                                              date: from_posting.date,
+                                              description: from_posting.description,
+                                              from: from_posting.from,
+                                              tags: from_posting.tags,
+                                              targets: targets.reverse
         end
       end
     end

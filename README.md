@@ -1,5 +1,5 @@
-# rvgp : (Reconcile, Validate, Grid, Plot) - Plain Text Accounting made simpler 
-A workflow tool to: reconcile bank-downloaded csv's into categorized pta journals. Run finance validations on those journals. And generate reports and graphs on the output.
+# rvgp : (Reconcile, Validate, Grid, Plot) - Plain Text Accounting automation and workflow with ruby and rake
+A workflow tool to: reconcile bank-downloaded csv's into categorized pta journals. Run financial validations on those journals. And, generate reports and graphs on the output.
 
 ## The Quick Pitch
 If you like ruby, and you want something akin to rails... but for your finances - this is what you're looking for! This tool offers an easy workflow,

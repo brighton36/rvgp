@@ -90,9 +90,9 @@ module RVGP
     #       '2023-01-15': $ 2345.67
     #       '2023-06-15': $ 3456,78
     #     ...
-    #   This feature is mostly implemented by the {RVGP::Validations::BalanceValidation}, and is provided as a fail-safe,
-    #   in which you can input the balance reported by the statements from your financial institution, and ensure your
-    #   build is consistent with the expectation of that institution.
+    #   This feature is mostly implemented by the {RVGP::Validations::BalanceValidation}, and is provided as a
+    #   fail-safe, in which you can input the balance reported by the statements from your financial institution,
+    #   and ensure your build is consistent with the expectation of that institution.
     # - *disable_checks* [Array<String>] - This declaration can be used to disable one or more of your journal
     #   validations. This is described in greater depth in the {RVGP::Base::Validation} documentation. Here's a sample
     #   of this feature, which can be used to disable the balances section that was explained above:
@@ -326,15 +326,15 @@ module RVGP
         def to_journal_posting
           transfers = targets.map do |target|
             RVGP::Journal::Posting::Transfer.new target[:to],
-                                                commodity: target[:commodity],
-                                                complex_commodity: target[:complex_commodity],
-                                                tags: target[:tags] ? target[:tags].map(&:to_tag) : nil
+                                                 commodity: target[:commodity],
+                                                 complex_commodity: target[:complex_commodity],
+                                                 tags: target[:tags] ? target[:tags].map(&:to_tag) : nil
           end
 
           RVGP::Journal::Posting.new date,
-                                    description,
-                                    tags: tags ? tags.map(&:to_tag) : nil,
-                                    transfers: transfers + [RVGP::Journal::Posting::Transfer.new(from)]
+                                     description,
+                                     tags: tags ? tags.map(&:to_tag) : nil,
+                                     transfers: transfers + [RVGP::Journal::Posting::Transfer.new(from)]
         end
       end
 

@@ -47,9 +47,9 @@ module RVGP
             # TODO: It seems like HLedger defaults to 10 digits. Probably
             # we should shrink these numbers down to the currency specifier...
             RVGP::Journal::Commodity.new symbol,
-                                        currency ? currency.alphabetic_code : symbol,
-                                        json[:aquantity][:decimalMantissa],
-                                        json[:aquantity][:decimalPlaces]
+                                         currency ? currency.alphabetic_code : symbol,
+                                         json[:aquantity][:decimalMantissa],
+                                         json[:aquantity][:decimalPlaces]
           end
         end
 
@@ -75,7 +75,7 @@ module RVGP
               raise RVGP::Pta::AssertionError unless json_account[0] == json_account[1]
 
               RVGP::Pta::BalanceAccount.new(json_account[0],
-                                           json_account[3].collect { |l| commodity_from_json l })
+                                            json_account[3].collect { |l| commodity_from_json l })
             end
 
             @summary_amounts = @json[1].collect { |json_amount| commodity_from_json json_amount }
@@ -195,8 +195,8 @@ module RVGP
         register(*args)&.transactions&.first
       end
 
-      # Returns the value of the 'Last transaction' key, of the #{RVGP::Pta#stats} method. This method is a fast query to
-      # resolve.
+      # Returns the value of the 'Last transaction' key, of the #{RVGP::Pta#stats} method. This method is a fast query
+      # to resolve.
       # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RVGP::Pta#args_and_opts} for
       #                             details.
       # @return [Date] The date of the newest transaction found in your files.
@@ -229,8 +229,8 @@ module RVGP
 
         # TODO: Provide and Test translate_meta_accounts here
         RVGP::Pta::HLedger::Output::Register.new command('register', *args, { 'output-format': 'json' }.merge(opts)),
-                                                monthly: (opts[:monthly] == true),
-                                                pricer: pricer
+                                                 monthly: (opts[:monthly] == true),
+                                                 pricer: pricer
       end
     end
   end

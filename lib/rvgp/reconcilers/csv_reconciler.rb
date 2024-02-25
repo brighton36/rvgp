@@ -94,10 +94,10 @@ module RVGP
             commodity.invert! if invert_amount
 
             RVGP::Base::Reconciler::Posting.new i + 1,
-                                               date: tx[:date],
-                                               description: tx[:description],
-                                               commodity: transform_commodity(commodity),
-                                               from: from
+                                                date: tx[:date],
+                                                description: tx[:description],
+                                                commodity: transform_commodity(commodity),
+                                                from: from
           end
         end
       end

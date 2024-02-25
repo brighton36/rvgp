@@ -329,8 +329,8 @@ module RVGP
       #                                              For more details on what options are supported in the :colors key,
       #                                              see the colors section of:
       #                                              {https://github.com/brighton36/rra/blob/main/resources/gnuplot/default.yml default.yml}
-      # @attr_reader [RVGP::Plot::Gnuplot::ChartBuilder] element An instance of {Plot::ELEMENTS}, to which plot directive
-      #                                                         generation is delegated.
+      # @attr_reader [RVGP::Plot::Gnuplot::ChartBuilder] element An instance of {Plot::ELEMENTS}, to which plot
+      #                                                          directive generation is delegated.
       # @attr_reader [Array<Array<String>>] dataset A grid, whose first row contains the headers, and in which each
       #                                             additional row's first element, is a keystone.
       class Plot

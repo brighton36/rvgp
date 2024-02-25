@@ -54,12 +54,12 @@ class TestFakeJournal < Minitest::Test
     assert_equal %w[2020-01-01 2020-01-03 2020-01-05 2020-01-07 2020-01-09
                     2020-01-12 2020-01-14 2020-01-16 2020-01-18 2020-01-20],
                  RVGP::Fakers::FakeJournal.basic_cash(from: Date.new(2020, 1, 1), to: Date.new(2020, 1, 20))
-                                         .postings.map(&:date).map(&:to_s)
+                                          .postings.map(&:date).map(&:to_s)
 
     assert_equal %w[2020-01-01 2020-02-09 2020-03-19 2020-04-28 2020-06-06
                     2020-07-16 2020-08-24 2020-10-03 2020-11-11 2020-12-20],
                  RVGP::Fakers::FakeJournal.basic_cash(from: Date.new(2020, 1, 1), to: Date.new(2020, 12, 20))
-                                         .postings.map(&:date).map(&:to_s)
+                                          .postings.map(&:date).map(&:to_s)
   end
 
   def test_basic_cash_postings
@@ -81,8 +81,8 @@ class TestFakeJournal < Minitest::Test
     ]
 
     journal = RVGP::Fakers::FakeJournal.basic_cash from: Date.new(2020, 1, 1),
-                                                  to: Date.new(2020, 1, 10),
-                                                  postings: postings
+                                                   to: Date.new(2020, 1, 10),
+                                                   postings: postings
     # Just make sure these postings are part of the output, and in the expected alphabetical order
     assert_equal 12, journal.postings.length
 

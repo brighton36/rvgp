@@ -62,8 +62,8 @@ module RVGP
                    RVGP::GoogleDrive::ExportLocalCsvs.new(destination: options[:csvdir], format: 'csv')
                  else
                    RVGP::GoogleDrive::ExportSheets.new(format: 'google_sheets',
-                                                      title: options[:title],
-                                                      secrets_file: @secrets_path)
+                                                       title: options[:title],
+                                                       secrets_file: @secrets_path)
                  end
 
         targets.each do |target|

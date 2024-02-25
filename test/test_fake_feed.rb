@@ -11,8 +11,8 @@ require_relative '../lib/rvgp/fakers/fake_reconciler'
 class TestFakeFeed < Minitest::Test
   def test_basic_feed
     feed = RVGP::Fakers::FakeFeed.basic_checking from: Date.new(2020, 1, 1),
-                                                to: Date.new(2020, 3, 31),
-                                                post_count: 300
+                                                 to: Date.new(2020, 3, 31),
+                                                 post_count: 300
 
     assert_kind_of String, feed
 
@@ -45,8 +45,8 @@ class TestFakeFeed < Minitest::Test
     expense_descriptions = %w[Walmart Amazon Apple CVS Exxon Berkshire Google Microsoft Costco]
     income_descriptions = %w[Uber Cyberdyne]
     feed = RVGP::Fakers::FakeFeed.basic_checking post_count: 50,
-                                                expense_descriptions: expense_descriptions,
-                                                income_descriptions: income_descriptions
+                                                 expense_descriptions: expense_descriptions,
+                                                 income_descriptions: income_descriptions
 
     csv = CSV.parse feed, headers: true
     assert_equal 50, csv.length
@@ -80,10 +80,10 @@ class TestFakeFeed < Minitest::Test
     starting_balance = '$ 10000.00'.to_commodity
 
     feed = RVGP::Fakers::FakeFeed.basic_checking from: Date.new(2020, 1, 1),
-                                                to: Date.new(2020, 3, 31),
-                                                post_count: 300,
-                                                starting_balance: starting_balance,
-                                                entries: additional_entries
+                                                 to: Date.new(2020, 3, 31),
+                                                 post_count: 300,
+                                                 starting_balance: starting_balance,
+                                                 entries: additional_entries
     csv = CSV.parse feed, headers: true
 
     # First:
@@ -130,13 +130,13 @@ class TestFakeFeed < Minitest::Test
     monthly_expenses[category_to_company['Personal:Expenses:Rent']] = ['$ 1500.00'.to_commodity] * 12
 
     feed = RVGP::Fakers::FakeFeed.personal_checking from: from,
-                                                   to: from >> (duration_in_months - 1),
-                                                   expense_sources: expense_sources,
-                                                   income_sources: income_sources,
-                                                   monthly_expenses: monthly_expenses,
-                                                   liability_sources: liability_sources,
-                                                   liabilities_by_month: liabilities,
-                                                   assets_by_month: assets
+                                                    to: from >> (duration_in_months - 1),
+                                                    expense_sources: expense_sources,
+                                                    income_sources: income_sources,
+                                                    monthly_expenses: monthly_expenses,
+                                                    liability_sources: liability_sources,
+                                                    liabilities_by_month: liabilities,
+                                                    assets_by_month: assets
 
     # Ensure the running balance is making sense:
     running_balance = nil

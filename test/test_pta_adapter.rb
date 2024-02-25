@@ -262,8 +262,8 @@ require_relative '../lib/rvgp'
 
         # We just use hledger here, rather than maintain two versions of our csv_rows truth table:
         csv_rows = CSV.parse(RVGP::Pta::HLedger.new.command('register',
-                                                           'Personal:Assets:AcmeBank:Savings',
-                                                           from_s: journal, related: true, 'output-format': 'csv'),
+                                                            'Personal:Assets:AcmeBank:Savings',
+                                                            from_s: journal, related: true, 'output-format': 'csv'),
                              headers: true)
 
         assert_equal csv_rows.length, register.transactions.length

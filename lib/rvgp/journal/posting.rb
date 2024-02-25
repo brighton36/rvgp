@@ -17,7 +17,8 @@ module RVGP
     # @attr_reader [Integer] line_number The line number, in a journal, that this posting was declared at.
     # @attr_reader [Date] date The date this posting occurred
     # @attr_reader [String] description The first line of this posting
-    # @attr_reader [Array<RVGP::Journal::Posting::Transfer>] transfers An array of transfers, that apply to this posting.
+    # @attr_reader [Array<RVGP::Journal::Posting::Transfer>] transfers An array of transfers, that apply to this
+    #                                                                  posting.
     # @attr_reader [Array<RVGP::Journal::Posting::Tag>] tags An array of tags, that apply to this posting.
     class Posting
       # This class represents an indented 'transfer' line, within a posting.

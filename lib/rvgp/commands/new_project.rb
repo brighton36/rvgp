@@ -278,13 +278,13 @@ module RVGP
       def liabilities_at_month(num)
         # I played with this until it offered a nice contrast with the assets curve
         RVGP::Journal::Commodity.from_symbol_and_amount('$',
-                                                       (Math.sin((num.to_f + 40) / 24) * 30_000) + 30_000)
+                                                        (Math.sin((num.to_f + 40) / 24) * 30_000) + 30_000)
       end
 
       def assets_at_month(num)
         # This just happened to be an interesting graph... to me:
         RVGP::Journal::Commodity.from_symbol_and_amount('$',
-                                                       (Math.sin((num.to_f - 32) / 20) * 40_000) + 50_000)
+                                                        (Math.sin((num.to_f - 32) / 20) * 40_000) + 50_000)
       end
 
       def project_journal_path
