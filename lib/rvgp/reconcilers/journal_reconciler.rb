@@ -4,9 +4,9 @@ require_relative '../journal'
 
 module RVGP
   module Reconcilers
+    # This reconciler is instantiated for input files of type journal (Plain Text Accounting text files).
+    # There are no parameters to this Reconciler, that aren't already documented in {RVGP::Reconcilers}
     class JournalReconciler < RVGP::Base::Reconciler
-      attr_reader :accounts
-
       private
 
       def journal

@@ -2,6 +2,8 @@
 
 module RVGP
   module Reconcilers
+    # This module contains the built-in Shorthand classes that ship with RVGP. For more details on this
+    # feature, see the 'Shorthand' section of the {RVGP::Reconcilers} module.
     module Shorthand
       # This reconciler module will automatically allocate the proceeds (or losses) from a stock sale.
       # This module will allocate capital gains or losses, given a symbol, amount, and price.
