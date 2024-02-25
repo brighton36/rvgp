@@ -4,7 +4,7 @@
 require 'csv'
 require 'minitest/autorun'
 
-require_relative '../lib/rra'
+require_relative '../lib/rvgp'
 
 [RRA::Pta::Ledger, RRA::Pta::HLedger].each do |pta_klass|
   describe pta_klass do

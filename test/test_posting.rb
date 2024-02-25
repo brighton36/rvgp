@@ -4,8 +4,8 @@
 require 'date'
 require 'minitest/autorun'
 
-require_relative '../lib/rra'
-require_relative '../lib/rra/journal'
+require_relative '../lib/rvgp'
+require_relative '../lib/rvgp/journal'
 
 # Tests for RRA::Journal::Posting
 class TestPosting < Minitest::Test

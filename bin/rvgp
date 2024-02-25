@@ -3,6 +3,6 @@
 # -*- mode: ruby -*-
 # frozen_string_literal: true
 
-require_relative '../lib/rra/commands'
+require_relative '../lib/rvgp/commands'
 
 RRA::Commands.dispatch!(*ARGV)

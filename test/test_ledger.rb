@@ -4,7 +4,7 @@
 require 'csv'
 require 'minitest/autorun'
 
-require_relative '../lib/rra'
+require_relative '../lib/rvgp'
 
 # These tests ensure that RRA::Pta::Ledger parses the xml output, as we'd expect.
 # Atm, most of these tests are in a private repo, since they test 'my' output,

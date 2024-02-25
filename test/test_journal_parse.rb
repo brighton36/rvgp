@@ -3,7 +3,7 @@
 
 require 'minitest/autorun'
 
-require_relative '../lib/rra'
+require_relative '../lib/rvgp'
 
 # Tests for RRA::Journal
 class TestJournalParse < Minitest::Test

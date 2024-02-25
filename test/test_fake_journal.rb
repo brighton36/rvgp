@@ -3,8 +3,8 @@
 
 require 'minitest/autorun'
 
-require_relative '../lib/rra'
-require_relative '../lib/rra/fakers/fake_journal'
+require_relative '../lib/rvgp'
+require_relative '../lib/rvgp/fakers/fake_journal'
 
 # Minitest class, used to test RRA::Fakers::FakeJournal
 class TestFakeJournal < Minitest::Test

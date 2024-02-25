@@ -14,22 +14,22 @@ module RRA
       # @return [Gem::Specification]
       def specification
         ::Gem::Specification.new do |s|
-          s.name        = 'rra'
+          s.name        = 'rvgp'
           s.version     = '0.3'
           s.required_ruby_version = '>= 3.0.0'
           s.licenses    = ['LGPL-2.0']
           s.authors     = ['Chris DeRose']
           s.email       = 'chris@chrisderose.com'
-          s.metadata    = { 'source_code_uri' => 'https://github.com/brighton36/rra' }
+          s.metadata    = { 'source_code_uri' => 'https://github.com/brighton36/rvgp' }
 
           s.summary = 'A workflow tool to: reconcile bank-downloaded csv\'s into ' \
                       'categorized pta journals. Run finance validations on those ' \
                       'journals. And generate csvs and plots on the output.'
-          s.homepage = 'https://github.com/brighton36/rra'
+          s.homepage = 'https://github.com/brighton36/rvgp'
 
           s.files = files
 
-          s.executables = ['rra']
+          s.executables = ['rvgp']
 
           s.add_development_dependency 'minitest', '~> 5.16.0'
           s.add_development_dependency 'yard', '~> 0.9.34'

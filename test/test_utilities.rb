@@ -3,8 +3,8 @@
 
 require 'minitest/autorun'
 
-require_relative '../lib/rra'
-require_relative '../lib/rra/utilities'
+require_relative '../lib/rvgp'
+require_relative '../lib/rvgp/utilities'
 
 # RRA::Utilities tests
 class TestUtilities < Minitest::Test

@@ -4,8 +4,8 @@
 require 'csv'
 require 'minitest/autorun'
 
-require_relative '../lib/rra'
-require_relative '../lib/rra/plot'
+require_relative '../lib/rvgp'
+require_relative '../lib/rvgp/plot'
 
 # Tests for RRA::Plot
 class TestPlot < Minitest::Test

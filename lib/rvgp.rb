@@ -1,28 +1,28 @@
 # frozen_string_literal: true
 
-require_relative 'rra/utilities/yaml'
-require_relative 'rra/application'
-require_relative 'rra/commands'
-require_relative 'rra/base/reconciler'
+require_relative 'rvgp/utilities/yaml'
+require_relative 'rvgp/application'
+require_relative 'rvgp/commands'
+require_relative 'rvgp/base/reconciler'
 
 # NOTE: Reconcilers & shorthand may want to go into a registry system at
 # some point, akin to grids/validations.
-require_relative 'rra/reconcilers/csv_reconciler'
-require_relative 'rra/reconcilers/journal_reconciler'
-require_relative 'rra/reconcilers/shorthand/mortgage'
-require_relative 'rra/reconcilers/shorthand/investment'
-require_relative 'rra/reconcilers/shorthand/international_atm'
+require_relative 'rvgp/reconcilers/csv_reconciler'
+require_relative 'rvgp/reconcilers/journal_reconciler'
+require_relative 'rvgp/reconcilers/shorthand/mortgage'
+require_relative 'rvgp/reconcilers/shorthand/investment'
+require_relative 'rvgp/reconcilers/shorthand/international_atm'
 
-require_relative 'rra/base/validation'
+require_relative 'rvgp/base/validation'
 
-require_relative 'rra/journal'
-require_relative 'rra/pta/ledger'
-require_relative 'rra/pta/hledger'
+require_relative 'rvgp/journal'
+require_relative 'rvgp/pta/ledger'
+require_relative 'rvgp/pta/hledger'
 
-require_relative 'rra/base/grid'
+require_relative 'rvgp/base/grid'
 
 # Gem Paths / Resources:
-require_relative 'rra/gem'
+require_relative 'rvgp/gem'
 
 I18n.load_path << Dir[RRA::Gem.root('resources/i18n/*.yml')]
 RRA::Journal::Currency.currencies_config = RRA::Gem.root('resources/iso-4217-currencies.json')

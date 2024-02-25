@@ -3,7 +3,7 @@
 
 require 'minitest/autorun'
 
-require_relative '../lib/rra'
+require_relative '../lib/rvgp'
 
 # Minitest class, used to test RRA::Base::Command
 class TestBaseCommand < Minitest::Test

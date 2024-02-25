@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative '../../rra'
+require_relative '../../rvgp'
 require_relative '../application/descendant_registry'
 
 module RRA

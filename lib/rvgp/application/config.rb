@@ -17,7 +17,7 @@ module RRA
         @project_path = project_path
         @build_path = format('%s/build', project_path)
 
-        config_path = project_path 'config/rra.yml'
+        config_path = project_path 'config/rvgp.yml'
         @yaml = RRA::Utilities::Yaml.new config_path, project_path if File.exist? config_path
 
         RRA::Pta.pta_adapter = @yaml[:pta_adapter].to_sym if @yaml.key? :pta_adapter
