@@ -1,8 +1,8 @@
-# rvgp - Plain Text Accounting automation and workflow with ruby and rake. 
+# rvgp - A plain text accounting framework for ruby on rake. 
 A workflow tool to: 
 - (R)econcile bank-downloaded csv's into categorized pta journals. 
-- (V)alidate the files, to protect against errors. 
-- Generate (G)rids, aka 'spreadsheets', of your cumulative and analytic calculations.
+- (V)alidate your accounting, to protect against errors. 
+- (G)rid the data! Make 'spreadsheets' based on analytic calculations from your journals.
 - (P)lot your grids, and generate meaningful graphs of your finances.
 
 # 📑 Table of Contents
