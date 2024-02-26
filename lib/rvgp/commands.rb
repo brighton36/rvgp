@@ -88,7 +88,15 @@ module RVGP
         RVGP::Commands.help! if options[:help]
 
         # Dispatch the command:
-        dispatch_klass RVGP.commands.find { |klass| klass.name == command_name }, command_args
+        command_klass = RVGP.commands.find { |klass| klass.name == command_name }
+
+        if command_name.nil?
+          error! 'error.missing_command'
+        elsif command_klass
+          dispatch_klass command_klass, command_args
+        else
+          error! 'error.command_unrecognized', command: command_name
+        end
       end
 
       # @!visibility private
@@ -101,6 +109,9 @@ module RVGP
           I18n.t('help.usage', program: File.basename($PROGRAM_NAME)),
           [indent, I18n.t('help.description')],
           I18n.t('help.command_introduction'),
+          I18n.t('help.target_introduction'),
+          I18n.t('help.global_option_introduction'),
+          I18n.t('help.command_list_introduction'),
           RVGP.commands.map do |command_klass|
             [
               [indent, RVGP.pastel.bold(command_klass.name)].join,
@@ -120,8 +131,7 @@ module RVGP
                  nil]
               end
             ]
-          end,
-          I18n.t('help.global_option_introduction')
+          end
         ].flatten.join "\n"
         exit
       end
@@ -134,23 +144,15 @@ module RVGP
       end
 
       def dispatch_klass(command_klass, command_args)
-        error! 'error.unexpected_argument', arg: command_klass unless command_klass
-
-        if command_klass.nil?
-          error! 'error.missing_command'
-        elsif command_klass
-          command = command_klass.new(*command_args)
-          if command.valid?
-            command.execute!
-          else
-            puts RVGP.pastel.bold(I18n.t('error.command_errors', command: command_klass.name))
-            command.errors.each do |error|
-              puts RVGP.pastel.red(I18n.t('error.command_error', error: error))
-            end
-            exit 1
-          end
+        command = command_klass.new(*command_args)
+        if command.valid?
+          command.execute!
         else
-          error! 'error.command_unrecognized', command: command_klass.name
+          puts RVGP.pastel.bold(I18n.t('error.command_errors', command: command_klass.name))
+          command.errors.each do |error|
+            puts RVGP.pastel.red(I18n.t('error.command_error', error: error))
+          end
+          exit 1
         end
       end
     end

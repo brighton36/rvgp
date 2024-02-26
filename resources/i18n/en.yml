@@ -3,14 +3,21 @@ en:
     usage: 'Usage: %{program} [OPTION]... [COMMAND] [TARGET]...'
     indent: '  '
     description: >
-      rvgp : (Reconcile, Validate, Grid, Plot) A workflow tool for reconciling,
-      validating, and reporting your finances in PTA (plain text accounting) and
-      ruby. See the program github for more details.
+      A plain text accounting workflow tool for: (r)econciling, (v)alidating, (g)rid-production and (p)lotting your finances with ruby. See the program github for more details.
+
     command_introduction: >
       COMMAND - This is a required parameter. Command-specific options are 
-      further available, once you've specified a command mode:
+      further available, once you've specified a command mode. See the 'Available Commands' section for a list of supported commands.
+    target_introduction: >
+      TARGET(s) - Depending on which command you select, a list of targets can be supplied. Typically,
+      supplying the -l option, in lieu of any targets, will output the targets supported by the command.
+      Note that any asterisk encountered in a target parameter, will expand to include all targets that
+      can be matched given the provided (target) string.
+    command_list_introduction: 'Available Commands:'
     global_option_introduction: >
-      The following global options are available, to all commands:
+      Global Options:
+        The following options are available to all commands:
+
         -d --dir[=PATH]  Use the supplied PATH as the active rvgp directory.
                          If unsupplied, this option defaults to the basedir of 
                          the LEDGER_FILE environment variable.
@@ -23,8 +30,6 @@ en:
           date: 'Specify a date to use, when calculatingg the "recent months" to display. Defaults to "today".'
       new_project:
         description: 'Create a new plain text accounting project, populated with random data, in the path specified by --dir.'
-      rotate_year:
-        description: "Rotate the given reconcilers, for a new year. And, move the last year's input files into the historical directory under your project feeds."
       plot:
         description: 'Build one or more gnuplots, based on a grid variant.'
         options:
@@ -57,6 +62,11 @@ en:
           all: 'Process all available reconcilers'
           list: 'List all available reconcilers'
           concise: "Concise output mode. Strips output that's unrelated to errors and warnings. (Mostly used by the ireconcile command)"
+      rotate_year:
+        description: "Rotate the given reconcilers, for a new year. And, move the last year's input files into the historical directory under your project feeds."
+        options:
+          all: 'Rotate all eligible reconcilers'
+          list: 'List reconcilers eligible for rotation'
       validate_journal:
         description: 'Validate reconciled journals, using the app/validations'
         options: 
@@ -130,11 +140,10 @@ en:
     warning: 'Warning'
     missing_entry_in_prices_db: ": The following entry is missing in the prices database:\n P %{time} %{from} %{to}"
     end_of_args: 'Missing an expected parameter value, in the argument list'
-    unexpected_argument: 'Unexpected argument encountered: %{arg}'
     no_targets: "No targets specified"
     missing_target: "One or more targets not found : %{targets}"
     missing_command: 'No command specified. Try running --help to view the available program modes'
-    command_unrecognized: '%{command} command is unrecognized. Consult the help page.'
+    command_unrecognized: '"%{command}" command is unrecognized. Consult the help page.'
     command_errors: "Unable to %{command}:"
     command_error: "  🟢 %{error}"
     no_application_dir: "Unable to determine the directory of your application. Consider setting the LEDGER_FILE environment variable, or providing a directory via the --dir parameter"
