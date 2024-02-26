@@ -1,16 +1,20 @@
-# rvgp - Plain Text Accounting automation and workflow with ruby and rake. Reconcile, Validate, Grid, ... and Plot!
-A workflow tool to: reconcile bank-downloaded csv's into categorized pta journals. Run financial validations on those journals. And, generate reports and graphs on the output.
+# rvgp - Plain Text Accounting automation and workflow with ruby and rake. 
+A workflow tool to: 
+- (R)econcile bank-downloaded csv's into categorized pta journals. 
+- (V)alidate the files, to protect against errors. 
+- Generate (G)rids, aka 'spreadsheets', of your cumulative and analytic calculations.
+- (P)lot your grids, and generate meaningful graphs of your finances.
 
-## 📑 Table of Contents
+# 📑 Table of Contents
 
-- [The Quick Pitch](#the-quick-pitch)
-- [Getting Started](#getting-started)
-- [How do project files relate?](#how-do-project-files-relate)
-- [Understanding the Workflow](#understanding-the-workflow)
-- [Documentation](#documentation)
-- [License](#license)
+- [The Quick Pitch](#-the-quick-pitch)
+- [Getting Started](#-getting-started)
+- [How do project files relate?](#-how-do-project-files-relate)
+- [Understanding the Workflow](#-understanding-the-workflow)
+- [Documentation](#-documentation)
+- [License](#-license)
 
-## 📽 The Quick Pitch
+# 📽 The Quick Pitch
 If you like ruby, and you want something akin to rails... but for your finances - this is what you're looking for! This tool offers an easy workflow,
 for the ruby literate, to: 
 
@@ -42,7 +46,7 @@ Plus, you get a bunch of other nice features. Like...
 * An easy quickstart generator, for setting up your first project (see the new_project command)
 * Shortcuts for working with finance, currency, gnuplot, hledger, i18n and more 
 
-## 🐦‍ Getting Started
+# 🐦‍ Getting Started
 
 The quickest way to get started, once you've installed the gem, is by way of the 'new_project' command.  
 ```
@@ -104,7 +108,7 @@ From here, you're ready to start populating this project with your data, instead
 
 Probably though, you'll want to read the rest of this README, to better understand how the project workflow is structured, and how these files work with that process.
 
-## 🐒 How do project files relate?
+# 🐒 How do project files relate?
 Let's take a moment, to understand the project directory structure. Here's what that looks like, in the "Yukihiro Matsumoto" project that we just created:
 
 ```
@@ -149,7 +153,7 @@ These directories contain the bulk of your workload, in your rvgp projects. Thes
 > **Note**
 > Feel free to add as many directories to your project root as you'd like. Useful ideas for additional directories might include: 'bank statements', 'test', 'orgs', 'documents', etc
 
-## 🪅 Understanding the Workflow
+# 🪅 Understanding the Workflow
 
 The significance of the Rakefile approach, to your accounting, can't be understated. This design decision offers us a number of features. The implicit dependency-tracking ensures that changes are only applied downstream in your build. A small adjustment at a given year, doesn't require an entire rebuild of the project. This offers us better performance, git-friendly accounting, and simplified auditing.
 
