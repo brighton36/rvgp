@@ -4,6 +4,7 @@ What follows is a workflow tool, and accounting framework, to:
 1. **V**alidate the accounting, to protect against errors. 
 1. **G**rid the data! Make 'spreadsheets' based on analytic calculations from your journals.
 1. **P**lot your grids, and generate meaningful graphs of your finances.
+
 Plus more! There's a bunch of tools included for: managing commodities, working with tables, parse journals... too much to list. There's plenty of ruby goodness inside to save you time with your accounting, and keep you from reinvent wheels.
 
 # 📑 Table of Contents
