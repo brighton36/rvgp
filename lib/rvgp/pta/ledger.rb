@@ -272,8 +272,8 @@ module RVGP
       #   calculating exchange rates.
       # - **:empty** (TrueClass, FalseClass) - If false, we'll remove any accounts and totals, that have
       #   quantities of zero.
-      # - **:translate_meta_accounts** (TrueClass, FalseClass) - If true, we'll convert accounts of name '<None>' to nil,
-      #   and '<Total>' to :total. This is mostly to useful when trying to preserve uniform behaviors between pta
+      # - **:translate_meta_accounts** (TrueClass, FalseClass) - If true, we'll convert accounts of name '<None>' to
+      #   nil, and '<Total>' to :total. This is mostly to useful when trying to preserve uniform behaviors between pta
       #   adapters. (hledger seems to offer us nil, in cases where ledger offers us '<None>')
       #
       # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RVGP::Pta#args_and_opts} for

@@ -39,11 +39,11 @@ module RVGP
       #   encountered by this module. Year one of a mortgage would start at zero. Subsequent annual reconcilers would
       #   be expected to define an installment number from which calculations can automatically pick-up the work
       #   from years prior.
-      # - **additional_payments** [Array<Hash>] - Any additional payments, to apply to the principal, can be listed here.
-      #   This field is expected to be an array of hashes, which, are composed of the following fields:
+      # - **additional_payments** [Array<Hash>] - Any additional payments, to apply to the principal, can be listed
+      #   here. This field is expected to be an array of hashes, which, are composed of the following fields:
       #   - **before_installment** [Integer] - The payment number, before which, this :amount should apply
-      #   - **amount** [Float] - A float that will be deducted from the principal. No commodity is necessary to delineate,
-      #     as we assume the same commodity as the :principle.
+      #   - **amount** [Float] - A float that will be deducted from the principal. No commodity is necessary to
+      #     delineate, as we assume the same commodity as the :principle.
       # - **override_payments** [Array<Hash>] - I can't explain why this is necessary. But, it seems that the interest
       #   calculations used by some mortgage providers ... aren't accurate. This happened to me, at least. The
       #   calculation being used was off by a penny, on a single installment. And, I didn't care enough to call the
@@ -51,8 +51,8 @@ module RVGP
       #   with the amount provided. This field is expected to be an array of hashes, which are composed of the following
       #   fields:
       #   - **at_installment** [Integer] - The payment number to assert the :interest value.
-      #   - **interest** [Float] - The amount of the interest calculation. No commodity is neccessary to delineate, as we
-      #     assume the same commodity as the :principle.
+      #   - **interest** [Float] - The amount of the interest calculation. No commodity is neccessary to delineate, as
+      #     we assume the same commodity as the :principle.
       #
       # # Example
       # Here's how this module might be used in your reconciler:

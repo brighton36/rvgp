@@ -15,8 +15,8 @@ module RVGP
       # - **total** [Commodity] - A lot price, the symbol. This represents the net  purchase price, which, would be
       #   divided by the amount, in order to arrive at a unit price. This field should be delimited if :price is
       #   omitted.
-      # - **capital_gains** [Commodity] - The amount of the total, to allocate to a capital gains account. Presumably for
-      #   tax reporting.
+      # - **capital_gains** [Commodity] - The amount of the total, to allocate to a capital gains account. Presumably
+      #   for tax reporting.
       # - **gains_account** [String] - The account name to allocate capital gains to.
       #
       # # Example
