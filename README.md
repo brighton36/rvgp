@@ -50,7 +50,21 @@ Plus, you get a bunch of other nice features. Like...
 
 ## 🐦‍ Getting Started
 
-The quickest way to get started, once you've installed the gem, is by way of the 'new_project' command.  
+First, install rvgp. Assuming you're running a recent ruby, it should be as easy as:
+
+```
+~> gem install rvgp
+Fetching rvgp-0.3.2.gem
+Successfully installed rvgp-0.3.2
+Parsing documentation for rvgp-0.3.2
+Installing ri documentation for rvgp-0.3.2
+Done installing documentation for rvgp after 2 seconds
+1 gem installed
+~>
+```
+
+Once installed, you'll now have access to the rvgp libraries, as well as the rvgp command. Let's start a new project, using the rvgp command:
+
 ```
 ~> rvgp -d ~/ledger new_project
 Whose project is this? A person's full name or a company name will work: Yukihiro Matsumoto
@@ -208,14 +222,14 @@ In this lifecycle, the major tasks are circled in blue, with cyan output files i
 ## 📚 Documentation
 
 Here are some links around the yard documentation, to particularly useful component and feature references:
-- [Reconciler yaml](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Reconcilers)
-- [JournalValidation base class](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Base/JournalValidation)
-- [SystemValidation base class](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Base/SystemValidation)
-- [Grid base class](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Base/Grid)
-- [Plot yaml](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Plot)
-- [PTA class(es)](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Pta)
-- [Commodity class](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Journal/Commodity)
-- [ComplexCommodity class](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Journal/ComplexCommodity)
+- [Reconciler yaml](https://gemdocs.org/gems/rvgp/0.3.2/RVGP/Reconcilers.html)
+- [JournalValidation base class](https://gemdocs.org/gems/rvgp/0.3.2/RVGP/Base/JournalValidation.html)
+- [SystemValidation base class](https://gemdocs.org/gems/rvgp/0.3.2/RVGP/Base/SystemValidation.html)
+- [Grid base class](https://gemdocs.org/gems/rvgp/0.3.2/RVGP/Base/Grid.html)
+- [Plot yaml](https://gemdocs.org/gems/rvgp/0.3.2/RVGP/Plot.html)
+- [PTA class(es)](https://gemdocs.org/gems/rvgp/0.3.2/RVGP/Pta.html)
+- [Commodity class](https://gemdocs.org/gems/rvgp/0.3.2/RVGP/Journal/Commodity.html)
+- [ComplexCommodity class](https://gemdocs.org/gems/rvgp/0.3.2/RVGP/Journal/ComplexCommodity.html)
 
 ## 📜 License
 

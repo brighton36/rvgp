@@ -24,7 +24,7 @@ module RVGP
           s.email       = 'chris@chrisderose.com'
           s.metadata    = {
             'source_code_uri' => 'https://github.com/brighton36/rvgp',
-            'documentation_uri' => ['https://www.rubydoc.info/gems/rvgp', VERSION].join('/')
+            'documentation_uri' => ['https://gemdocs.org/gems/rvgp', VERSION].join('/')
           }
 
           s.doc_dir 'doc'
