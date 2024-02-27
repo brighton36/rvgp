@@ -29,7 +29,7 @@ module RVGP
     # for each value of a tag), that may be used to produce additional grids in your build, on top of the dated
     # segments.
     #
-    # = Example
+    # ## Example
     # Perhaps the easiest way to understand what this class does, is to look at one of the sample grids produced by
     # the new_project command. Here's the contents of an app/grids/wealth_growth_grid.rb, that you can use in your
     # projects:
@@ -60,17 +60,19 @@ module RVGP
     # -  build/grids/2023-wealth-growth.csv
     #
     # And, inside each of this files, will be a csv similar to:
-    #   Date,Assets,Liabilities
-    #   01-23,89418.01,-4357.45
-    #   02-23,89708.53,-3731.10
-    #   03-23,89899.81,-3150.35
-    #   04-23,89991.36,-2616.21
-    #   05-23,89982.94,-2129.60
-    #   06-23,89874.60,-1691.37
-    #   07-23,89666.59,-1302.28
-    #   08-23,89359.43,-963.00
-    #   09-23,88953.92,-674.13
-    #   10-23,88451.01,-436.16
+    # ```
+    # Date,Assets,Liabilities
+    # 01-23,89418.01,-4357.45
+    # 02-23,89708.53,-3731.10
+    # 03-23,89899.81,-3150.35
+    # 04-23,89991.36,-2616.21
+    # 05-23,89982.94,-2129.60
+    # 06-23,89874.60,-1691.37
+    # 07-23,89666.59,-1302.28
+    # 08-23,89359.43,-963.00
+    # 09-23,88953.92,-674.13
+    # 10-23,88451.01,-436.16
+    # ```
     #
     # @attr_reader [Date] starting_at The first day in this instance of the grid
     # @attr_reader [Date] ending_at The last day in this instance of the grid
@@ -127,12 +129,12 @@ module RVGP
       # month, whose value is the total amount returned, for that month.
       #
       # In addition to the options supported by pta.register, the following options are supported:
-      # - *accrue_before_begin* [Boolean] - This flag will create a pta-adapter independent query, to accrue balances
+      # - **accrue_before_begin** [Boolean] - This flag will create a pta-adapter independent query, to accrue balances
       #   before the start date of the returned set. This is useful if you want to (say) output the current year's
       #   total's, but, you want to start with the ending balance of the prior year, as opposed to '0'.
-      # - *initial* [Hash] - defaults to ({}). This is the value we begin to map values from. Typically we want to
+      # - **initial** [Hash] - defaults to ({}). This is the value we begin to map values from. Typically we want to
       #   start that process from nil, this allows us to decorate the starting point.
-      # - *in_code* [String] - defaults to ('$') . This value, expected to be a commodity code, is ultimately passed
+      # - **in_code** [String] - defaults to ('$') . This value, expected to be a commodity code, is ultimately passed
       #   to {RVGP::Pta::RegisterPosting#total_in}
       # @param [Array<Object>] args See {RVGP::Pta::HLedger#register}, {RVGP::Pta::Ledger#register} for details
       # @return [Hash<String,Hash<Date,RVGP::Journal::Commodity>>] all totals, indexed by month. Months are indexed by
@@ -148,12 +150,12 @@ module RVGP
       # whose value is the amount amount returned, for that month.
       #
       # In addition to the options supported by pta.register, the following options are supported:
-      # - *accrue_before_begin* [Boolean] - This flag will create a pta-adapter independent query, to accrue balances
+      # - **accrue_before_begin** [Boolean] - This flag will create a pta-adapter independent query, to accrue balances
       #   before the start date of the returned set. This is useful if you want to (say) output the current year's
       #   amount's, but, you want to start with the ending balance of the prior year, as opposed to '0'.
-      # - *initial* [Hash] - defaults to ({}). This is the value we begin to map values from. Typically we want to
+      # - **initial** [Hash] - defaults to ({}). This is the value we begin to map values from. Typically we want to
       #   start that process from nil, this allows us to decorate the starting point.
-      # - *in_code* [String] - defaults to ('$') . This value, expected to be a commodity code, is ultimately passed
+      # - **in_code** [String] - defaults to ('$') . This value, expected to be a commodity code, is ultimately passed
       #   to {RVGP::Pta::RegisterPosting#amount_in}
       # @param [Array<Object>] args See {RVGP::Pta::HLedger#register}, {RVGP::Pta::Ledger#register} for details
       # @return [Hash<String,Hash<Date,RVGP::Journal::Commodity>>] all amounts, indexed by month. Months are indexed by
@@ -168,12 +170,12 @@ module RVGP
       # Date class) whose value is itself a Commodity, which indicates the total for that month.
       #
       # In addition to the options supported by pta.register, the following options are supported:
-      # - *accrue_before_begin* [Boolean] - This flag will create a pta-adapter independent query, to accrue balances
+      # - **accrue_before_begin** [Boolean] - This flag will create a pta-adapter independent query, to accrue balances
       #   before the start date of the returned set. This is useful if you want to (say) output the current year's
       #   amount's, but, you want to start with the ending balance of the prior year, as opposed to '0'.
-      # - *initial* [Hash] - defaults to ({}). This is the value we begin to map values from. Typically we want to
+      # - **initial** [Hash] - defaults to ({}). This is the value we begin to map values from. Typically we want to
       #   start that process from nil, this allows us to decorate the starting point.
-      # - *in_code* [String] - defaults to ('$') . This value, expected to be a commodity code, is ultimately passed
+      # - **in_code** [String] - defaults to ('$') . This value, expected to be a commodity code, is ultimately passed
       #   to {RVGP::Pta::RegisterPosting#total_in}
       # @param [Array<Object>] args See {RVGP::Pta::HLedger#register}, {RVGP::Pta::Ledger#register} for details
       # @return [Hash<Date,RVGP::Journal::Commodity>] all amounts, indexed by month. Months are indexed by
@@ -188,12 +190,12 @@ module RVGP
       # class) whose value is itself a Commodity, which indicates the amount for that month.
       #
       # In addition to the options supported by pta.register, the following options are supported:
-      # - *accrue_before_begin* [Boolean] - This flag will create a pta-adapter independent query, to accrue balances
+      # - **accrue_before_begin** [Boolean] - This flag will create a pta-adapter independent query, to accrue balances
       #   before the start date of the returned set. This is useful if you want to (say) output the current year's
       #   amount's, but, you want to start with the ending balance of the prior year, as opposed to '0'.
-      # - *initial* [Hash] - defaults to ({}). This is the value we begin to map values from. Typically we want to
+      # - **initial** [Hash] - defaults to ({}). This is the value we begin to map values from. Typically we want to
       #   start that process from nil, this allows us to decorate the starting point.
-      # - *in_code* [String] - defaults to ('$') . This value, expected to be a commodity code, is ultimately passed
+      # - **in_code** [String] - defaults to ('$') . This value, expected to be a commodity code, is ultimately passed
       #   to {RVGP::Pta::RegisterPosting#amount_in}
       # @param [Array<Object>] args See {RVGP::Pta::HLedger#register}, {RVGP::Pta::Ledger#register} for details
       # @return [Hash<Date,RVGP::Journal::Commodity>] all amounts, indexed by month. Months are indexed by
@@ -369,49 +371,53 @@ module RVGP
 
       # This module can be included into classes descending from RVGP::Base::Grid, in order to add support for multiple
       # sheets, per year. These sheets can be declared using the provided 'has_sheets' class method, like so:
-      #   has_sheets('cashflow') { %w(personal business) }
+      # ```
+      # has_sheets('cashflow') { %w(personal business) }
+      # ```
       # This declaration will ensure the creation of "#\\{year}-cashflow-business.csv" and
       # "#\\{year}-cashflow-personal.csv" grids, in the project's build/grids output. This is achieved by providing the
       # sheet name as a parameter to your #sheet_header, and #sheet_body methods. (see the below example)
       #
-      # = Example
+      # ## Example
       # Here's a simple example of a grid that's segmented both by year, as well as by "property". The property an
       # expense correlates with, is determined by the value of it's property tag (should one exist).
       # This grid will build a separate grid for every property that we've tagged expenses for, with the expenses for
       # that tag, separated by year.
-      #   class PropertyExpensesGrid < RVGP::Base::Grid
-      #     include HasMultipleSheets
+      # ```
+      # class PropertyExpensesGrid < RVGP::Base::Grid
+      #   include HasMultipleSheets
       #
-      #     grid 'expenses_by_property', 'Generate Property Expense Grids', 'Property Expenses by month (%s)'
+      #   grid 'expenses_by_property', 'Generate Property Expense Grids', 'Property Expenses by month (%s)'
       #
-      #     has_sheets('property-expenses') { |year| pta.tags 'property', values: true, begin: year, end: year + 1 }
+      #   has_sheets('property-expenses') { |year| pta.tags 'property', values: true, begin: year, end: year + 1 }
       #
-      #     def sheet_header(property)
-      #       ['Date'] + sheet_series(property)
-      #     end
+      #   def sheet_header(property)
+      #     ['Date'] + sheet_series(property)
+      #   end
       #
-      #     def sheet_body(property)
-      #       months = property_expenses(property).values.map(&:keys).flatten.uniq.sort
+      #   def sheet_body(property)
+      #     months = property_expenses(property).values.map(&:keys).flatten.uniq.sort
       #
-      #       months_through_dates(months.first, months.last).map do |month|
-      #         [month.strftime('%m-%y')] + sheet_series(property).map { |col| property_expenses(property)[col][month] }
-      #       end
-      #     end
-      #
-      #     private
-      #
-      #     def sheet_series(property)
-      #       property_expenses(property).keys.sort
-      #     end
-      #
-      #     def property_expenses(property)
-      #       @property_expenses ||= {}
-      #       @property_expenses[property] ||= monthly_amounts_by_account(
-      #         ledger_args: [format('%%property=%s', property), 'and', 'Expense'],
-      #         hledger_args: [format('tag:property=%s', property), 'Expense']
-      #       )
+      #     months_through_dates(months.first, months.last).map do |month|
+      #       [month.strftime('%m-%y')] + sheet_series(property).map { |col| property_expenses(property)[col][month] }
       #     end
       #   end
+      #
+      #   private
+      #
+      #   def sheet_series(property)
+      #     property_expenses(property).keys.sort
+      #   end
+      #
+      #   def property_expenses(property)
+      #     @property_expenses ||= {}
+      #     @property_expenses[property] ||= monthly_amounts_by_account(
+      #       ledger_args: [format('%%property=%s', property), 'and', 'Expense'],
+      #       hledger_args: [format('tag:property=%s', property), 'Expense']
+      #     )
+      #   end
+      # end
+      # ```
       #
       # This PropertyExpensesGrid, depending on your data, will output a series of grids in your build directory, such
       # as the following:
@@ -429,20 +435,22 @@ module RVGP
       # -  build/grids/2023-property-expenses-101_0021tokyo.csv
       #
       # And, inside each of this files, will be a csv similar to:
-      #   Date,Business:Expenses:Banking:Interest:181Yurakucho,Business:Expenses:Home:Improvement:181Yurakucho[...]
-      #   01-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
-      #   02-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
-      #   03-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
-      #   04-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
-      #   05-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
-      #   06-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
-      #   07-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
-      #   07-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
-      #   08-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
-      #   09-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
-      #   10-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
-      #   11-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
-      #   12-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # ```
+      # Date,Business:Expenses:Banking:Interest:181Yurakucho,Business:Expenses:Home:Improvement:181Yurakucho[...]
+      # 01-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # 02-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # 03-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # 04-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # 05-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # 06-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # 07-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # 07-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # 08-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # 09-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # 10-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # 11-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # 12-23,123.45,678.90,123.45,678.90,123.45,678.90,123.45,678.90,123.45
+      # ```
       module HasMultipleSheets
         # Return the computed grid, in a parsed form, before it's serialized to a string.
         # @return [Array[Array<String>]] Each row is an array, itself composed of an array of cells.

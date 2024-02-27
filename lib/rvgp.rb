@@ -52,7 +52,7 @@ module RVGP
   #   @return [Array<RVGP::Base::Command>] the commands that are available in this project
   # @!attribute [r] self.grids
   #   Contains an array of all available objects, with parent of type {RVGP::Base::Grid}.<br>
-  #   *NOTE:* RVGP.app.task_names => Array<String>, will return all grid-building tasks that have been defined in the
+  #   **NOTE:** RVGP.app.task_names => Array<String>, will return all grid-building tasks that have been defined in the
   #   project.
   #   @return [Array<RVGP::Base::Grid>] the grids that are available in this project
   # @!attribute [r] self.journal_validations
@@ -60,7 +60,7 @@ module RVGP
   #   @return [Array<RVGP::Base::JournalValidation>] the journal validations that are available in this project
   # @!attribute [r] self.system_validations
   #   Contains an array of all available objects, with parent of type {RVGP::Base::SystemValidation}.<br>
-  #   *NOTE:* RVGP.system_validations.task_names => Array<String>, will return all system validation tasks that have
+  #   **NOTE:** RVGP.system_validations.task_names => Array<String>, will return all system validation tasks that have
   #   been defined in the project.
   #   @return [Array<RVGP::Base::SystemValidation>] the system validations that are available in this project
 end

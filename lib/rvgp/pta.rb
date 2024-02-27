@@ -132,13 +132,13 @@ module RVGP
 
     # Returns the output of arguments to a pta adapter.
     #
-    # *NOTE:* If the RVGP_LOG_COMMANDS environment variable is set. (say, to "1") this command will output diagnostic
+    # **NOTE:** If the RVGP_LOG_COMMANDS environment variable is set. (say, to "1") this command will output diagnostic
     # information to the console. This information will include the fully expanded command being run,
     # alongside its execution time.
     #
     # While args and options are largely fed straight to the pta command, for processing, we support the following
     # options, which, are removed from the arguments, and handled in this method.
-    # - *:from_s* (String)- If a string is provided here, it's fed to the STDIN of the pta adapter. And "-f -" is added
+    # - **:from_s** (String)- If a string is provided here, it's fed to the STDIN of the pta adapter. And "-f -" is added
     #   to the program's arguments. This instructs the command to treat STDIN as a journal.
     #
     # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RVGP::Pta#args_and_opts} for
@@ -202,13 +202,13 @@ module RVGP
     # options are documented below.
     #
     # This method also supports the following options, for additional handling:
-    # - *:hledger_args* - If this is a ledger adapter, this option is removed. Otherwise, the values of this Array will
+    # - **:hledger_args** - If this is a ledger adapter, this option is removed. Otherwise, the values of this Array will
     #   be returned in the first element of the return array.
-    # - *:hledger_opts* - If this is a ledger adapter, this option is removed. Otherwise, the values of this Hash will
+    # - **:hledger_opts** - If this is a ledger adapter, this option is removed. Otherwise, the values of this Hash will
     #   be merged with the second element of the return array.
-    # - *:ledger_args* - If this is an hledger adapter, this option is removed. Otherwise, the values of this Array will
+    # - **:ledger_args** - If this is an hledger adapter, this option is removed. Otherwise, the values of this Array will
     #   be returned in the first element of the return array.
-    # - *:ledger_opts* - If this is an hledger adapter, this option is removed. Otherwise, the values of this Hash will
+    # - **:ledger_opts** - If this is an hledger adapter, this option is removed. Otherwise, the values of this Hash will
     #   be merged with the second element of the return array.
     # @return [Array<Object>] A two element array. The first element of this array is an Array<String> containing the
     #                         string arguments that were provided to this method, and/or which should be passed directly

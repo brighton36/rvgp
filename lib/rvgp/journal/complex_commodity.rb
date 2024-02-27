@@ -9,16 +9,18 @@ module RVGP
     # inconsistent (compare complex expressions vs comments).
     #
     # Here's some examples of Complex Commodities:
-    #  10 AAPL @@ $500.00
-    #  10 AAPL @ ($500.00 / 10)
-    #  (5 AAPL * 2) @ ($500.00 / 10)
-    #  1000 AAPL (@) $1
-    #  -10 AAPL {{$500.00}} @@ $750.00
-    #  10 AAPL {=$50.00}
-    #  -5 AAPL {$50.00} [2012-04-10] @@ $375.00
-    #  -5 AAPL {$50.00} [2012-04-10] (Oh my!) @@ $375.00
-    #  -5 AAPL {$50.00} ((ten_dollars)) @@ $375.00
-    #  -5 AAPL {$50.00} ((s, d, t -> market($10, date, t))) @@ $375.00
+    # ```
+    # 10 AAPL @@ $500.00
+    # 10 AAPL @ ($500.00 / 10)
+    # (5 AAPL * 2) @ ($500.00 / 10)
+    # 1000 AAPL (@) $1
+    # -10 AAPL {{$500.00}} @@ $750.00
+    # 10 AAPL {=$50.00}
+    # -5 AAPL {$50.00} [2012-04-10] @@ $375.00
+    # -5 AAPL {$50.00} [2012-04-10] (Oh my!) @@ $375.00
+    # -5 AAPL {$50.00} ((ten_dollars)) @@ $375.00
+    # -5 AAPL {$50.00} ((s, d, t -> market($10, date, t))) @@ $375.00
+    # ```
     #
     # We ended up needing most of this class to run {RVGP::Validations::DuplicateTagsValidation}.
     # And, to ensure that we're able to mostly-validate the syntax of the journals. We don't actually

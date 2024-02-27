@@ -20,15 +20,22 @@ module RVGP
       #       a redirect URI, and use the playground...
       #
       # You'll want to write these credentials, in the following files:
-      #   * config/google-secrets.yml :
-      #       client_id: ""
-      #       project_id: "ruby-rake-accounting"
-      #       client_secret: ""
-      #       token_path: "google-token.yml"
-      #       application_name: "rvgp"
-      #   * config/google-token.yml :
-      #       ---
-      #       default: '{"client_id":"","access_token":"","refresh_token":"","scope":["https://www.googleapis.com/auth/spreadsheets"],"expiration_time_millis":1682524731000}'
+      #
+      # **config/google-secrets.yml**
+      # ```
+      # client_id: ""
+      # project_id: "ruby-rake-accounting"
+      # client_secret: ""
+      # token_path: "google-token.yml"
+      # application_name: "rvgp"
+      # ```
+      #
+      # **config/google-token.yml**
+      # ```
+      # ---
+      # default: '{"client_id":"","access_token":"","refresh_token":"","scope":["https://www.googleapis.com/auth/spreadsheets"],"expiration_time_millis":1682524731000}'
+      # ```
+      #
       # The empty values in these files, should be populated with the values you secured
       # following the medium link above. The only exception here, might be that refresh_token.
       # Which, I think gets written by the googleauth library, automatically.

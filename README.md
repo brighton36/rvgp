@@ -207,7 +207,15 @@ In this lifecycle, the major tasks are circled in blue, with cyan output files i
 
 ## 📚 Documentation
 
-Bear with me while I get this together. From here, the plan is to send you to yard docs, broken out into sections with excruciating detail.
+Here are some links around the yard documentation, to particularly useful component and feature references:
+- [Reconciler yaml](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Reconcilers)
+- [JournalValidation base class](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Base/JournalValidation)
+- [SystemValidation base class](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Base/SystemValidation)
+- [Grid base class](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Base/Grid)
+- [Plot yaml](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Plot)
+- [PTA class(es)](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Pta)
+- [Commodity class](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Journal/Commodity)
+- [ComplexCommodity class](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Journal/ComplexCommodity)
 
 ## 📜 License
 

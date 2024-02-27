@@ -9,26 +9,28 @@ module RVGP
   # Here's an example plot specification, included in the default project build as
   # {https://github.com/brighton36/rvgp/blob/main/resources/skel/app/plots/wealth-growth.yml wealth-growth.yml}, as
   # created by the new_project command:
-  #   title: "Wealth Growth (%{year})"
-  #   glob: "%{year}-wealth-growth.csv"
-  #   grid_hacks:
-  #     store_cell: !!proc >
-  #       (cell) ? cell.to_f.abs : nil
-  #   google:
-  #     chart_type: area
-  #     axis:
-  #       left: "Amount"
-  #       bottom: "Date"
-  #   gnuplot:
-  #     chart_type: area
-  #     domain: monthly
-  #     axis:
-  #       left: "Amount"
-  #       bottom: "Date"
-  #     additional_lines: |+
-  #       set xtics scale 0 rotate by 45 offset -1.4,-1.4
-  #       set key title ' '
-  #       set style fill transparent solid 0.7 border
+  # ```
+  # title: "Wealth Growth (%{year})"
+  # glob: "%{year}-wealth-growth.csv"
+  # grid_hacks:
+  #   store_cell: !!proc >
+  #     (cell) ? cell.to_f.abs : nil
+  # google:
+  #   chart_type: area
+  #   axis:
+  #     left: "Amount"
+  #     bottom: "Date"
+  # gnuplot:
+  #   chart_type: area
+  #   domain: monthly
+  #   axis:
+  #     left: "Amount"
+  #     bottom: "Date"
+  #   additional_lines: |+
+  #     set xtics scale 0 rotate by 45 offset -1.4,-1.4
+  #     set key title ' '
+  #     set style fill transparent solid 0.7 border
+  # ```
   #
   # The yaml file is required to have :title and :glob parameters. Additionally,
   # the following parameter groups are supported: :grid_hacks, :gnuplot, and :google.

@@ -33,6 +33,7 @@ module RVGP
 
           s.add_development_dependency 'minitest', '~> 5.16.0'
           s.add_development_dependency 'yard', '~> 0.9.34'
+          s.add_development_dependency 'redcarpet', '~> 3.6.0'
 
           s.add_dependency 'open3', '~> 0.1.1'
           s.add_dependency 'shellwords', '~> 0.1.0'

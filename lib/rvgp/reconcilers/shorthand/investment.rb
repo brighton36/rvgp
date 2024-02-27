@@ -9,35 +9,39 @@ module RVGP
       # This module will allocate capital gains or losses, given a symbol, amount, and price.
       #
       # The module parameters we support are:
-      # - *symbol* [String] -  A commodity or currency code, that represents the purchased asset
-      # - *amount* [Integer] - The amount of :symbol that was purchased, or if negative, sold.
-      # - *price* [Commodity] - A unit price, for the symbol. This field should be delimited if :total is omitted.
-      # - *total* [Commodity] - A lot price, the symbol. This represents the net  purchase price, which, would be
+      # - **symbol** [String] -  A commodity or currency code, that represents the purchased asset
+      # - **amount** [Integer] - The amount of :symbol that was purchased, or if negative, sold.
+      # - **price** [Commodity] - A unit price, for the symbol. This field should be delimited if :total is omitted.
+      # - **total** [Commodity] - A lot price, the symbol. This represents the net  purchase price, which, would be
       #   divided by the amount, in order to arrive at a unit price. This field should be delimited if :price is
       #   omitted.
-      # - *capital_gains* [Commodity] - The amount of the total, to allocate to a capital gains account. Presumably for
+      # - **capital_gains** [Commodity] - The amount of the total, to allocate to a capital gains account. Presumably for
       #   tax reporting.
-      # - *gains_account* [String] - The account name to allocate capital gains to.
+      # - **gains_account** [String] - The account name to allocate capital gains to.
       #
-      # = Example
+      # # Example
       # Here's how this module might be used in your reconciler:
-      #   ...
-      #   - match: /Acme Stonk Exchange/
-      #     to_shorthand: Investment
-      #     shorthand_params:
-      #       symbol: VOO
-      #       price: "$ 400.00"
-      #       amount: "-1000"
-      #       capital_gains: "$ -100000.00"
-      #       gains_account: Personal:Income:AcmeExchange:VOO
-      #   ...
+      # ```
+      # ...
+      # - match: /Acme Stonk Exchange/
+      #   to_shorthand: Investment
+      #   shorthand_params:
+      #     symbol: VOO
+      #     price: "$ 400.00"
+      #     amount: "-1000"
+      #     capital_gains: "$ -100000.00"
+      #     gains_account: Personal:Income:AcmeExchange:VOO
+      # ...
+      # ```
       # And here's how that will reconcile, in your build:
+      # ```
+      # ...
+      # 2023-06-01 Acme Stonk Exchange ACH CREDIT 123456 Yukihiro Matsumoto
+      #   Personal:Assets                   -1000 VOO @@ $ 400000.00
+      #   Personal:Income:AcmeExchange:VOO    $ 100000.00
+      #   Personal:Assets:AcmeChecking
       #   ...
-      #   2023-06-01 Acme Stonk Exchange ACH CREDIT 123456 Yukihiro Matsumoto
-      #     Personal:Assets                   -1000 VOO @@ $ 400000.00
-      #     Personal:Income:AcmeExchange:VOO    $ 100000.00
-      #     Personal:Assets:AcmeChecking
-      #     ...
+      # ```
       #
       class Investment
         # @!visibility private

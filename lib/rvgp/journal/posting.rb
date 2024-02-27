@@ -5,9 +5,9 @@ module RVGP
     # This class represents a single posting, in a PTA journal. A posting is
     # typically of the following form:
     # ```
-    #     2020-02-10 Frozen Chicken from the Local Supermarket
-    #       Personal:Expenses:Food:Groceries    $ 50.00
-    #       Cash
+    # 2020-02-10 Frozen Chicken from the Local Supermarket
+    #   Personal:Expenses:Food:Groceries    $ 50.00
+    #   Cash
     # ```
     # This is a simple example. There are a good number of permutations under which
     # posting components s appear. Nonetheless, a posting is typically comprised of

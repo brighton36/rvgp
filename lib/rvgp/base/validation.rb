@@ -15,7 +15,7 @@ module RVGP
     # This Base class contains some common helpers for use in your validations, regardless of whether its a system or
     # journal validation. Here are the differences between these two validation classes:
     #
-    # =Journal Validations
+    # ##Journal Validations
     # Validate the output of one reconciler at a time<br>
     #
     # These validations are run immediately after the reconcile task, and before system validations
@@ -27,15 +27,17 @@ module RVGP
     # with the 'Validation' suffix removed from the class. For example, to disable the
     # {RVGP::Validations::BalanceValidation} in one of the reconcilers of your project, add the following lines to its
     # yaml:
-    #   disable_checks:
-    #     - balance
+    # ```
+    # disable_checks:
+    #   - balance
+    # ```
     # A JournalValidation is passed the reconciler corresponding to it's instance in its initialize method. For further
     # details on how these validations work, see the documentation for this class here {RVGP::Base::JournalValidation}
     # or check out an example implementation. Here's the BalanceValidation itself, which is a relatively easy example to
     # {https://github.com/brighton36/rvgp/blob/main/lib/rvgp/validations/balance_validation.rb balance_validation.rb}
     # follow.
     #
-    # =System Validations
+    # ##System Validations
     # Validate the entire, finished, journal output for the project <br>
     #
     # Unlike Journal validations, these Validations are run without a target, and are expected to generate warnings and
@@ -44,6 +46,7 @@ module RVGP
     # There are no example SystemValidations included in the distribution of rvgp. However, here's an easy one, to serve
     # as reference. This validation ensures Transfers between accounts are always credited and
     # debited on both sides:
+    # ```
     #  class TransferAccountValidation < RVGP::Base::SystemValidation
     #    STATUS_LABEL = 'Unbalanced inter-account transfers'
     #    DESCRIPTION = "Ensure that debits and credits through Transfer accounts, complete without remainders"
@@ -58,35 +61,38 @@ module RVGP
     #      warning! 'Unbalanced Transfer Encountered', warnings if warnings.length > 0
     #    end
     #  end
+    # ```
     #
     # The above validation works, if you assign transfers between accounts like so:
-    #   ; This is how a Credit Card Payment looks in my Checking account, the source of funds:
-    #   2023-01-25 Payment to American Express card ending in 1234
-    #     Transfers:PersonalChecking_PersonalAmex    $ 10000.00
-    #     Personal:Assets:AcmeBank:Checking
+    # ```
+    # ; This is how a Credit Card Payment looks in my Checking account, the source of funds:
+    # 2023-01-25 Payment to American Express card ending in 1234
+    #   Transfers:PersonalChecking_PersonalAmex    $ 10000.00
+    #   Personal:Assets:AcmeBank:Checking
     #
-    #   ; This is how a Credit Card Payment looks in my Amex account, the destination of funds:
-    #   2023-01-25 Payment Thank You - Web
-    #     Transfers:PersonalChecking_PersonalAmex    $ -10000.00
-    #     Personal:Liabilities:AmericanExpress
+    # ; This is how a Credit Card Payment looks in my Amex account, the destination of funds:
+    # 2023-01-25 Payment Thank You - Web
+    #   Transfers:PersonalChecking_PersonalAmex    $ -10000.00
+    #   Personal:Liabilities:AmericanExpress
+    # ```
     #
     # In this format of transfering money, if either the first or second transfer was omitted, the
     # TransferAccountValidation will alert you that money has gone missing somewhere at the bank, and/or is taking
     # longer to complete, than you expected.
     #
-    # =Summary of Differences
+    # ##Summary of Differences
     # SystemValidations are largely identical to JournalValidations, with, the following exceptions:
     #
-    # *Priority*
+    # **Priority**
     # Journal validations are run sooner in the rake process. Just after reconciliations have completed. System
     # validations run immediately after all Journal validations have completed.
     #
-    # *Input*
+    # **Input**
     # Journal validations have one input, accessible via its {RVGP::Base::JournalValidation#reconciler}. System
     # validations have no preconfigured inputs at all. Journal Validations support a disable_checks attribute in the
     # reconciler yaml, and system validations have no such directive.
     #
-    # *Labeling*
+    # **Labeling**
     # With Journal validations, tasks are labeled automatically by rvgp, based on their class name. System validations
     # are expected to define a STATUS_LABEL and DESCRIPTION constant, in order to arrive at these labels.
     #
@@ -94,7 +100,7 @@ module RVGP
     # {RVGP::Base::Validation#error!} and {RVGP::Base::Validation#warning!} methods, instigated in the class'
     # validate method.
     #
-    # =Error and Warning formatting
+    # ##Error and Warning formatting
     # The format of errors and warnings are a bit peculiar, and probably need a bit more polish to the interface.
     # Nonetheless, it's not complicated. Here's the way it works, for both collections:
     # - The formatting of :errors and :warnings is identical. These collections contain a hierarchy of errors, which

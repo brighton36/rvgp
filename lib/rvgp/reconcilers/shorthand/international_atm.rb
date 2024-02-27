@@ -13,37 +13,41 @@ module RVGP
       # some will use a subset.
       #
       # The module parameters we support are:
-      # - *amount* [Commodity] - The amount you withdrew on the ATM screen. This is paper amount, that you received.
+      # - **amount** [Commodity] - The amount you withdrew on the ATM screen. This is paper amount, that you received.
       #   This amount should be denoted in the commodity you received.
-      # - *operation_cost* [Commodity] - This amount is denominated in the same currency you received in paper, and
+      # - **operation_cost** [Commodity] - This amount is denominated in the same currency you received in paper, and
       #   is typically listed in a summary screen, and on your printed receipt.
-      # - *conversion_markup* [String] - This is a percentage, expressed as a string. So, "7.5%" would be expected
+      # - **conversion_markup** [String] - This is a percentage, expressed as a string. So, "7.5%" would be expected
       #   to be written as "7.5", here. This amount is typically listed on a summary screen, and in your printed
       #   receipt.
-      # - *conversion_markup_to* [String] - The account that :conversion_markup fees should be transferred to
-      # - *operation_cost_to* [String] - The account that :operation_cost fees should be transferred to
+      # - **conversion_markup_to** [String] - The account that :conversion_markup fees should be transferred to
+      # - **operation_cost_to** [String] - The account that :operation_cost fees should be transferred to
       #
-      # = Example
+      # # Example
       # Here's how this module might be used in your reconciler:
-      #   ...
-      #   - match: /BANCOLOMBIA/
-      #     to: Personal:Assets:Cash
-      #     to_shorthand: InternationalAtm
-      #     shorthand_params:
-      #       amount: "600000 COP"
-      #       operation_cost: "24290.00 COP"
-      #       operation_cost_to: Personal:Expenses:Banking:Fees:RandomAtmOperator
-      #       conversion_markup: "7.5"
-      #       conversion_markup_to: Personal:Expenses:Banking:Fees:RandomAtmOperator
-      #   ...
+      # ```
+      # ...
+      # - match: /BANCOLOMBIA/
+      #   to: Personal:Assets:Cash
+      #   to_shorthand: InternationalAtm
+      #   shorthand_params:
+      #     amount: "600000 COP"
+      #     operation_cost: "24290.00 COP"
+      #     operation_cost_to: Personal:Expenses:Banking:Fees:RandomAtmOperator
+      #     conversion_markup: "7.5"
+      #     conversion_markup_to: Personal:Expenses:Banking:Fees:RandomAtmOperator
+      # ...
+      # ```
       # And how one of these above uses will reconcile, in your build:
-      #   ...
-      #   2023-02-18 BANCOLOMBIA AERO_JMC4 antioquia
-      #     Personal:Assets:Cash                                600000.00 COP @@ $ 123.26
-      #     Personal:Expenses:Banking:Fees:RandomAtmOperator    24290.00 COP @@ $ 4.99
-      #     Personal:Expenses:Banking:Fees:RandomAtmOperator    $ 9.62
-      #     Personal:Assets:AcmeBank:Checking
-      #   ...
+      # ```
+      # ...
+      # 2023-02-18 BANCOLOMBIA AERO_JMC4 antioquia
+      #   Personal:Assets:Cash                                600000.00 COP @@ $ 123.26
+      #   Personal:Expenses:Banking:Fees:RandomAtmOperator    24290.00 COP @@ $ 4.99
+      #   Personal:Expenses:Banking:Fees:RandomAtmOperator    $ 9.62
+      #   Personal:Assets:AcmeBank:Checking
+      # ...
+      # ```
       # Note that the reconciler line above, could match more than one transaction in the input file, and if it
       # does, each of them will be expanded similarly to the expansion below. Though, with international exchange
       # rates changing on a daily basis, the numbers may be different, depending on the debit amount encountered

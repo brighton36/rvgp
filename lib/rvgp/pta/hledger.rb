@@ -216,7 +216,7 @@ module RVGP
       # Run the 'hledger register' command, and return it's output.
       #
       # This method also supports the following options, for additional handling:
-      # - *:pricer* (RVGP::Journal::Pricer) - If provided, this option will use the specified pricer object when
+      # - **:pricer** (RVGP::Journal::Pricer) - If provided, this option will use the specified pricer object when
       #   calculating exchange rates.
       #
       # @param [Array<Object>] args Arguments and options, passed to the pta command. See {RVGP::Pta#args_and_opts} for

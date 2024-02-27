@@ -12,7 +12,7 @@ module RVGP
     # , and this file is typically loaded during rvgp initialization.
     #
     # Here's what an entry in that file, looks like:
-    #
+    # ```
     #  {
     #    "Entity":"UNITED STATES",
     #    "Currency":"US Dollar",
@@ -21,6 +21,7 @@ module RVGP
     #    "Minor unit":"2",
     #    "Symbol":"$"
     #  },
+    # ```
     #
     # PR's welcome, if you have additions to offer on this file.
     #

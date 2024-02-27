@@ -27,66 +27,70 @@ module RVGP
       #   reconciler to allocate escrow payments.
       #
       # The module parameters we support are:
-      # - *label* [String] - This is a prefix, used in the description of Principal, Interest, and Escrow transactions
-      # - *principal* [Commodity] - The mortgage principal
-      # - *rate* [Float] - The mortgage rate
-      # - *payee_principal* [String] - The account to ascribe principal payments to
-      # - *payee_interest* [String] - The account to ascribe interest payments to
-      # - *escrow_account* [String] - Te account to ascribe escrow payments to
-      # - *intermediary_account* [String] - The account to ascribe intermediary payments to, from the source account,
+      # - **label** [String] - This is a prefix, used in the description of Principal, Interest, and Escrow transactions
+      # - **principal** [Commodity] - The mortgage principal
+      # - **rate** [Float] - The mortgage rate
+      # - **payee_principal** [String] - The account to ascribe principal payments to
+      # - **payee_interest** [String] - The account to ascribe interest payments to
+      # - **escrow_account** [String] - Te account to ascribe escrow payments to
+      # - **intermediary_account** [String] - The account to ascribe intermediary payments to, from the source account,
       #   before being assigned to principal, interest, and escrow break-outs.
-      # - *start_at_installment_number* [Integer] - The installment number, of the first matching transaction,
+      # - **start_at_installment_number** [Integer] - The installment number, of the first matching transaction,
       #   encountered by this module. Year one of a mortgage would start at zero. Subsequent annual reconcilers would
       #   be expected to define an installment number from which calculations can automatically pick-up the work
       #   from years prior.
-      # - *additional_payments* [Array<Hash>] - Any additional payments, to apply to the principal, can be listed here.
+      # - **additional_payments** [Array<Hash>] - Any additional payments, to apply to the principal, can be listed here.
       #   This field is expected to be an array of hashes, which, are composed of the following fields:
-      #   - *before_installment* [Integer] - The payment number, before which, this :amount should apply
-      #   - *amount* [Float] - A float that will be deducted from the principal. No commodity is necessary to delineate,
+      #   - **before_installment** [Integer] - The payment number, before which, this :amount should apply
+      #   - **amount** [Float] - A float that will be deducted from the principal. No commodity is necessary to delineate,
       #     as we assume the same commodity as the :principle.
-      # - *override_payments* [Array<Hash>] - I can't explain why this is necessary. But, it seems that the interest
+      # - **override_payments** [Array<Hash>] - I can't explain why this is necessary. But, it seems that the interest
       #   calculations used by some mortgage providers ... aren't accurate. This happened to me, at least. The
       #   calculation being used was off by a penny, on a single installment. And, I didn't care enough to call the
       #   institution and figure out why. So, I added this feature, to allow an override of the automatic calculation,
       #   with the amount provided. This field is expected to be an array of hashes, which are composed of the following
       #   fields:
-      #   - *at_installment* [Integer] - The payment number to assert the :interest value.
-      #   - *interest* [Float] - The amount of the interest calculation. No commodity is neccessary to delineate, as we
+      #   - **at_installment** [Integer] - The payment number to assert the :interest value.
+      #   - **interest** [Float] - The amount of the interest calculation. No commodity is neccessary to delineate, as we
       #     assume the same commodity as the :principle.
       #
-      # = Example
+      # # Example
       # Here's how this module might be used in your reconciler:
-      #   ...
-      #   - match: /AcmeFinance Servicing/
-      #     to_shorthand: Mortgage
-      #     shorthand_params:
-      #       label: 1-8-1 Yurakucho Dori Mortgage
-      #       intermediary_account: Personal:Expenses:Banking:MortgagePayment:181Yurakucho
-      #       payee_principal: Personal:Liabilities:Mortgage:181Yurakucho
-      #       payee_interest: Personal:Expenses:Banking:Interest:181Yurakucho
-      #       escrow_account: Personal:Assets:AcmeFinance:181YurakuchoEscrow
-      #       principal: 260000.00
-      #       rate: 0.0499
-      #       start_at_installment_number: 62
-      #   ...
+      # ```
+      # ...
+      # - match: /AcmeFinance Servicing/
+      #   to_shorthand: Mortgage
+      #   shorthand_params:
+      #     label: 1-8-1 Yurakucho Dori Mortgage
+      #     intermediary_account: Personal:Expenses:Banking:MortgagePayment:181Yurakucho
+      #     payee_principal: Personal:Liabilities:Mortgage:181Yurakucho
+      #     payee_interest: Personal:Expenses:Banking:Interest:181Yurakucho
+      #     escrow_account: Personal:Assets:AcmeFinance:181YurakuchoEscrow
+      #     principal: 260000.00
+      #     rate: 0.0499
+      #     start_at_installment_number: 62
+      # ...
+      # ```
       # And here's how that will reconcile one of your payments, in your build:
-      #   ...
-      #   2023-01-03 AcmeFinance Servicing MTG PYMT 012345 Yukihiro Matsumoto
-      #     Personal:Expenses:Banking:MortgagePayment:181Yurakucho    $ 3093.67
-      #     Personal:Assets:AcmeBank:Checking
+      # ```
+      # ...
+      # 2023-01-03 AcmeFinance Servicing MTG PYMT 012345 Yukihiro Matsumoto
+      #   Personal:Expenses:Banking:MortgagePayment:181Yurakucho    $ 3093.67
+      #   Personal:Assets:AcmeBank:Checking
       #
-      #   2023-01-03 1-8-1 Yurakucho Dori Mortgage (#61) Principal
-      #     Personal:Liabilities:Mortgage:181Yurakucho    $ 403.14
-      #     Personal:Expenses:Banking:MortgagePayment:181Yurakucho
+      # 2023-01-03 1-8-1 Yurakucho Dori Mortgage (#61) Principal
+      #   Personal:Liabilities:Mortgage:181Yurakucho    $ 403.14
+      #   Personal:Expenses:Banking:MortgagePayment:181Yurakucho
       #
-      #   2023-01-03 1-8-1 Yurakucho Dori Mortgage (#61) Interest
-      #     Personal:Expenses:Banking:Interest:181Yurakucho    $ 991.01
-      #     Personal:Expenses:Banking:MortgagePayment:181Yurakucho
+      # 2023-01-03 1-8-1 Yurakucho Dori Mortgage (#61) Interest
+      #   Personal:Expenses:Banking:Interest:181Yurakucho    $ 991.01
+      #   Personal:Expenses:Banking:MortgagePayment:181Yurakucho
       #
-      #   2023-01-03 1-8-1 Yurakucho Dori Mortgage (#61) Escrow
-      #     Personal:Assets:AcmeFinance:181YurakuchoEscrow    $ 1699.52
-      #     Personal:Expenses:Banking:MortgagePayment:181Yurakucho
-      #   ...
+      # 2023-01-03 1-8-1 Yurakucho Dori Mortgage (#61) Escrow
+      #   Personal:Assets:AcmeFinance:181YurakuchoEscrow    $ 1699.52
+      #   Personal:Expenses:Banking:MortgagePayment:181Yurakucho
+      # ...
+      # ```
       # Note that you'll have an automatically calculated reconcilation for each payment you
       # make, during the year. A single reconciler rule, will take care of reconciling every
       # payment, automatically.

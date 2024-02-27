@@ -27,6 +27,6 @@ YARD::Rake::YardocTask.new do |t|
   t.files = RVGP::Gem.ruby_files.reject do |f|
     %r{\A(?:(?:test|resources/skel)/.*|.*finance_gem_hacks\.rb\Z)}.match f
   end
-  t.options = ['--no-private', '--protected']
+  t.options = ['--no-private', '--protected', '--markup=markdown']
   t.stats_options = ['--list-undoc']
 end
