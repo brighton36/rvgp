@@ -6,6 +6,8 @@ module RVGP
   # This class contains information relating to our Gem configuration, and is
   # used to produce a gemspec.
   class Gem
+    VERSION = '0.3.2'
+
     # @!visibility private
     GEM_DIR = File.expand_path format('%s/../..', File.dirname(__FILE__))
 
@@ -15,12 +17,17 @@ module RVGP
       def specification
         ::Gem::Specification.new do |s|
           s.name        = 'rvgp'
-          s.version     = '0.3'
+          s.version     = VERSION
           s.required_ruby_version = '>= 3.0.0'
           s.licenses    = ['LGPL-2.0']
           s.authors     = ['Chris DeRose']
           s.email       = 'chris@chrisderose.com'
-          s.metadata    = { 'source_code_uri' => 'https://github.com/brighton36/rvgp' }
+          s.metadata    = {
+            'source_code_uri' => 'https://github.com/brighton36/rvgp',
+            'documentation_uri' => ['https://www.rubydoc.info/gems/rvgp', VERSION].join('/')
+          }
+
+          s.doc_dir 'doc'
 
           s.summary = 'A workflow tool to: reconcile bank-downloaded csv\'s into ' \
                       'categorized pta journals. Run finance validations on those ' \

@@ -1,4 +1,5 @@
 # rvgp - A plain text accounting framework for ruby on rake. 
+[![Gem Version](https://badge.fury.io/rb/rvgp.svg)](https://badge.fury.io/rb/rvgp)
 What follows is a workflow tool, and accounting framework, to automate: 
 1. **R**econciliation of your bank-downloaded csv's into categorized pta journals. (interactively!)
 1. **V**alidation of your output, to protect against errors. (in ruby)
@@ -208,14 +209,14 @@ In this lifecycle, the major tasks are circled in blue, with cyan output files i
 ## 📚 Documentation
 
 Here are some links around the yard documentation, to particularly useful component and feature references:
-- [Reconciler yaml](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Reconcilers)
-- [JournalValidation base class](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Base/JournalValidation)
-- [SystemValidation base class](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Base/SystemValidation)
-- [Grid base class](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Base/Grid)
-- [Plot yaml](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Plot)
-- [PTA class(es)](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Pta)
-- [Commodity class](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Journal/Commodity)
-- [ComplexCommodity class](https://www.rubydoc.info/gems/rvgp/0.3/RVGP/Journal/ComplexCommodity)
+- [Reconciler yaml](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Reconcilers)
+- [JournalValidation base class](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Base/JournalValidation)
+- [SystemValidation base class](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Base/SystemValidation)
+- [Grid base class](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Base/Grid)
+- [Plot yaml](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Plot)
+- [PTA class(es)](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Pta)
+- [Commodity class](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Journal/Commodity)
+- [ComplexCommodity class](https://www.rubydoc.info/gems/rvgp/0.3.2/RVGP/Journal/ComplexCommodity)
 
 ## 📜 License
 
