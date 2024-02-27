@@ -1,9 +1,9 @@
 # rvgp - A plain text accounting framework for ruby on rake. 
-What follows is a workflow tool, and accounting framework, to: 
-1. **R**econcile your bank-downloaded csv's into categorized pta journals. 
-1. **V**alidate the accounting, to protect against errors. 
-1. **G**rid the data! Make 'spreadsheets' based on analytic calculations from your journals.
-1. **P**lot your grids, and generate meaningful graphs of your finances.
+What follows is a workflow tool, and accounting framework, to automate: 
+1. **R**econciliation of your bank-downloaded csv's into categorized pta journals. (interactively!)
+1. **V**alidation the accounting, to protect against errors. (in ruby)
+1. **G**rid'ing the data! Make 'spreadsheets' based on analytic calculations from your journals. (ruby here, too)
+1. **P**lotting grids, and generate meaningful graphs of your finances. (with gnuplot, or google sheets)
 
 Plus more! There's a bunch of tools included for: managing commodities, working with tables, parse journals... too much to list. There's plenty of ruby goodness inside to save you time with your accounting, and keep you from reinvent wheels.
 
