@@ -3,9 +3,9 @@
 module RVGP
   class Plot
     module GoogleDrive
-      # This class is roughly, an kind of diagnostic alternative to RVGP::GoogleDrive::ExportSheets,
+      # This class is roughly, an kind of diagnostic alternative to RVGP::Plot::GoogleDrive::ExportSheets,
       # which implements the :csvdir option of the RVGP::Commands::PublishGsheets command.
-      # Mostly, this object offers the methods that RVGP::GoogleDrive::ExportSheets provides, and
+      # Mostly, this object offers the methods that RVGP::Plot::GoogleDrive::ExportSheets provides, and
       # writes the sheets that would have otherwise been published to google - into a
       # local directory, with csv files representing the Google sheet. This is mostly
       # a debugging and diagnostic function.

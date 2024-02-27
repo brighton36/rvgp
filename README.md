@@ -167,19 +167,19 @@ To better understand how your files, are processed by rvgp, here's a diagram of 
 ```mermaid
   graph TD;
     subgraph Reconciliation[Reconciliation Cycle]
-      Reconcilers("app/reconcilers/*.yml").->JournalBuild("<br>🏗 **Journal Build**<br><br>");
+      Reconcilers("app/reconcilers/*.yml").->JournalBuild("<br>🏗 Journal Build<br><br>");
       Feeds("feeds/*.csv").->JournalBuild;
       JournalBuild-->JournalOutput("build/journals/*.journal");
     end
     JournalOutput-->JValidations;
-    JValidationInput("app/validations/*.rb<br>(*RVGP::Base::JournalValidation*)").->JValidations;
-    JValidations("<br>📒 **Journal Validate**<br><br>");
-    SValidationInput("app/validations/*.rb<br>(*RVGP::Base::SystemValidation*)").->SValidations;
-    JValidations-->SValidations("<br>📚 **System Validate**<br><br>");
-    GridInput("app/grids/*.rb<br>(<i>RVGP::Base::Grid*)").->GridBuild("<br>▦ **Grid Build**<br><br>");
+    JValidationInput("app/validations/*.rb<br>(RVGP::Base::JournalValidation)").->JValidations;
+    JValidations("<br>📒 Journal Validate<br><br>");
+    SValidationInput("app/validations/*.rb<br>(RVGP::Base::SystemValidation)").->SValidations;
+    JValidations-->SValidations("<br>📚 System Validate<br><br>");
+    GridInput("app/grids/*.rb<br>(RVGP::Base::Grid)").->GridBuild("<br>▦ Grid Build<br><br>");
     SValidations-->GridBuild;
     GridBuild-->GridOutput("build/grids/*.csv");
-    PlotInput("app/plots/*.yml").->PlotBuild("<br>📈 **Plot Build**<br><br>");
+    PlotInput("app/plots/*.yml").->PlotBuild("<br>📈 Plot Build<br><br>");
     GridOutput-->PlotBuild;
     PlotBuild-->PlotOutput("build/plots/*.gpi");
     

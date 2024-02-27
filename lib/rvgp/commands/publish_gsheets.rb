@@ -32,7 +32,7 @@ module RVGP
       class Target < RVGP::Base::Command::PlotTarget
         # @!visibility private
         def to_sheet
-          RVGP::GoogleDrive::Sheet.new plot.title(name), plot.grid(name), { google: plot.google_options || {} }
+          RVGP::Plot::GoogleDrive::Sheet.new plot.title(name), plot.grid(name), { google: plot.google_options || {} }
         end
       end
 
@@ -59,9 +59,9 @@ module RVGP
       # @!visibility private
       def execute!
         output = if options.key?(:csvdir)
-                   RVGP::GoogleDrive::ExportLocalCsvs.new(destination: options[:csvdir], format: 'csv')
+                   RVGP::Plot::GoogleDrive::ExportLocalCsvs.new(destination: options[:csvdir], format: 'csv')
                  else
-                   RVGP::GoogleDrive::ExportSheets.new(format: 'google_sheets',
+                   RVGP::Plot::GoogleDrive::ExportSheets.new(format: 'google_sheets',
                                                        title: options[:title],
                                                        secrets_file: @secrets_path)
                  end
@@ -72,7 +72,7 @@ module RVGP
 
             # NOTE: This should fix the complaints that google issues, from too many
             # requests per second.
-            sleep options[:sleep] if output.is_a? RVGP::GoogleDrive::ExportSheets
+            sleep options[:sleep] if output.is_a? RVGP::Plot::GoogleDrive::ExportSheets
 
             {}
           end
