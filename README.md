@@ -1,5 +1,4 @@
-# rvgp - A plain text accounting framework for ruby on rake. 
-[![Gem Version](https://badge.fury.io/rb/rvgp.svg)](https://badge.fury.io/rb/rvgp)
+# rvgp - A plain text accounting framework for ruby on rake. [![Gem Version](https://badge.fury.io/rb/rvgp.svg)](https://badge.fury.io/rb/rvgp)
 What follows is a workflow tool, and accounting framework, to automate: 
 1. **R**econciliation of your bank-downloaded csv's into categorized pta journals. (interactively!)
 1. **V**alidation of your output, to protect against errors. (in ruby)
