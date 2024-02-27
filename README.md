@@ -1,13 +1,13 @@
 # rvgp - A plain text accounting framework for ruby on rake. 
 What follows is a workflow tool, and accounting framework, to automate: 
 1. **R**econciliation of your bank-downloaded csv's into categorized pta journals. (interactively!)
-1. **V**alidation the accounting, to protect against errors. (in ruby)
-1. **G**rid'ing the data! Make 'spreadsheets' based on analytic calculations from your journals. (ruby here, too)
-1. **P**lotting grids, and generate meaningful graphs of your finances. (with gnuplot, or google sheets)
+1. **V**alidation of your output, to protect against errors. (in ruby)
+1. **G**rid'ing the data - Make 'spreadsheets' based on analytic calculations from your journals. (ruby here, too)
+1. **P**lotting grids, and generate meaningful graphs of your finances. (using gnuplot, or google sheets)
 
 Plus more! There's a bunch of tools included for: managing commodities, working with tables, parse journals... too much to list. There's plenty of ruby goodness inside to save you time with your accounting, and keep you from reinvent wheels.
 
-# 📑 Table of Contents
+## 📑 Table of Contents
 
 - [The Quick Pitch](#-the-quick-pitch)
 - [Getting Started](#-getting-started)
@@ -16,7 +16,7 @@ Plus more! There's a bunch of tools included for: managing commodities, working 
 - [Documentation](#-documentation)
 - [License](#-license)
 
-# 📽 The Quick Pitch
+## 📽 The Quick Pitch
 If you like ruby, and you want something akin to rails... but for your finances - this is what you're looking for! This tool offers an easy workflow,
 for the ruby literate, to: 
 
@@ -48,7 +48,7 @@ Plus, you get a bunch of other nice features. Like...
 * An easy quickstart generator, for setting up your first project (see the new_project command)
 * Shortcuts for working with finance, currency, gnuplot, hledger, i18n and more 
 
-# 🐦‍ Getting Started
+## 🐦‍ Getting Started
 
 The quickest way to get started, once you've installed the gem, is by way of the 'new_project' command.  
 ```
@@ -110,7 +110,7 @@ From here, you're ready to start populating this project with your data, instead
 
 Probably though, you'll want to read the rest of this README, to better understand how the project workflow is structured, and how these files work with that process.
 
-# 🐒 How do project files relate?
+## 🐒 How do project files relate?
 Let's take a moment, to understand the project directory structure. Here's what that looks like, in the "Yukihiro Matsumoto" project that we just created:
 
 ```
@@ -155,7 +155,7 @@ These directories contain the bulk of your workload, in your rvgp projects. Thes
 > **Note**
 > Feel free to add as many directories to your project root as you'd like. Useful ideas for additional directories might include: 'bank statements', 'test', 'orgs', 'documents', etc
 
-# 🪅 Understanding the Workflow
+## 🪅 Understanding the Workflow
 
 The significance of the Rakefile approach, to your accounting, can't be understated. This design decision offers us a number of features. The implicit dependency-tracking ensures that changes are only applied downstream in your build. A small adjustment at a given year, doesn't require an entire rebuild of the project. This offers us better performance, git-friendly accounting, and simplified auditing.
 
@@ -167,19 +167,19 @@ To better understand how your files, are processed by rvgp, here's a diagram of 
 ```mermaid
   graph TD;
     subgraph Reconciliation[Reconciliation Cycle]
-      Reconcilers("app/reconcilers/*.yml").->JournalBuild("<br>🏗 <b>Journal Build</b><br><br>");
+      Reconcilers("app/reconcilers/*.yml").->JournalBuild("<br>🏗 **Journal Build**<br><br>");
       Feeds("feeds/*.csv").->JournalBuild;
       JournalBuild-->JournalOutput("build/journals/*.journal");
     end
     JournalOutput-->JValidations;
-    JValidationInput("app/validations/*.rb<br>(<i>RVGP::Base::JournalValidation</i>)").->JValidations;
-    JValidations("<br>📒 <b>Journal Validate</b><br><br>");
-    SValidationInput("app/validations/*.rb<br>(<i>RVGP::Base::SystemValidation</i>)").->SValidations;
-    JValidations-->SValidations("<br>📚 <b>System Validate</b><br><br>");
-    GridInput("app/grids/*.rb<br>(<i>RVGP::Base::Grid</i>)").->GridBuild("<br>▦ <b>Grid Build</b><br><br>");
+    JValidationInput("app/validations/*.rb<br>(*RVGP::Base::JournalValidation*)").->JValidations;
+    JValidations("<br>📒 **Journal Validate**<br><br>");
+    SValidationInput("app/validations/*.rb<br>(*RVGP::Base::SystemValidation*)").->SValidations;
+    JValidations-->SValidations("<br>📚 **System Validate**<br><br>");
+    GridInput("app/grids/*.rb<br>(<i>RVGP::Base::Grid*)").->GridBuild("<br>▦ **Grid Build**<br><br>");
     SValidations-->GridBuild;
     GridBuild-->GridOutput("build/grids/*.csv");
-    PlotInput("app/plots/*.yml").->PlotBuild("<br>📈 <b>Plot Build</b><br><br>");
+    PlotInput("app/plots/*.yml").->PlotBuild("<br>📈 **Plot Build**<br><br>");
     GridOutput-->PlotBuild;
     PlotBuild-->PlotOutput("build/plots/*.gpi");
     
@@ -205,10 +205,10 @@ To better understand how your files, are processed by rvgp, here's a diagram of 
 
 In this lifecycle, the major tasks are circled in blue, with cyan output files in-between these tasks. Input files, that you provide, are peppered along the process, and are denoted in purple. Any `commands` that you define, are inserted in-between the blue tasks, depending on whether and where you define those commands to insert themselves.
 
-# 📚 Documentation
+## 📚 Documentation
 
 Bear with me while I get this together. From here, the plan is to send you to yard docs, broken out into sections with excruciating detail.
 
-# 📜 License
+## 📜 License
 
 This software is licensed under the [LGPL-2.1](https://github.com/rvgp/blob/master/LICENSE) © [Chris DeRose](https://github.com/brighton36).
