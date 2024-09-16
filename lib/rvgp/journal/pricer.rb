@@ -186,7 +186,17 @@ module RVGP
           # what we're adding, and what would have been found, otherwise
           price_before_add = i ? @prices_db[key][i - 1] : @prices_db[key].last
 
-          if price_before_add.amount != price.amount
+          # NOTE: I think it's possible that we are able to add a kind of duplicate
+          #       Price here, in the form of a reversed lcode/rcode, with an inversed
+          #       price. But, I don't know that this will happen, or that it will 
+          #       matter if/when it does. So, I'm ignoring that case for now
+          is_redundant = false
+          begin 
+            is_redundant = price_before_add.amount == price.amount
+          rescue RVGP::Journal::Commodity::ConversionError
+          end
+
+          unless is_redundant
             @before_price_add&.call time, from_alpha, to
 
             if i

@@ -131,6 +131,24 @@ class TestPricer < Minitest::Test
     assert_equal '$ 0.80',   price_on(pricer, '2020-08-15', 'ABC', '$')
   end
 
+  def test_price_insert_swapped_pairs
+    # This looks like a bug that cropped up in production. Whereby, the key pairs
+    # are reversed in subsequent calls, and we're unable to handle that case. 
+    # There's no reason this shouldn't work like TEST_PRICES_DB_FORMAT2. 
+    p = RVGP::Journal::Pricer.new <<~SWAPPED_PRICES
+      P 2010-01-01 USD 3808 COP
+      P 2010-02-01 USD 4063.75 COP
+    SWAPPED_PRICES
+
+    # This is equivalent to adding the following, in the above prices_db:
+    #    P 2010-03-01 COP $ 0.00025
+    p.add(Date.new(2010, 3, 1), 'COP', '$ 0.00025'.to_commodity)
+
+    assert_equal '3808.00 COP', price_on(p, '2010-01-15', '$', 'COP')
+    assert_equal '4063.75 COP', price_on(p, '2010-02-15', '$', 'COP')
+    assert_equal '4000.00 COP', price_on(p, '2010-03-15', '$', 'COP')
+  end
+
   private
 
   def price_on(pricer, date_str, code_from, code_to)

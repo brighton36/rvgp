@@ -6,7 +6,7 @@ module RVGP
   # This class contains information relating to our Gem configuration, and is
   # used to produce a gemspec.
   class Gem
-    VERSION = '0.3.2'
+    VERSION = '0.3.3'
 
     # @!visibility private
     GEM_DIR = File.expand_path format('%s/../..', File.dirname(__FILE__))
