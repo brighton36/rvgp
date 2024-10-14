@@ -110,7 +110,8 @@ module RVGP
       # Write the computed grid, to its default build path
       # @return [void]
       def to_file!
-        write! self.class.output_path(year), to_table
+        table = to_table
+        write! self.class.output_path(year), table unless table.compact.empty?
         nil
       end
 
@@ -462,7 +463,8 @@ module RVGP
         # @return [void]
         def to_file!
           self.class.sheets(year).each do |sheet|
-            write! self.class.output_path(year, sheet.to_s.downcase), to_table(sheet)
+            table = to_table(sheet)
+            write! self.class.output_path(year, sheet.to_s.downcase), table unless table.compact.empty?
           end
           nil
         end
