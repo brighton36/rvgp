@@ -188,10 +188,10 @@ module RVGP
 
           # NOTE: I think it's possible that we are able to add a kind of duplicate
           #       Price here, in the form of a reversed lcode/rcode, with an inversed
-          #       price. But, I don't know that this will happen, or that it will 
+          #       price. But, I don't know that this will happen, or that it will
           #       matter if/when it does. So, I'm ignoring that case for now
           is_redundant = false
-          begin 
+          begin
             is_redundant = price_before_add.amount == price.amount
           rescue RVGP::Journal::Commodity::ConversionError
           end

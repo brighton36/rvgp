@@ -133,8 +133,8 @@ class TestPricer < Minitest::Test
 
   def test_price_insert_swapped_pairs
     # This looks like a bug that cropped up in production. Whereby, the key pairs
-    # are reversed in subsequent calls, and we're unable to handle that case. 
-    # There's no reason this shouldn't work like TEST_PRICES_DB_FORMAT2. 
+    # are reversed in subsequent calls, and we're unable to handle that case.
+    # There's no reason this shouldn't work like TEST_PRICES_DB_FORMAT2.
     p = RVGP::Journal::Pricer.new <<~SWAPPED_PRICES
       P 2010-01-01 USD 3808 COP
       P 2010-02-01 USD 4063.75 COP

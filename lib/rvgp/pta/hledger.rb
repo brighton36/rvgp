@@ -201,7 +201,16 @@ module RVGP
       #                             details.
       # @return [Date] The date of the newest transaction found in your files.
       def newest_transaction_date(*args)
-        Date.strptime stats(*args)['Last transaction'], '%Y-%m-%d'
+        output = stats(*args)
+        last_tx_s = if output.key? 'Last transaction'
+                      output['Last transaction']
+                    elsif output.key? 'Last txn'
+                      output['Last txn']
+                    else
+                      raise RVGP::Pta::AssertionError
+                    end
+
+        Date.strptime last_tx_s, '%Y-%m-%d'
       end
 
       # Run the 'hledger balance' command, and return it's output.
