@@ -87,6 +87,10 @@ en:
       errors:
         screen_too_small: 'Screen width "%{screen_width}" is too small. Minimum width is %{minimum_width}.'
         unrecognized_path: 'Unrecognized path: %{file}'
+    ireconcile:
+      list_targets: "The following targets are available for interactive reconcilliation:"
+      errors:
+        unsupported_editor: 'Unsupported editor "%{editor}" found in the EDITOR environment variable.'
     new_project:
       directory_exists_prompt: "The directory \"%{dir}\" already exists. Continuing will overwrite some of its contents. Are you sure you wish to continue creating a new project in this directory? (Type \"Yes\" to continue) : "
       project_name_prompt: "Whose project is this? A person's full name or a company name will work: "

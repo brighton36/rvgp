@@ -78,7 +78,7 @@ module RVGP
                   :reverse_order, :default_currency
 
       # @!visibility private
-      HEADER = "; -*- %s -*-¬\n; vim: syntax=ledger"
+      HEADER = ";;; %s --- Description -*- mode: ledger; -*-\n; vim: syntax=ledger"
 
       # Create a Reconciler from the provided yaml
       # @param [RVGP::Utilities::Yaml] yaml A file containing the settings to use in the construction of this reconciler

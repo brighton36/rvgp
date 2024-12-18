@@ -52,8 +52,10 @@ module RVGP
       posting = nil
       cite = nil
       contents.lines.each_with_index do |line, i|
+        next if posting.nil? && postings.empty? && /\A;/.match(line)
+
         line_number = i + 1
-        cite = [line_number, line.inspect] # in case we run into an error
+        cite = [line_number, ': ', line.inspect].join # in case we run into an error
         line_comment = nil
 
         # Here, we separate the line into non-comment lvalue and comment rvalue:
