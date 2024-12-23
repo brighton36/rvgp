@@ -122,7 +122,6 @@ en:
         unable_to_write_to_csvdir: 'Unable to write to path "%{csvdir}"'
     grid:
       list_targets: 'The following grids are available:'
-      target_description: '%{description} for %{year}'
     rescan_grids:
       target_description: 'Re-scan the journal directory, and register previously unavaible grid targets into the running build'
     rescan_plots:

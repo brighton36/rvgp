@@ -141,6 +141,10 @@ module RVGP
       FileUtils.mkdir_p path unless File.directory? path
     end
 
+    def journals_empty?
+      !Dir[RVGP.app.config.build_path('journals/*.journal')].count.positive?
+    end
+
     private
 
     def require_commands!
