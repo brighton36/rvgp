@@ -27,7 +27,7 @@ module RVGP
         # @!visibility private
         def initialize(grid)
           @grid = grid
-          super grid.name, grid.status_name
+          super grid.label, grid.status_name
         end
 
         # @!visibility private

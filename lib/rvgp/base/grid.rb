@@ -37,11 +37,11 @@ module RVGP
     #      grid 'wealth_growth', 'Generate Wealth Growth Grids', 'Wealth Growth by month (%s)',
     #           output_path_template: '%s-wealth-growth'
     #
-    #      def sheet_header
+    #      def header
     #        %w[Date Assets Liabilities]
     #      end
     #
-    #      def sheet_body
+    #      def body
     #        assets, liabilities = *%w[Assets Liabilities].map { |acct| monthly_totals acct, accrue_before_begin: true }
     #
     #        months_through(starting_at, ending_at).map do |month|
@@ -103,11 +103,12 @@ module RVGP
         nil
       end
 
-      # TODO This starting/ending shouldn't be here really, move this into the class sheets
+      # TODO This starting/ending shouldn't be here really, move this into the class sheets. Well, there should be a by_year lambda maybe...
       def starting_at
         @starting_at ||= Date.new sheet[:year], 1, 1
       end
 
+      # TODO: Same as above
       def ending_at
         # NOTE: It seems that with monthly queries, the ending date works a bit
         # differently. It's not necessariy to add one to the day here. If you do,
@@ -119,12 +120,11 @@ module RVGP
                        end
       end
 
-      # TODO: let's switch this to label
-      def name
-        format(self.class.name_fmt, @sheet).downcase
+      def label
+        format(self.class.label_fmt, @sheet).downcase
       end
 
-      alias status_name name
+      alias status_name label
 
       # Whether this grid's outputs are fresh. This is determined, by examing the mtime's of our #dependency_paths.
       # @return [TrueClass, FalseClass] true, if we're fresh, false if we're stale.
@@ -134,15 +134,15 @@ module RVGP
 
       # The output path for this Grid sheet
       def output_path
-        format '%<path>s/%<name>s.csv',
+        format '%<path>s/%<label>s.csv',
                path: RVGP.app.config.build_path('grids'),
-               name: name
+               label: label
       end
 
       # Return the computed grid, in a parsed form, before it's serialized to a string.
       # @return [Array[Array<String>]] Each row is an array, itself composed of an array of cells.
       def to_table
-        [sheet_header] + sheet_body
+        [header] + body
       end
 
       private
@@ -329,24 +329,22 @@ module RVGP
         end
       end
 
-      # @attr_reader [String] name_fmt A format string, to use in composing a sheet name. Typically, this would be an
+      # @attr_reader [String] label_fmt A format string, to use in composing a sheet label. Typically, this would be an
       #                                underscorized version of the instance name, without the _grid suffix. This is
       #                                applied to the sheet options to compose the rake task names, and file names.
-      # @attr_reader [String] description A description of this grid, for use in a rake task description.
       class << self
         include RVGP::Utilities
         include RVGP::Pta::AvailabilityHelper
 
-        attr_reader :name_fmt, :description
+        attr_reader :label_fmt
 
         # This helper method is provided for child classes, to easily establish a definition of this grid, that
         # can be used to produce it's instances, and their resulting output.
-        # @param [String] name_fmt See {RVGP::Base::Grid#name_fmt}.
-        # @param [String] description See {RVGP::Base::Grid.description}.
+        # @param [String] label_fmt See {RVGP::Base::Grid#label_fmt}.
         # @return [void]
-        def grid(name_fmt, description)
-          @name_fmt = name_fmt
-          @description = description
+        def builds(label_fmt, **opts)
+          @label_fmt = label_fmt
+          @grid_parameters = opts[:grids] if opts.key? :grids
         end
 
         # This method returns an array of paths, to the files it produces it's output from. This is used by rake
@@ -366,15 +364,29 @@ module RVGP
         def task_names
           return [] if RVGP.app.journals_empty?
 
-          sheets.map { |sheet| ['grid:', (new sheet).name].join }
+          sheets.map { |sheet| ['grid:', (new sheet).label].join }
         end
 
+        # TODO: This should be grids...
         # The Sheets, which this class will build
-        # @return [Array<String>] An array of sheet names, corresponding to the grids this class produces. Defaults to 'one per year'
+        # @return [Array<String>] An array of sheet label, corresponding to the grids this class produces. Defaults to 'one per year'
         def sheets
           # TODO: I think we should just call the has_sheets here, and merge this with the Multiple sheets class maybe
           #       and ideally, the year would be a part of that?
-          configured_grid_years.map { |year| { year: year } }
+          if @grid_parameters
+            @grid_parameters.call
+          else
+            # TODO: I think the default shouldn't be this
+            configured_grid_years.map { |year| { year: year } }
+          end
+        end
+
+        def parameters_per_year(each_year = nil)
+          lambda do
+            configured_grid_years.map do |year|
+              each_year ? each_year.call(year) : { year: year }
+            end.flatten.compact
+          end
         end
 
         private
