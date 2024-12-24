@@ -229,7 +229,9 @@ module RVGP
     # @param [String] name The :name of the variant you're looking for
     # @return [void]
     def write!(name)
-      File.write output_file(name, 'gpi'), gnuplot(name).script
+      output_path = output_file(name, 'gpi')
+      File.write output_path, gnuplot(name).script
+      RVGP::CachedPta.invalidate! output_path
     end
 
     # This returns what plot variants are possible, given a glob, when matched against the

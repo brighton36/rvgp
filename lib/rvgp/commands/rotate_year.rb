@@ -145,6 +145,7 @@ module RVGP
                                            dir: File.dirname(reconciler.file), basename: rotated_basename, ext: 'yml')
 
           File.write rotated_reconciler_path, rotated_reconciler_contents
+          RVGP::CachedPta.invalidate! rotated_reconciler_path
 
           git! 'add', rotated_reconciler_path if git_repo?
 

@@ -358,7 +358,7 @@ module RVGP
           # But, if we start using this before the journals are built, we're going to
           # need to clear this cache, thereafter. So, maybe we want to take a parameter
           # here, or figure something out then, to prevent problems.
-          @dependency_paths ||= pta.files(file: RVGP.app.config.project_journal_path)
+          @dependency_paths ||= cached_pta('*.journal').files(file: RVGP.app.config.project_journal_path)
         end
 
         # The task names, that rake will build, produced by this grid

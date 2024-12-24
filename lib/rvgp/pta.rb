@@ -27,6 +27,10 @@ module RVGP
       def pta
         RVGP::Pta.pta
       end
+
+      def cached_pta(*args)
+        RVGP::CachedPta.cached_pta(*args)
+      end
     end
 
     # This error is raised when a Sanity check fails. This should never happen.

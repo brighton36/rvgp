@@ -363,6 +363,7 @@ module RVGP
       # @return [void]
       def to_ledger!
         File.write output_file, to_ledger
+        RVGP::CachedPta.invalidate! output_file
       end
 
       # Returns an array of all of the reconcilers found in the specified path.

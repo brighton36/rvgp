@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../pta'
+require_relative '../cached_pta'
 
 module RVGP
   class Application
@@ -137,8 +138,7 @@ module RVGP
             return years.empty? ? Date.today : Date.new(years.last, 12, 31)
           end
 
-          # TODO: I think this is why our rake / rake clean output is mismatching atm
-          end_date = pta.newest_transaction_date file: project_journal_path
+          end_date = cached_pta('*.journal').newest_transaction_date file: project_journal_path
 
           return end_date if end_date == Date.civil(end_date.year, end_date.month, -1)
 
