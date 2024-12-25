@@ -47,9 +47,7 @@ module RVGP
 
         # @!visibility private
         def self.all
-          return [] if RVGP.app.journals_empty?
-
-          RVGP.grids.classes.map { |klass| klass.sheets.map { |sheet| new klass.new(sheet) } }.flatten
+          RVGP.grids.instances.flatten.map { |instance| new instance }
         end
       end
     end

@@ -8,6 +8,8 @@ module RVGP
   # This module largely exists as a folder, in which to group Parent classes, that are used throughout the project.
   # There's nothing else interesting happening here in this module, other than its use as as namespace.
   module Base
+    # TODO: remove the stagnant stuff here. Mostly all terminology for sheets, and insert parameters, and remove the helpers
+    # TODO: also reference the self.builds
     # This is the base class implementation, for your application-defined grids. This class offers the bulk of
     # functionality that your grids will use. The goal of a grid, is to compute csv files, in the project's build/grids
     # directory. Sometimes, these grids will simply be an assemblage of pta queries. Other times, these grids won't
@@ -34,8 +36,7 @@ module RVGP
     # the new_project command. Here's the contents of an app/grids/wealth_growth_grid.rb, that you can use in your
     # projects:
     #    class WealthGrowthGrid < RVGP::Base::Grid
-    #      grid 'wealth_growth', 'Generate Wealth Growth Grids', 'Wealth Growth by month (%s)',
-    #           output_path_template: '%s-wealth-growth'
+    #      builds '%<year>s-wealth-growth', grids: parameters_per_year
     #
     #      def header
     #        %w[Date Assets Liabilities]
@@ -73,9 +74,7 @@ module RVGP
     # 09-23,88953.92,-674.13
     # 10-23,88451.01,-436.16
     # ```
-    #
-    # @attr_reader [Date] starting_at The first day in this instance of the grid
-    # @attr_reader [Date] ending_at The last day in this instance of the grid
+    # @attr_reader [Array<Hash>] parameters The parameters for this grid instance
     class Grid
       include RVGP::Application::DescendantRegistry
       include RVGP::Pta::AvailabilityHelper
@@ -84,15 +83,21 @@ module RVGP
       register_descendants RVGP,
                            :grids,
                            accessors: {
-                             # TODO: I think task_names should maybe take a backstage to the sheets...
                              task_names: ->(registry) { registry.classes.map(&:task_names).flatten },
-                             by_sheet: ->(registry) { registry.classes.map(&:sheets).flatten }
+                             instances: lambda do |registry|
+                               # This is just a time saver really, for an empty build...
+                               return [] if RVGP.app.journals_empty?
+
+                               registry.classes.map do |klass|
+                                 klass.grids.map { |parameters| klass.new(parameters) }
+                               end.flatten
+                             end
                            }
 
-      attr_reader :sheet
+      attr_reader :parameters
 
-      def initialize(sheet)
-        @sheet = sheet
+      def initialize(parameters = {})
+        @parameters = parameters
       end
 
       # Write the computed grid, to its default build path
@@ -103,9 +108,8 @@ module RVGP
         nil
       end
 
-      # TODO This starting/ending shouldn't be here really, move this into the class sheets. Well, there should be a by_year lambda maybe...
       def starting_at
-        @starting_at ||= Date.new sheet[:year], 1, 1
+        @starting_at ||= Date.new parameters[:year], 1, 1 if parameters.key? :year
       end
 
       # TODO: Same as above
@@ -113,15 +117,15 @@ module RVGP
         # NOTE: It seems that with monthly queries, the ending date works a bit
         # differently. It's not necessariy to add one to the day here. If you do,
         # you get the whole month of January, in the next year added to the output.
-        @ending_at ||= if sheet[:year] == RVGP.app.config.grid_ending_at.year
+        @ending_at ||= if parameters.key?(:year) && parameters[:year] == RVGP.app.config.grid_ending_at.year
                          RVGP.app.config.grid_ending_at
                        else
-                         Date.new sheet[:year], 12, 31
+                         Date.new parameters[:year], 12, 31
                        end
       end
 
       def label
-        format(self.class.label_fmt, @sheet).downcase
+        format(self.class.label_fmt, @parameters).downcase
       end
 
       alias status_name label
@@ -132,7 +136,7 @@ module RVGP
         FileUtils.uptodate? output_path, self.class.dependency_paths
       end
 
-      # The output path for this Grid sheet
+      # The output path for this Grid instance
       def output_path
         format '%<path>s/%<label>s.csv',
                path: RVGP.app.config.build_path('grids'),
@@ -329,9 +333,9 @@ module RVGP
         end
       end
 
-      # @attr_reader [String] label_fmt A format string, to use in composing a sheet label. Typically, this would be an
+      # @attr_reader [String] label_fmt A format string, to use in composing a grid label. Typically, this would be an
       #                                underscorized version of the instance name, without the _grid suffix. This is
-      #                                applied to the sheet options to compose the rake task names, and file names.
+      #                                applied to the grid parameters to compose the rake task names, and file names.
       class << self
         include RVGP::Utilities
         include RVGP::Pta::AvailabilityHelper
@@ -364,21 +368,13 @@ module RVGP
         def task_names
           return [] if RVGP.app.journals_empty?
 
-          sheets.map { |sheet| ['grid:', (new sheet).label].join }
+          grids.map { |parameters| ['grid:', (new parameters).label].join }
         end
 
-        # TODO: This should be grids...
-        # The Sheets, which this class will build
-        # @return [Array<String>] An array of sheet label, corresponding to the grids this class produces. Defaults to 'one per year'
-        def sheets
-          # TODO: I think we should just call the has_sheets here, and merge this with the Multiple sheets class maybe
-          #       and ideally, the year would be a part of that?
-          if @grid_parameters
-            @grid_parameters.call
-          else
-            # TODO: I think the default shouldn't be this
-            configured_grid_years.map { |year| { year: year } }
-          end
+        # The Grids, which this class will build
+        # @return [Array<Hash>] An array of parameters, corresponding to the grids this class produces.
+        def grids
+          @grid_parameters.call if @grid_parameters
         end
 
         def parameters_per_year(each_year = nil)
