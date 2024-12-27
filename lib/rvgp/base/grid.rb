@@ -20,8 +20,8 @@ module RVGP
     # use with annual by-the-month output).  But, you can parameterize anything you'd like, for the purpose of building
     # your grids.
     #
-    # A key method in your Grid implement is the {RVGP::Base::Grid.builds} method, which declares the label formatting, and which
-    # grids will be produced by the class being defined. See this method (and the example below) for details.
+    # A key method in your Grid implement is the {RVGP::Base::Grid.builds} method, which declares the label formatting,
+    # and which grids will be produced by the class being defined. See this method (and the example below) for details.
     #
     # The function and purpose of grids, in your project, is as follows:
     # - Store a state of our data in the project's build, and thus its git history.
@@ -389,12 +389,12 @@ module RVGP
           @grid_parameters&.call
         end
 
-        # This method is intended for use as a helper, provided to the {RVGP::Base::Grid.builds}'s :grids option. Provided no
-        # parameters, this method will return an Array<Hash>, with, each Hash containing a :year, set to one
-        # of the years between {RVGP::Application::Config.grid_starting_at} and {RVGP::Application::Config.grid_ending_at}
-        # (inclusive). If a lambda is provided to this method, that lambda will be used to map each of the
-        # years, and will be provided with a <Int> year parameter, and will be expected to return a Hash
-        # of Grid parameters for the provided year.
+        # This method is intended for use as a helper, provided to the {RVGP::Base::Grid.builds}'s :grids option.
+        # Provided no parameters, this method will return an Array<Hash>, with, each Hash containing a :year, set
+        # to one of the years between {RVGP::Application::Config.grid_starting_at} and
+        # {RVGP::Application::Config.grid_ending_at} (inclusive). If a lambda is provided to this method, that
+        # lambda will be used to map each of the years, and will be provided with a <Int> year parameter, and
+        # will be expected to return a Hash of Grid parameters for the provided year.
         # @return [lambda]
         def parameters_per_year(each_year = nil)
           lambda do

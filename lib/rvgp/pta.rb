@@ -28,8 +28,9 @@ module RVGP
         RVGP::Pta.pta
       end
 
-      def cached_pta(*args)
-        RVGP::CachedPta.cached_pta(*args)
+      # (see RVGP::CachedPta.cached_pta)
+      def cached_pta(dependency_glob)
+        RVGP::CachedPta.cached_pta(dependency_glob)
       end
     end
 
