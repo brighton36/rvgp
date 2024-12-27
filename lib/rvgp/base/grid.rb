@@ -8,28 +8,25 @@ module RVGP
   # This module largely exists as a folder, in which to group Parent classes, that are used throughout the project.
   # There's nothing else interesting happening here in this module, other than its use as as namespace.
   module Base
-    # TODO: remove the stagnant stuff here. Mostly all terminology for sheets, and insert parameters, and remove the helpers
-    # TODO: also reference the self.builds
-    # This is the base class implementation, for your application-defined grids. This class offers the bulk of
-    # functionality that your grids will use. The goal of a grid, is to compute csv files, in the project's build/grids
-    # directory. Sometimes, these grids will simply be an assemblage of pta queries. Other times, these grids won't
+    # This is the base class implementation, for your application-defined grids. The base class works like a grid
+    # builder, which, each instance of inheriting grids, representing a single output file.
+    #
+    # The goal of a grid instance, is to compute csv files, in the project's "build/grids" directory.
+    # Sometimes, these grids will simply be an assemblage of pta queries. Other times, these grids won't
     # involve any pta queries at all, and may instead contain projections and statistics computed elsewhere.
     #
     # Users are expected to inherit from this class, in their grid bulding implementations, inside ruby classes defined
     # in your project's app/grids directory. This class offers helpers for working with pta_adapters (particularly for
-    # use with by-month queries). Additionally, this class offers code to detect and produce annual, and otherwise
-    # arbitary(see {RVGP::Base::Grid::HasMultipleSheets}) segmentation of grids.
+    # use with annual by-the-month output).  But, you can parameterize anything you'd like, for the purpose of building
+    # your grids.
+    #
+    # A key method in your Grid implement is the {RVGP::Base::Grid.builds} method, which declares the label formatting, and which
+    # grids will be produced by the class being defined. See this method (and the example below) for details.
     #
     # The function and purpose of grids, in your project, is as follows:
     # - Store a state of our data in the project's build, and thus its git history.
     # - Provide the data used by a subsequent {RVGP::Plot}.
     # - Provide the data used by a subsequent {RVGP::Utilities::GridQuery}.
-    #
-    # Each instance of Grid, in your build is expected to represent a segment of the data. Typically this segment will
-    # be as simple as a date range (either a specific year, or 'all dates'). However, the included
-    # {RVGP::Base::Grid::HasMultipleSheets} module, allows you to add additional arbitrary segments (perhaps a segment
-    # for each value of a tag), that may be used to produce additional grids in your build, on top of the dated
-    # segments.
     #
     # ## Example
     # Perhaps the easiest way to understand what this class does, is to look at one of the sample grids produced by
@@ -108,11 +105,16 @@ module RVGP
         nil
       end
 
+      # If the grid was provided a :year parameter, returns the first date of the year.
+      # @return [Date]
       def starting_at
+        # NOTE: We may want to group the :year helpers, and their downstream methods, into their own module.
         @starting_at ||= Date.new parameters[:year], 1, 1 if parameters.key? :year
       end
 
-      # TODO: Same as above
+      # If the grid was provided a :year parameter, returns either the last date of the year, or the
+      # {RVGP::Application::Config.grid_ending_at}, whichever is newer.
+      # @return [Date]
       def ending_at
         # NOTE: It seems that with monthly queries, the ending date works a bit
         # differently. It's not necessariy to add one to the day here. If you do,
@@ -124,6 +126,8 @@ module RVGP
                        end
       end
 
+      # A descriptive name for this grid, given it's parameters. This uses the {Grid.label_fmt} to compose
+      # @return [String]
       def label
         format(self.class.label_fmt, @parameters).downcase
       end
@@ -303,7 +307,6 @@ module RVGP
           opts[:ledger_opts][:display] = format('date>=[%<starting_at>s] and date <=[%<ending_at>s]',
                                                 starting_at: starting_at.strftime('%Y-%m-%d'),
                                                 ending_at: ending_at.strftime('%Y-%m-%d'))
-          # TODO: Can we maybe use opts on this?
           opts[:hledger_args] += [format('date:%s-', starting_at.strftime('%Y/%m/%d')),
                                   format('date:-%s', ending_at.strftime('%Y/%m/%d'))]
           opts[:hledger_opts][:historical] = true
@@ -331,11 +334,13 @@ module RVGP
             csv << row.map { |val| val.is_a?(RVGP::Journal::Commodity) ? val.to_s(no_code: true, precision: 2) : val }
           end
         end
+        RVGP::CachedPta.invalidate! path
       end
 
       # @attr_reader [String] label_fmt A format string, to use in composing a grid label. Typically, this would be an
       #                                underscorized version of the instance name, without the _grid suffix. This is
-      #                                applied to the grid parameters to compose the rake task names, and file names.
+      #                                applied via format()to the grid parameters to compose the rake task names,
+      #                                and file names.
       class << self
         include RVGP::Utilities
         include RVGP::Pta::AvailabilityHelper
@@ -345,6 +350,12 @@ module RVGP
         # This helper method is provided for child classes, to easily establish a definition of this grid, that
         # can be used to produce it's instances, and their resulting output.
         # @param [String] label_fmt See {RVGP::Base::Grid#label_fmt}.
+        # @param [Hash] opts The options to configure this palette with
+        # @option opts [lambda] :grids The base colors for this plot. Currently, the following base colors
+        #                              This method will be used to generate an array of hashes. With, each element in
+        #                              that array, representing a grid instance that needs to be built. There are no
+        #                              parameters supplied to this method. Each element of the array it returns, will
+        #                              be provided to a Grid in its {initialize} method.
         # @return [void]
         def builds(label_fmt, **opts)
           @label_fmt = label_fmt
@@ -364,7 +375,8 @@ module RVGP
         end
 
         # The task names, that rake will build, produced by this grid
-        # @return [Array<String>] An array of task names, corresponding to the grids this class produces. Defaults to 'one per year'
+        # @return [Array<String>] An array of task names, corresponding to the grids this class produces. Defaults to
+        #                         'one per year'
         def task_names
           return [] if RVGP.app.journals_empty?
 
@@ -374,9 +386,16 @@ module RVGP
         # The Grids, which this class will build
         # @return [Array<Hash>] An array of parameters, corresponding to the grids this class produces.
         def grids
-          @grid_parameters.call if @grid_parameters
+          @grid_parameters&.call
         end
 
+        # This method is intended for use as a helper, provided to the {RVGP::Base::Grid.builds}'s :grids option. Provided no
+        # parameters, this method will return an Array<Hash>, with, each Hash containing a :year, set to one
+        # of the years between {RVGP::Application::Config.grid_starting_at} and {RVGP::Application::Config.grid_ending_at}
+        # (inclusive). If a lambda is provided to this method, that lambda will be used to map each of the
+        # years, and will be provided with a <Int> year parameter, and will be expected to return a Hash
+        # of Grid parameters for the provided year.
+        # @return [lambda]
         def parameters_per_year(each_year = nil)
           lambda do
             configured_grid_years.map do |year|
@@ -391,7 +410,6 @@ module RVGP
           RVGP.app.config.grid_starting_at.year.upto(RVGP.app.config.grid_ending_at.year)
         end
       end
-
     end
   end
 end
