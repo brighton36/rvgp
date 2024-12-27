@@ -2,14 +2,13 @@
 
 # This class writes the cashflow numbers, by month
 class CashFlowGrid < RVGP::Base::Grid
-  grid 'cashflow', 'Generate Cashflow Grids', 'Cashflows by month (%s)',
-       output_path_template: '%s-cashflow'
+  builds '%<year>s-cashflow', grids: parameters_per_year
 
-  def sheet_header
+  def header
     ['Account'] + map_months { |month| month.strftime('%m-%y') }
   end
 
-  def sheet_body
+  def body
     # NOTE: I think it only makes sense to sort these by account name. Mostly
     #       because any other sorting mechanism wouldn't 'line up' with the
     #       other years. But, it's also nice that the git diff's would be

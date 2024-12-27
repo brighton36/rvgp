@@ -2,14 +2,13 @@
 
 # This class writes the wealth growth grid, by month
 class WealthGrowthGrid < RVGP::Base::Grid
-  grid 'wealth_growth', 'Generate Wealth Growth Grids', 'Wealth Growth by month (%s)',
-       output_path_template: '%s-wealth-growth'
+  builds '%<year>s-wealth-growth', grids: parameters_per_year
 
-  def sheet_header
+  def header
     %w[Date Assets Liabilities]
   end
 
-  def sheet_body
+  def body
     # NOTE: If we're having a problem with prices not matching outputs,
     # depending on whether we're rebuilding the whole grids directory, as
     # compared to just rebuilding the newest year, it's probably because of

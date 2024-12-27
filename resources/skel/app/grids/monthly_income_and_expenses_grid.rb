@@ -2,16 +2,13 @@
 
 # This class writes the monthly income and expense numbers, by month
 class MonthlyIncomeAndExpensesGrid < RVGP::Base::Grid
-  grid 'income_and_expenses',
-       'Generate Income & Expense Grids',
-       'Income & Expense by month (%s)',
-       output_path_template: '%s-monthly-income-and-expenses'
+  builds '%<year>s-monthly-income-and-expenses', grids: parameters_per_year
 
-  def sheet_header
+  def header
     %w[Date Income Expense]
   end
 
-  def sheet_body
+  def body
     table = { 'Income' => monthly_amounts('Income'), 'Expense' => monthly_amounts('Expense') }
 
     # This deserializes our lookup hash(es) into rows:
