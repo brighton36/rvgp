@@ -159,7 +159,7 @@ module RVGP
         # @return [Array<RVGP::Base::Command::PlotTarget>] A collection of targets.
         def self.all
           RVGP::Plot.all(RVGP.app.config.project_path('app/plots')).map do |plot|
-            plot.variants.map { |params| new params[:name], plot }
+            plot.variants.map { |params| new params.name, plot }
           end.flatten
         end
       end

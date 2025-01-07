@@ -1,5 +1,6 @@
 title: "Wealth Growth (%{year})"
 glob: "%{year}-wealth-growth.csv"
+aggregates: ["year"]
 grid_hacks:
   store_cell: !!proc >
     (cell) ? cell.to_f.abs : nil

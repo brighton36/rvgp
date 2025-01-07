@@ -25,8 +25,8 @@ module RVGP
     #
     # The function and purpose of grids, in your project, is as follows:
     # - Store a state of our data in the project's build, and thus its git history.
-    # - Provide the data used by a subsequent {RVGP::Plot}.
-    # - Provide the data used by a subsequent {RVGP::Utilities::GridQuery}.
+    # - Provide the data used by a subsequent {RVGP::Plot}, {RVGP::Utilities::GridQuery}, or another program outside
+    #   rvgp.
     #
     # ## Example
     # Perhaps the easiest way to understand what this class does, is to look at one of the sample grids produced by
@@ -317,8 +317,11 @@ module RVGP
           # It seems that ledger interprets the --end parameter as :<, and hledger
           # interprets it as :<= . So, we add one here, and, this makes the output consistent with
           # hledger, as well as our :display syntax above.
-          opts[:ledger_opts][:end] = (ending_at + 1).strftime('%Y-%m-%d')
-          opts[:hledger_opts][:end] = ending_at.strftime('%Y-%m-%d')
+
+          opts_end = opts.delete(:end) || ending_at
+          # TODO: I think we should instead set this from opts[:end]
+          opts[:ledger_opts][:end] = (opts[:ledger_opts][:end] || (opts_end + 1)).strftime('%Y-%m-%d')
+          opts[:hledger_opts][:end] = (opts[:hledger_opts][:end] || opts_end).strftime('%Y-%m-%d')
         end
 
         pta.register(*args, opts).transactions.inject(initial) do |ret, tx|
@@ -386,13 +389,12 @@ module RVGP
         # The Grids, which this class will build
         # @return [Array<Hash>] An array of parameters, corresponding to the grids this class produces.
         def grids
-          @grid_parameters&.call
+          @grid_parameters&.call || [{}]
         end
 
         # This method is intended for use as a helper, provided to the {RVGP::Base::Grid.builds}'s :grids option.
         # Provided no parameters, this method will return an Array<Hash>, with, each Hash containing a :year, set
-        # to one of the years between {RVGP::Application::Config.grid_starting_at} and
-        # {RVGP::Application::Config.grid_ending_at} (inclusive). If a lambda is provided to this method, that
+        # to one of the years returned by {configured_grid_years}. If a lambda is provided to this method, that
         # lambda will be used to map each of the years, and will be provided with a <Int> year parameter, and
         # will be expected to return a Hash of Grid parameters for the provided year.
         # @return [lambda]
@@ -404,8 +406,9 @@ module RVGP
           end
         end
 
-        private
-
+        # This shortcut method will return the range of years between {RVGP::Application::Config.grid_starting_at} and
+        # {RVGP::Application::Config.grid_ending_at} (inclusive).
+        # @return [Array<Int>]
         def configured_grid_years
           RVGP.app.config.grid_starting_at.year.upto(RVGP.app.config.grid_ending_at.year)
         end

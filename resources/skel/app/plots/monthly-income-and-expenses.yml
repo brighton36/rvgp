@@ -1,5 +1,6 @@
 title: "Monthly Income & Expenses (%{year})"
 glob: "%{year}-monthly-income-and-expenses.csv"
+aggregates: ["year"]
 google:
   chart_type: column
   axis: 

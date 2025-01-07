@@ -12,6 +12,7 @@ module RVGP
   # ```
   # title: "Wealth Growth (%{year})"
   # glob: "%{year}-wealth-growth.csv"
+  # aggregates: ["year"]
   # grid_hacks:
   #   store_cell: !!proc >
   #     (cell) ? cell.to_f.abs : nil
@@ -33,7 +34,12 @@ module RVGP
   # ```
   #
   # The yaml file is required to have :title and :glob parameters. Additionally,
-  # the following parameter groups are supported: :grid_hacks, :gnuplot, and :google.
+  # the following parameter groups are supported: :aggregates, :grid_hacks, :gnuplot, and :google.
+  #
+  # The :aggregates section of this file specifies whether the plot should produce additional plot, using a wildcare, in
+  # lieu of a single value, in the specified key. So, given the above wealth growth example, in addition to a plot per
+  # year, there would be an 'all-wealth-growth' plot that is generated, which outputs over the domain of all years in
+  # the produced wealth-growth grids.
   #
   # The :gnuplot section of this file, is merged with the contents of
   # {https://github.com/brighton36/rvgp/blob/main/resources/gnuplot/default.yml default.yml}, and passed to the {RVGP::Plot::Gnuplot}
@@ -85,10 +91,123 @@ module RVGP
     # {glob} attribute
     class InvalidYamlGlob < StandardError
       # @!visibility private
-      MSG_FORMAT = 'Plot file %<path>s is missing a required \'year\' parameter in glob'
+      MSG_FORMAT = 'Plot file %<path>s contains one or more invalid keys: %<keys>s, in glob parameter'
 
       def initialize(path)
-        super format(MSG_FORMAT, path: path)
+        super format(MSG_FORMAT, path: path, invalid_keys: RVGP::Plot::Glob::INVALID_KEYS.map(&:to_s).join(', '))
+      end
+    end
+
+    # This exception is raised when a provided yaml file, stipulates an improperly formatted
+    # parameter
+    class InvalidYamlParameter < StandardError
+      # @!visibility private
+      MSG_FORMAT = 'Plot file %<path>s contains an invalid or improperly formatted \"%<attribute>s\" parameter'
+
+      def initialize(path, attribute)
+        super format(MSG_FORMAT, path: path, attribute: attribute)
+      end
+    end
+
+    # This class is used by {RVGP::Plot} as an abstraction for working with the glob parameter of a plot yaml, against
+    # paths in a filesystem. While this class mostly resembles the traditional glob functions, there are some additional
+    # functions for reversing the glob, and parameterizing the results. In addition, the syntax resembles ruby's
+    # format() syntax, more so than glob syntax (at the consequence of many of glob's features). Probably I should use a
+    # different name for this class and parameter, but, it works at the moment. And largely expresses the idea.
+    #
+    # Note that an instance of this class, is principally intended for use as a return value by the
+    # {RVGP::Plot::Glob.variants} method.
+    # @attr_reader [Hash<String,<String,Bool>>] values The key to value pairs, of what patterns this glob represents.
+    #                                           This attribute is used by the plot, to represent a 'variant'
+    # @attr_reader [Array<String>] files An array of paths, that this glob matched against.
+    class Glob
+      MATCH_KEYS = /%(?><([^ >]+)>|\{([^ }]+))/.freeze
+      INVALID_KEYS = %i[basename values keys files].freeze
+
+      attr_reader :values
+      attr_accessor :files
+
+      # Create a glob match, using the provided fields
+      # @param [String] from_s The glob that produced this result
+      # @param [Hash<String,<String,Bool>>] values The values for the match, given the keys provided by the glob's
+      #                                             from_s
+      # @param [Array<String>] files The files that belong to the match
+      def initialize(from_s, values, files)
+        @from_s = from_s
+        @values = values
+        @files = files
+      end
+
+      # The basename of this glob, composed by applying the values_as_strings, to the glob
+      # @return [String] The fully composed name of this glob
+      def name
+        File.basename(format(@from_s, values_as_strings), '.*')
+      end
+
+      # This method is mostly identical to {Glob.values}, however, wildcards are converted
+      # @return [Hash<String,String>] The fully composed name of this glob, with bool entries converted into a
+      #                               human-readable representation.
+      def values_as_strings
+        str_all = I18n.t('commands.plot.wildcard')
+        values.transform_values { |val| val == true ? str_all : val }.to_h
+      end
+
+      # Return the glob keys. As specified in the constructor, presumably calculated using the glob string itself
+      # @return [Array<String>] The keys from {values}
+      def keys
+        @values.keys
+      end
+
+      # Calls to this instance, which match a key in the {values} will return the value itself as a String or Bool
+      def method_missing(method, *_, &block)
+        values.key?(method) ? values[method] : super
+      end
+
+      # @!visibility private
+      def respond_to_missing?(method, _ = false)
+        values.key?(method) || super
+      end
+
+      # This returns what file variants are possible, given a glob, when matched against the
+      # provided haystack(corpus) of file names.
+      # If wildcards contains a key: Then, any permutation in the provided corpus that could match in place
+      # of the key, is included in a match. This is commonly used for {year} matches, where we want to aggregate
+      # the data of all years into a single result.
+      # @param [String] glob A string that matches 'variables'(keys) in the form of \\{variablename} specifiers
+      # @param [Array<String>] corpus An array of file paths. The paths are matched against the glob, and
+      #                               separated based on the variables found, in their names.
+      # @param [Array<Symbol>] wildcards An array of key names, which won't be separated into independent glob returns
+      # @return [Array<Glob>] The resulting matches for this query
+      def self.variants(from_str, corpus, wildcards = [])
+        keys = from_str.scan(MATCH_KEYS).flatten.compact.map(&:to_sym)
+
+        variant_matcher = Regexp.new format(from_str, keys.to_h { |key| [key, '(.+)'] })
+
+        corpus.each_with_object([]) do |file, ret|
+          matches = variant_matcher.match File.basename(file)
+
+          if matches
+            pairs = keys.map.with_index do |key, i|
+              [key, wildcards.include?(key.to_sym) ? true : matches[i + 1]]
+            end.to_h
+
+            pair_i = ret.find_index { |glob| glob.values == pairs }
+            if pair_i
+              ret[pair_i].files << file
+            else
+              ret << new(from_str, pairs, [file])
+            end
+          end
+
+          ret
+        end
+      end
+
+      # A quick test against a glob string, to determine if there are any obvious errors with it.
+      # @param [String] glob A glob string.
+      # @return [Bool] True if valid, False if not
+      def self.valid?(glob)
+        glob.scan(MATCH_KEYS).flatten.compact.map(&:to_sym).intersection(INVALID_KEYS).length.zero?
       end
     end
 
@@ -103,12 +222,18 @@ module RVGP
       raise MissingYamlAttribute, yaml.path, missing_attrs unless missing_attrs.empty?
 
       @glob = yaml[:glob] if yaml.key? :glob
-      raise InvalidYamlGlob, yaml.path unless /%\{year\}/.match glob
+      raise InvalidYamlGlob, yaml.path unless RVGP::Plot::Glob.valid? glob
 
       grids_corpus = Dir[RVGP.app.config.build_path('grids/*')]
 
-      @variants ||= self.class.glob_variants(glob, grids_corpus) +
-                    self.class.glob_variants(glob, grids_corpus, year: 'all')
+      @variants ||= RVGP::Plot::Glob.variants(glob, grids_corpus)
+
+      if yaml.key?(:aggregates) &&
+         (!yaml[:aggregates].is_a?(Array) || yaml[:aggregates].any? { |str| !str.is_a? String })
+        raise InvalidYamlParameter, yaml.path, 'aggregates'
+      end
+
+      yaml[:aggregates]&.each { |agg| @variants += RVGP::Plot::Glob.variants(glob, grids_corpus, [agg.to_sym]) }
 
       @title = yaml[:title] if yaml.key? :title
     end
@@ -120,21 +245,21 @@ module RVGP
     # @return [Hash<Symbol, Object>] The hash will return name, :pairs, and :files keys,
     #                                that contain the variant details.
     def variants(name = nil)
-      name ? @variants.find { |v| v[:name] == name } : @variants
+      name ? @variants.find { |v| v.name == name } : @variants
     end
 
     # This method returns only the :files parameter, of the {#variants} return.
     # @param [String] variant_name (nil) Limit the return to this variant, if set
     # @return [Array<String>] An array of grid paths
     def variant_files(variant_name)
-      variants(variant_name)[:files]
+      variants(variant_name).files
     end
 
     # The plot title, of the given variant
     # @param [String] variant_name The :name of the variant you're looking to title
     # @return [String] The title of the plot
     def title(variant_name)
-      @title % variants(variant_name)[:pairs]
+      @title % variants(variant_name).values_as_strings
     end
 
     # Generate an output file path, for the given variant. Typically this is a .csv grid, in the build/grids
@@ -232,43 +357,6 @@ module RVGP
       output_path = output_file(name, 'gpi')
       File.write output_path, gnuplot(name).script
       RVGP::CachedPta.invalidate! output_path
-    end
-
-    # This returns what plot variants are possible, given a glob, when matched against the
-    # provided file names.
-    # If pair_values contains key: value combinations, then, any of the returned
-    # variants will be sorted under the key:value provided . (Its really just meant
-    # for year: 'all',  atm..)
-    # @param [String] glob A string that matches 'variables' in the form of \\{variablename} specifiers
-    # @param [Array<String>] corpus An array of file paths. The paths are matched against the glob, and
-    #                               separated based on the variables found, in their names.
-    # @return [Array<Hash<Symbol,Object>>] An array of Hashes, containing :name, :pairs, and :files components
-    def self.glob_variants(glob, corpus, pair_values = {})
-      variant_names = glob.scan(/%\{([^ }]+)/).flatten.map(&:to_sym)
-
-      glob_vars = variant_names.to_h { |key| [key, '(.+)'] }
-      variant_matcher = Regexp.new format(glob, glob_vars)
-
-      corpus.each_with_object([]) do |file, ret|
-        matches = variant_matcher.match File.basename(file)
-
-        if matches
-          pairs = variant_names.map.with_index do |key, i|
-            [key, pair_values.key?(key.to_sym) ? pair_values[key] : matches[i + 1]]
-          end.to_h
-
-          pair_i = ret.find_index { |variant| variant[:pairs] == pairs }
-          if pair_i
-            ret[pair_i][:files] << file
-          else
-            ret << { name: File.basename(glob % pairs, '.*'),
-                     pairs: pairs,
-                     files: [file] }
-          end
-        end
-
-        ret
-      end.compact
     end
 
     # Return all the plot objects, initialized from the yaml files in the plot_directory_path

@@ -41,93 +41,103 @@ class TestPlot < Minitest::Test
   ].freeze
 
   def test_globber
-    matches = RVGP::Plot.glob_variants '%{year}-wealth-growth.csv', YEAR_ONLY_CORPUS # rubocop:disable Style/FormatStringToken
+    # NOTE: I'm testing the %<key>s here, in addition to %{key}. But, really, the later is probably whats
+    # preferred....
+    globs = RVGP::Plot::Glob.variants '%<year>s-wealth-growth.csv', YEAR_ONLY_CORPUS
 
-    assert_equal 5, matches.length
+    assert_equal 5, globs.length
 
-    0.upto(4).map do |i|
-      year = 2018 + i
-      assert_equal [format('/path/to/ledger/%d-wealth-growth.csv', year)], matches[i][:files]
-      assert_equal format('%d-wealth-growth', year), matches[i][:name]
-      assert_equal({ year: year.to_s }, matches[i][:pairs])
+    2018.upto(2018 + 4).each_with_index.map do |year, i|
+      assert_equal [format('/path/to/ledger/%d-wealth-growth.csv', year)], globs[i].files
+      assert_equal format('%d-wealth-growth', year), globs[i].name
+      assert_equal({ year: year.to_s }, globs[i].values)
     end
 
-    matches = RVGP::Plot.glob_variants '%{year}-cashflow-%{intention}.csv', YEAR_AND_INTENTION_CORPUS # rubocop:disable Style/FormatStringToken
+    globs = RVGP::Plot::Glob.variants '%<year>s-cashflow-%{intention}.csv', YEAR_AND_INTENTION_CORPUS # rubocop:disable Style/FormatStringToken
 
-    assert_equal 9, matches.length
+    assert_equal 9, globs.length
 
-    assert_equal ['build/grids/2018-cashflow-burgershop.csv'], matches[0][:files]
-    assert_equal '2018-cashflow-burgershop', matches[0][:name]
-    assert_equal({ year: '2018', intention: 'burgershop' }, matches[0][:pairs])
+    assert_equal ['build/grids/2018-cashflow-burgershop.csv'], globs[0].files
+    assert_equal '2018-cashflow-burgershop', globs[0].name
+    assert_equal({ year: '2018', intention: 'burgershop' }, globs[0].values)
 
-    assert_equal ['build/grids/2018-cashflow-multiplex.csv'], matches[1][:files]
-    assert_equal '2018-cashflow-multiplex', matches[1][:name]
-    assert_equal({ year: '2018', intention: 'multiplex' }, matches[1][:pairs])
+    assert_equal ['build/grids/2018-cashflow-multiplex.csv'], globs[1].files
+    assert_equal '2018-cashflow-multiplex', globs[1].name
+    assert_equal({ year: '2018', intention: 'multiplex' }, globs[1].values)
 
-    assert_equal ['build/grids/2018-cashflow-ignored.csv'], matches[2][:files]
-    assert_equal '2018-cashflow-ignored', matches[2][:name]
-    assert_equal({ year: '2018', intention: 'ignored' }, matches[2][:pairs])
+    assert_equal ['build/grids/2018-cashflow-ignored.csv'], globs[2].files
+    assert_equal '2018-cashflow-ignored', globs[2].name
+    assert_equal({ year: '2018', intention: 'ignored' }, globs[2].values)
 
-    assert_equal ['build/grids/2018-cashflow-personal.csv'], matches[3][:files]
-    assert_equal '2018-cashflow-personal', matches[3][:name]
-    assert_equal({ year: '2018', intention: 'personal' }, matches[3][:pairs])
+    assert_equal ['build/grids/2018-cashflow-personal.csv'], globs[3].files
+    assert_equal '2018-cashflow-personal', globs[3].name
+    assert_equal({ year: '2018', intention: 'personal' }, globs[3].values)
 
-    assert_equal ['build/grids/2018-cashflow-frozenbananastand.csv'], matches[4][:files]
-    assert_equal '2018-cashflow-frozenbananastand', matches[4][:name]
-    assert_equal({ year: '2018', intention: 'frozenbananastand' }, matches[4][:pairs])
+    assert_equal ['build/grids/2018-cashflow-frozenbananastand.csv'], globs[4].files
+    assert_equal '2018-cashflow-frozenbananastand', globs[4].name
+    assert_equal({ year: '2018', intention: 'frozenbananastand' }, globs[4].values)
 
-    assert_equal ['build/grids/2019-cashflow-burgershop.csv'], matches[5][:files]
-    assert_equal '2019-cashflow-burgershop', matches[5][:name]
-    assert_equal({ year: '2019', intention: 'burgershop' }, matches[5][:pairs])
+    assert_equal ['build/grids/2019-cashflow-burgershop.csv'], globs[5].files
+    assert_equal '2019-cashflow-burgershop', globs[5].name
+    assert_equal({ year: '2019', intention: 'burgershop' }, globs[5].values)
 
-    assert_equal ['build/grids/2019-cashflow-multiplex.csv'], matches[6][:files]
-    assert_equal '2019-cashflow-multiplex', matches[6][:name]
-    assert_equal({ year: '2019', intention: 'multiplex' }, matches[6][:pairs])
+    assert_equal ['build/grids/2019-cashflow-multiplex.csv'], globs[6].files
+    assert_equal '2019-cashflow-multiplex', globs[6].name
+    assert_equal({ year: '2019', intention: 'multiplex' }, globs[6].values)
 
-    assert_equal ['build/grids/2019-cashflow-ignored.csv'], matches[7][:files]
-    assert_equal '2019-cashflow-ignored', matches[7][:name]
-    assert_equal({ year: '2019', intention: 'ignored' }, matches[7][:pairs])
+    assert_equal ['build/grids/2019-cashflow-ignored.csv'], globs[7].files
+    assert_equal '2019-cashflow-ignored', globs[7].name
+    assert_equal({ year: '2019', intention: 'ignored' }, globs[7].values)
 
-    assert_equal ['build/grids/2019-cashflow-personal.csv'], matches[8][:files]
-    assert_equal '2019-cashflow-personal', matches[8][:name]
-    assert_equal({ year: '2019', intention: 'personal' }, matches[8][:pairs])
+    assert_equal ['build/grids/2019-cashflow-personal.csv'], globs[8].files
+    assert_equal '2019-cashflow-personal', globs[8].name
+    assert_equal({ year: '2019', intention: 'personal' }, globs[8].values)
   end
 
   def test_all_year_globber
-    matches = RVGP::Plot.glob_variants '%{year}-wealth-growth.csv', YEAR_ONLY_CORPUS, year: 'all' # rubocop:disable Style/FormatStringToken
+    globs = RVGP::Plot::Glob.variants '%<year>s-wealth-growth.csv', YEAR_ONLY_CORPUS, [:year]
 
-    assert_equal 1, matches.length
+    assert_equal 1, globs.length
 
     assert_equal ['/path/to/ledger/2018-wealth-growth.csv',
                   '/path/to/ledger/2019-wealth-growth.csv',
                   '/path/to/ledger/2020-wealth-growth.csv',
                   '/path/to/ledger/2021-wealth-growth.csv',
-                  '/path/to/ledger/2022-wealth-growth.csv'], matches[0][:files]
-    assert_equal 'all-wealth-growth', matches[0][:name]
-    assert_equal({ year: 'all' }, matches[0][:pairs])
+                  '/path/to/ledger/2022-wealth-growth.csv'], globs[0].files
+    assert_equal 'all-wealth-growth', globs[0].name
+    assert_equal({ year: true }, globs[0].values)
 
-    matches = RVGP::Plot.glob_variants '%{year}-cashflow-%{intention}.csv', YEAR_AND_INTENTION_CORPUS, year: 'all' # rubocop:disable Style/FormatStringToken
+    globs = RVGP::Plot::Glob.variants '%<year>s-cashflow-%{intention}.csv', YEAR_AND_INTENTION_CORPUS, [:year] # rubocop:disable Style/FormatStringToken
 
-    assert_equal 5, matches.length
+    assert_equal 5, globs.length
 
-    assert_equal(%w[2018 2019].map { |y| format('build/grids/%s-cashflow-burgershop.csv', y) }, matches[0][:files])
-    assert_equal 'all-cashflow-burgershop', matches[0][:name]
-    assert_equal({ year: 'all', intention: 'burgershop' }, matches[0][:pairs])
+    assert_equal(%w[2018 2019].map { |y| format('build/grids/%s-cashflow-burgershop.csv', y) }, globs[0].files)
+    assert_equal 'all-cashflow-burgershop', globs[0].name
+    assert_equal({ year: true, intention: 'burgershop' }, globs[0].values)
 
-    assert_equal(%w[2018 2019].map { |y| format('build/grids/%s-cashflow-multiplex.csv', y) }, matches[1][:files])
-    assert_equal 'all-cashflow-multiplex', matches[1][:name]
-    assert_equal({ year: 'all', intention: 'multiplex' }, matches[1][:pairs])
+    assert_equal(%w[2018 2019].map { |y| format('build/grids/%s-cashflow-multiplex.csv', y) }, globs[1].files)
+    assert_equal 'all-cashflow-multiplex', globs[1].name
+    assert_equal({ year: true, intention: 'multiplex' }, globs[1].values)
 
-    assert_equal(%w[2018 2019].map { |y| format('build/grids/%s-cashflow-ignored.csv', y) }, matches[2][:files])
-    assert_equal 'all-cashflow-ignored', matches[2][:name]
-    assert_equal({ year: 'all', intention: 'ignored' }, matches[2][:pairs])
+    assert_equal(%w[2018 2019].map { |y| format('build/grids/%s-cashflow-ignored.csv', y) }, globs[2].files)
+    assert_equal 'all-cashflow-ignored', globs[2].name
+    assert_equal({ year: true, intention: 'ignored' }, globs[2].values)
 
-    assert_equal(%w[2018 2019].map { |y| format('build/grids/%s-cashflow-personal.csv', y) }, matches[3][:files])
-    assert_equal 'all-cashflow-personal', matches[3][:name]
-    assert_equal({ year: 'all', intention: 'personal' }, matches[3][:pairs])
+    assert_equal(%w[2018 2019].map { |y| format('build/grids/%s-cashflow-personal.csv', y) }, globs[3].files)
+    assert_equal 'all-cashflow-personal', globs[3].name
+    assert_equal({ year: true, intention: 'personal' }, globs[3].values)
 
-    assert_equal ['build/grids/2018-cashflow-frozenbananastand.csv'], matches[4][:files]
-    assert_equal 'all-cashflow-frozenbananastand', matches[4][:name]
-    assert_equal({ year: 'all', intention: 'frozenbananastand' }, matches[4][:pairs])
+    assert_equal ['build/grids/2018-cashflow-frozenbananastand.csv'], globs[4].files
+    assert_equal 'all-cashflow-frozenbananastand', globs[4].name
+    assert_equal({ year: true, intention: 'frozenbananastand' }, globs[4].values)
+  end
+
+  def test_invalid_glob
+    assert RVGP::Plot::Glob.valid?('%<year>s-cashflow.csv')
+    assert RVGP::Plot::Glob.valid?('%{year}s-cashflow.csv') # rubocop:disable Style/FormatStringToken
+    assert !RVGP::Plot::Glob.valid?('%<basename>s-cashflow.csv')
+    assert !RVGP::Plot::Glob.valid?('%<values>s-cashflow.csv')
+    assert !RVGP::Plot::Glob.valid?('%{keys}-cashflow.csv') # rubocop:disable Style/FormatStringToken
+    assert !RVGP::Plot::Glob.valid?('%{files}-cashflow.csv') # rubocop:disable Style/FormatStringToken
   end
 end

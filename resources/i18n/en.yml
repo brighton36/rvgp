@@ -107,6 +107,7 @@ en:
         directory_exists: "The directory \"%{dir}\" could not be created because it already exists."
     plot:
       target_description: 'Build the %{name} plot file, and its variants'
+      wildcard: 'all'
     rotate_year:
       list_targets: 'The following reconcilers are eligible for annual rotation:'
       operations_header: 'The following command(s) will be executed:'

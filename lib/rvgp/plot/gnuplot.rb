@@ -114,6 +114,10 @@ module RVGP
             else
               raise StandardError, format('Unsupported domain %s', @domain.inspect)
             end
+          else
+            # I'm not entirely sure that this is what we want, but, I think it is. It's possible we want this in all
+            # cases. This instruction fixes domain issues, caused by the first row being interpreted as data
+            gnuplot.set 'key', 'autotitle columnhead'
           end
 
           gnuplot.set 'xrange', format_xrange(opts) if xrange? opts
@@ -219,6 +223,8 @@ module RVGP
           @series_types = {}
           @series_types = opts[:series_types].transform_keys(&:to_s) if opts[:series_types]
 
+          @default_series_type = opts[:chart_type].to_sym == :lines ? :line : :column
+
           case @columns_rendered_as
           when :histograms
             gnuplot.set 'style', format('histogram %s', clustered? ? 'clustered' : 'rowstacked')
@@ -264,7 +270,7 @@ module RVGP
         # @return [Symbol] Either :column, or :line
         def series_type(num)
           title = @gnuplot.series_name(num)
-          @series_types.key?(title) ? @series_types[title].downcase.to_sym : :column
+          @series_types.key?(title) ? @series_types[title].downcase.to_sym : @default_series_type
         end
 
         # (see ChartBuilder#series_range)
@@ -365,7 +371,7 @@ module RVGP
           element_klass = ELEMENTS.find { |element| element.types.any? opts[:chart_type] }
           raise StandardError, format('Unsupported chart_type %s', opts[:chart_type]) unless element_klass
 
-          @element = element_klass.new opts, self
+          @element = element_klass.new opts.merge({ chart_type: opts[:chart_type] }), self
         end
 
         # Assembles a gpi file's contents, and returns them as a string

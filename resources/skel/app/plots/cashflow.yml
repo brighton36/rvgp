@@ -1,5 +1,6 @@
 title: "Cashflow Expenses (%{year})"
 glob: "%{year}-cashflow.csv"
+aggregates: ["year"]
 grid_hacks:
   # NOTE: "date"/cornerstone column is the 1 here
   keystone: "Date"
