@@ -143,6 +143,10 @@ module RVGP
   #   the input file. This can be specified either as a number, which indicates the number of lines to trim. Or,
   #   alternatively, this can be specified as a RegExp (provided in the form of a yaml string). In which case, the
   #   reconciler will trim the file up to one character to the left of the regular expression match.
+  # - **filter_contents** [Proc] - This field is intended for use in modifying the csv file, before passing it on to
+  #   rvgp for normal processing. The code in this filed will be provided 'contents', a string containing the contents
+  #   of the csv file, and 'path' containing the path of the csv file. A string is expected to be returned, which, will
+  #   be used in lieu of the contents that would otherwise be evaluated.
   #
   # ### CSV and Journal file format parameters
   # These parameters are available to both .journal as well as .csv files.
@@ -323,8 +327,10 @@ module RVGP
     # @attr_reader [<Regexp, Integer>] trim_lines Given a regex, the input file will discard the match for the
     #   provided regex from the end of the input file. Given an integer, the provided number of lines will be
     #   removed from the end of the input file.
+    # @attr_reader [<Proc>] filter_contents A procedure, provided in the yaml, that is used to modify the csv
+    #   contents.
     class CsvReconciler < RVGP::Base::Reconciler
-      attr_reader :fields_format, :csv_format, :invert_amount, :skip_lines, :trim_lines
+      attr_reader :fields_format, :csv_format, :invert_amount, :skip_lines, :trim_lines, :filter_contents
 
       def initialize(yaml)
         super yaml
@@ -348,28 +354,29 @@ module RVGP
         @invert_amount = yaml[:format][:invert_amount] || false if yaml[:format].key? :invert_amount
         @skip_lines = yaml[:format][:skip_lines]
         @trim_lines = yaml[:format][:trim_lines]
+        @filter_contents = yaml[:format][:filter_contents]
         @csv_format = { headers: yaml[:format][:csv_headers] } if yaml[:format].key? :csv_headers
       end
 
       class << self
         include RVGP::Utilities
 
-        # Mostly this is a class mathed, to make testing easier
-        def input_file_contents(contents, skip_lines = nil, trim_lines = nil)
+        # Mostly this is a class method, to make testing easier
+        def input_file_contents(contents, options = {})
           start_offset = 0
           end_offset = contents.length
 
-          if trim_lines
-            trim_lines_regex = string_to_regex trim_lines.to_s
-            trim_lines_regex ||= /(?:[^\n]*\n?){0,#{trim_lines}}\Z/m
+          if options[:trim_lines]
+            trim_lines_regex = string_to_regex options[:trim_lines].to_s
+            trim_lines_regex ||= /(?:[^\n]*\n?){0,#{options[:trim_lines]}}\Z/m
             match = trim_lines_regex.match contents
             end_offset = match.begin 0 if match
             return String.new if end_offset.zero?
           end
 
-          if skip_lines
-            skip_lines_regex = string_to_regex skip_lines.to_s
-            skip_lines_regex ||= /(?:[^\n]*\n){0,#{skip_lines}}/m
+          if options[:skip_lines]
+            skip_lines_regex = string_to_regex options[:skip_lines].to_s
+            skip_lines_regex ||= /(?:[^\n]*\n){0,#{options[:skip_lines]}}/m
             match = skip_lines_regex.match contents
             start_offset = match.end 0 if match
           end
@@ -377,7 +384,9 @@ module RVGP
           # If our cursors overlapped, that means we're just returning an empty string
           return String.new if end_offset < start_offset
 
-          contents[start_offset..(end_offset - 1)]
+          contents = contents[start_offset..(end_offset - 1)]
+
+          options[:filter_contents]&.call({ contents: contents }.merge(options[:proc_options])) || contents
         end
       end
 
@@ -386,7 +395,11 @@ module RVGP
       def input_file_contents
         open_args = {}
         open_args[:encoding] = @encoding_format if @encoding_format
-        self.class.input_file_contents File.read(input_file, **open_args), skip_lines, trim_lines
+        self.class.input_file_contents File.read(input_file, **open_args),
+                                       proc_options: { path: input_file },
+                                       skip_lines: skip_lines,
+                                       trim_lines: trim_lines,
+                                       filter_contents: filter_contents
       end
 
       # We actually returned semi-reconciled transactions here. That lets us do
@@ -395,6 +408,7 @@ module RVGP
       def source_postings
         @source_postings ||= begin
           rows = CSV.parse input_file_contents, **csv_format
+
           rows.collect.with_index do |csv_row, i|
             # Set the object values, return the reconciled row:
             tx = fields_format.collect do |field, formatter|

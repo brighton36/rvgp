@@ -13,42 +13,42 @@ class TestCsvReconciler < Minitest::Test
 
   def test_input_file_contents
     assert_equal THREE_LINES, input_file_contents(THREE_LINES)
-    assert_equal "Line 2\nLine 3\n", input_file_contents(THREE_LINES, 1)
-    assert_equal "Line 3\n", input_file_contents(THREE_LINES, 2)
-    assert_equal '', input_file_contents(THREE_LINES, 3)
+    assert_equal "Line 2\nLine 3\n", input_file_contents(THREE_LINES, skip_lines: 1)
+    assert_equal "Line 3\n", input_file_contents(THREE_LINES, skip_lines: 2)
+    assert_equal '', input_file_contents(THREE_LINES, skip_lines: 3)
 
-    assert_equal "Line 1\nLine 2\n", input_file_contents(THREE_LINES, nil, 1)
-    assert_equal "Line 1\n", input_file_contents(THREE_LINES, nil, 2)
-    assert_equal '', input_file_contents(THREE_LINES, nil, 3)
+    assert_equal "Line 1\nLine 2\n", input_file_contents(THREE_LINES, trim_lines: 1)
+    assert_equal "Line 1\n", input_file_contents(THREE_LINES, trim_lines: 2)
+    assert_equal '', input_file_contents(THREE_LINES, trim_lines: 3)
 
-    assert_equal "Line 2\n", input_file_contents(THREE_LINES, 1, 1)
-    assert_equal '', input_file_contents(THREE_LINES, 0, 3)
-    assert_equal '', input_file_contents(THREE_LINES, nil, 3)
-    assert_equal '', input_file_contents(THREE_LINES, 3, 0)
-    assert_equal '', input_file_contents(THREE_LINES, 3)
-    assert_equal '', input_file_contents(THREE_LINES, 1, 2)
-    assert_equal '', input_file_contents(THREE_LINES, 2, 1)
+    assert_equal "Line 2\n", input_file_contents(THREE_LINES, skip_lines: 1, trim_lines: 1)
+    assert_equal '', input_file_contents(THREE_LINES, skip_lines: 0, trim_lines: 3)
+    assert_equal '', input_file_contents(THREE_LINES, trim_lines: 3)
+    assert_equal '', input_file_contents(THREE_LINES, skip_lines: 3, trim_lines: 0)
+    assert_equal '', input_file_contents(THREE_LINES, skip_lines: 3)
+    assert_equal '', input_file_contents(THREE_LINES, skip_lines: 1, trim_lines: 2)
+    assert_equal '', input_file_contents(THREE_LINES, skip_lines: 2, trim_lines: 1)
 
     # Test the case of the first line being empty
     assert_equal THREE_LINES_W_ENDLINE_AS_CHAR0, input_file_contents(THREE_LINES_W_ENDLINE_AS_CHAR0)
 
-    assert_equal "Line 2\nLine 3\n", input_file_contents(THREE_LINES_W_ENDLINE_AS_CHAR0, 1)
-    assert_equal "Line 3\n", input_file_contents(THREE_LINES_W_ENDLINE_AS_CHAR0, 2)
-    assert_equal '', input_file_contents(THREE_LINES_W_ENDLINE_AS_CHAR0, 3)
+    assert_equal "Line 2\nLine 3\n", input_file_contents(THREE_LINES_W_ENDLINE_AS_CHAR0, skip_lines: 1)
+    assert_equal "Line 3\n", input_file_contents(THREE_LINES_W_ENDLINE_AS_CHAR0, skip_lines: 2)
+    assert_equal '', input_file_contents(THREE_LINES_W_ENDLINE_AS_CHAR0, skip_lines: 3)
 
     # Test to see what happens if we exceed the number of lines in the file
-    assert_equal '', input_file_contents(THREE_LINES, 4, 1)
-    assert_equal '', input_file_contents(THREE_LINES, 1, 4)
-    assert_equal '', input_file_contents(THREE_LINES, 4, nil)
-    assert_equal '', input_file_contents(THREE_LINES, nil, 4)
-    assert_equal '', input_file_contents(THREE_LINES, 2, 2)
+    assert_equal '', input_file_contents(THREE_LINES, skip_lines: 4, trim_lines: 1)
+    assert_equal '', input_file_contents(THREE_LINES, skip_lines: 1, trim_lines: 4)
+    assert_equal '', input_file_contents(THREE_LINES, skip_lines: 4)
+    assert_equal '', input_file_contents(THREE_LINES, trim_lines: 4)
+    assert_equal '', input_file_contents(THREE_LINES, skip_lines: 2, trim_lines: 2)
 
     # Test the case of more trims/skips than lines
     assert_equal THREE_LINES_WO_ENDLINE, input_file_contents(THREE_LINES_WO_ENDLINE)
-    assert_equal "Line 1\nLine 2\n", input_file_contents(THREE_LINES_WO_ENDLINE, nil, 1)
+    assert_equal "Line 1\nLine 2\n", input_file_contents(THREE_LINES_WO_ENDLINE, trim_lines: 1)
 
-    assert_equal "Line 1\n", input_file_contents(THREE_LINES_WO_ENDLINE, nil, 2)
-    assert_equal '', input_file_contents(THREE_LINES_WO_ENDLINE, nil, 3)
+    assert_equal "Line 1\n", input_file_contents(THREE_LINES_WO_ENDLINE, trim_lines: 2)
+    assert_equal '', input_file_contents(THREE_LINES_WO_ENDLINE, trim_lines: 3)
   end
 
   private
