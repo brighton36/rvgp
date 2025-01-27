@@ -137,7 +137,8 @@ module RVGP
       # Whether this grid's outputs are fresh. This is determined, by examing the mtime's of our #dependency_paths.
       # @return [TrueClass, FalseClass] true, if we're fresh, false if we're stale.
       def uptodate?
-        FileUtils.uptodate? output_path, self.class.dependency_paths
+        source_path = Object.const_source_location(self.class.to_s)[0]
+        FileUtils.uptodate? output_path, [source_path] + self.class.dependency_paths
       end
 
       # The output path for this Grid instance
