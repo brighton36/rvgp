@@ -239,7 +239,7 @@ module RVGP
         FileUtils.uptodate? build_validation_file_path, [
           RVGP.app.config.build_path('journals/*.journal'),
           RVGP.app.config.project_path('journals/*.journal')
-        ].map { |glob| Dir.glob glob }.flatten
+        ].map { |glob| Dir.glob glob }.flatten + [Object.const_source_location(self.to_s)[0]]
       end
 
       # @!visibility private
