@@ -12,6 +12,7 @@ module RVGP
     # @attr_reader [String] output_file The contents of the yaml :output parameter (see above)
     # @attr_reader [String] input_file The contents of the yaml :input parameter (see above)
     # @attr_reader [Date] starts_on The contents of the yaml :starts_on parameter (see above)
+    # @attr_reader [Date] ends_on The contents of the yaml :ends_on parameter (see above)
     # @attr_reader [Hash<String, String>] balances A hash of dates (in 'YYYY-MM-DD') to commodities (as string)
     #                                              corresponding to the balance that are expected on those dates.
     #                                              See {RVGP::Validations::BalanceValidation} for details on this
@@ -73,7 +74,7 @@ module RVGP
         end
       end
 
-      attr_reader :label, :file, :output_file, :input_file, :starts_on, :balances, :disable_checks,
+      attr_reader :label, :file, :output_file, :input_file, :starts_on, :ends_on, :balances, :disable_checks,
                   :from, :income_rules, :expense_rules, :tag_accounts, :cash_back, :cash_back_to,
                   :reverse_order, :default_currency
 
@@ -89,6 +90,7 @@ module RVGP
         @dependencies = yaml.dependencies
 
         @starts_on = yaml.key?(:starts_on) ? Date.strptime(yaml[:starts_on], '%Y-%m-%d') : nil
+        @ends_on = yaml.key?(:ends_on) ? Date.strptime(yaml[:ends_on], '%Y-%m-%d') : nil
 
         missing_fields = %i[label output input from income expense].find_all { |attr| !yaml.key? attr }
 
@@ -315,6 +317,7 @@ module RVGP
 
             # Cull only the transactions after the specified date:
             next if starts_on && journal_posting.date < starts_on
+            next if ends_on && journal_posting.date > ends_on
 
             journal_posting
           end
