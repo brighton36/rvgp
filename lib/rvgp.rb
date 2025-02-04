@@ -12,6 +12,7 @@ require_relative 'rvgp/reconcilers/journal_reconciler'
 require_relative 'rvgp/reconcilers/shorthand/mortgage'
 require_relative 'rvgp/reconcilers/shorthand/investment'
 require_relative 'rvgp/reconcilers/shorthand/international_atm'
+require_relative 'rvgp/reconcilers/shorthand/double_post'
 
 require_relative 'rvgp/base/validation'
 

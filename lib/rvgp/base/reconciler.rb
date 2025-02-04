@@ -196,7 +196,6 @@ module RVGP
       def reconcile_posting(rule, posting)
         # NOTE: The shorthand(s) produce more than one tx per csv line, sometimes:
 
-        to = rule[:to].dup
         posting.from = rule[:from] if rule.key? :from
 
         posting.tags << rule[:tag] if rule.key? :tag
@@ -206,10 +205,10 @@ module RVGP
         # but I think it's fine for now. Probably it's broken wrt cash back or
         # something...
         if rule[:captures]
-          to.scan(/\$([0-9a-z]+)/i).each do |substitutes|
+          rule[:to].scan(/\$([0-9a-z]+)/i).each do |substitutes|
             substitutes.each do |substitute|
               replace = rule[:captures][substitute]
-              to.sub! format('$%s', substitute), replace if replace
+              rule[:to].sub! format('$%s', substitute), replace if replace
             end
           end
         end
@@ -274,7 +273,7 @@ module RVGP
             posting.targets << { to: cash_back_to, commodity: cash_back_commodity }
           end
 
-          to_target = { to: to, commodity: residual_commodity }
+          to_target = { to: rule[:to], commodity: residual_commodity }
 
           to_target[:tags] = [rule[:to_tag]] if rule[:to_tag]
           posting.targets << to_target
