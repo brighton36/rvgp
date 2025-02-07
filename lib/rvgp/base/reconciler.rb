@@ -44,11 +44,12 @@ module RVGP
       # formats of both .csv and .journal files, without forcing one conform to the
       # other.
       class Posting
-        attr_accessor :line_number, :date, :description, :commodity, :complex_commodity, :from, :to, :tags, :targets
+        attr_accessor :line_number, :date, :effective_date, :description, :commodity, :complex_commodity, :from, :to, :tags, :targets
 
         def initialize(line_number, opts = {})
           @line_number = line_number
           @date = opts[:date]
+          @effective_date = opts[:effective_date]
           @description = opts[:description]
           @commodity = opts[:commodity]
           @complex_commodity = opts[:complex_commodity]
@@ -62,6 +63,7 @@ module RVGP
         def to_journal_posting
           transfers = targets.map do |target|
             RVGP::Journal::Posting::Transfer.new target[:to],
+                                                 effective_date: target[:effective_date],
                                                  commodity: target[:commodity],
                                                  complex_commodity: target[:complex_commodity],
                                                  tags: target[:tags] ? target[:tags].map(&:to_tag) : nil
@@ -275,10 +277,12 @@ module RVGP
             posting.targets << { to: cash_back_to, commodity: cash_back_commodity }
           end
 
-          to_target = { to: rule[:to], commodity: residual_commodity }
-
-          to_target[:tags] = [rule[:to_tag]] if rule[:to_tag]
-          posting.targets << to_target
+          posting.targets << {
+            effective_date: posting.effective_date,
+            to: rule[:to],
+            commodity: residual_commodity,
+            tags: rule[:to_tag] ? [rule[:to_tag]] : nil
+          }
 
           posting
         end

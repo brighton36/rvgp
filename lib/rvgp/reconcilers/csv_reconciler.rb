@@ -315,10 +315,10 @@ module RVGP
     # :format section of this reconciler, which are documented in {RVGP::Reconcilers} under the
     # 'CSV specific format parameters' section.
     # @attr_reader [Hash<String, <Proc,String,Integer>>] fields_format A hash of field names, to their location in
-    #   the input file. Supported key names include: date, amount, description. These keys can map to either a
-    #   'string' type (indicating which column of the input file contains the key's value). An Integer (indicating
-    #   which column offset contains the key's value). Or, a Proc (which executes for every row in the input file,
-    #   and whose return value will be used)
+    #   the input file. Supported key names include: date, effective_date, amount, description. These keys can map
+    #   to either a 'string' type (indicating which column of the input file contains the key's value). An Integer
+    #   (indicating which column offset contains the key's value). Or, a Proc (which executes for every row in the
+    #   input file, and whose return value will be used)
     # @attr_reader [Hash] csv_format This hash is sent to the options parameter of CSV.parse
     # @attr_reader [Boolean] invert_amount Whether or not to multiple the :amount field by negative one.
     # @attr_reader [<Regexp, Integer>] skip_lines Given a regex, the input file will discard the match for the
@@ -427,6 +427,7 @@ module RVGP
 
             RVGP::Base::Reconciler::Posting.new i + 1,
                                                 date: tx[:date],
+                                                effective_date: tx[:effective_date],
                                                 description: tx[:description],
                                                 commodity: transform_commodity(commodity),
                                                 from: from

@@ -26,7 +26,7 @@ module RVGP
           targets = []
 
           # First target:
-          targets << { to: to, commodity: reported_amount }
+          targets << { to: to, commodity: reported_amount, effective_date: from_posting.effective_date }
 
           # Additional Target
           targets << { to: additional_to, commodity: reported_amount } if additional_to

@@ -30,20 +30,23 @@ module RVGP
       # that there should be no reason a posting ever has both is commodity and complex_commodity
       # set. Either one or the other should exist, for any given Transfer.
       # @attr_reader [String] account The account this posting is crediting or debiting
+      # @attr_reader [String] effective_date The effective date of this transfer {See https://ledger-cli.org/doc/ledger3.html#Effective-Dates}
       # @attr_reader [String] commodity The amount (expressed in commodity terms) being credit/debited
       # @attr_reader [String] complex_commodity The amount (expressed in complex commodity terms) being credit/debited
       # @attr_reader [Array<RVGP::Journal::Posting::Tag>] tags An array of tags, that apply to this posting.
       class Transfer
-        attr :account, :commodity, :complex_commodity, :tags
+        attr :account, :effective_date, :commodity, :complex_commodity, :tags
 
         # Create a complex commodity, from constituent parts
         # @param [String] account see {Transfer#account}
         # @param [Hash] opts Additional parts of this Transfer
+        # @option opts [String] effective_date see {Transfer#effective_date}
         # @option opts [String] commodity see {Transfer#commodity}
         # @option opts [String] complex_commodity see {Transfer#complex_commodity}
         # @option opts [Array<RVGP::Journal::Posting::Tag>] tags ([]) see {Transfer#tags}
         def initialize(account, opts = {})
           @account = account
+          @effective_date = opts[:effective_date]
           @commodity = opts[:commodity]
           @complex_commodity = opts[:complex_commodity]
           @tags = opts[:tags] || []
@@ -115,9 +118,10 @@ module RVGP
         lines += transfers.map do |transfer|
           [
             if transfer.commodity || transfer.complex_commodity
-              format("  %<account>-#{max_to_length}s    %<commodity>s",
+              format("  %<account>-#{max_to_length}s    %<commodity>s%<effective_date>s",
                      account: transfer.account,
-                     commodity: (transfer.commodity || transfer.complex_commodity).to_s)
+                     commodity: (transfer.commodity || transfer.complex_commodity).to_s,
+                     effective_date: transfer.effective_date ? format('  ; [=%s]', transfer.effective_date.to_s) : nil)
             else
               format('  %s', transfer.account)
             end,
