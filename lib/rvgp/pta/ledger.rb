@@ -126,9 +126,12 @@ module RVGP
 
             @transactions = doc.xpath('//transactions/transaction').collect do |xt|
               date = Date.strptime(xt.at('date').content, '%Y/%m/%d')
+              # This is returned on an --effective query
+              aux_date = xt.xpath('(postings/posting)[1]')&.at('aux-date')&.content
+              aux_date = Date.strptime(aux_date, '%Y/%m/%d') if aux_date
 
               RVGP::Pta::RegisterTransaction.new(
-                date,
+                aux_date || date,
                 xt.at('payee').content,
                 xt.xpath('postings/posting').collect do |xp|
                   amounts, totals = *%w[post-amount total].collect do |attr|

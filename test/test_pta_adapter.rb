@@ -280,6 +280,17 @@ require_relative '../lib/rvgp'
         end
       end
 
+      it 'supports effective date' do
+        register = subject.register 'Hotel:Income:Visa:Room204', effective: true, from_s: <<~JOURNAL
+          2024-09-04 Henry Jonhnson on for 10 nights via Hotels.com (Paid)
+            Hotel:Income:Visa:Room204        $ -1500.04  ; [=2025-02-14]
+            Transfers:VisaProcessingProvider_HotelChecking
+        JOURNAL
+
+        value(register.transactions[0].date.to_s).must_equal '2025-02-14'
+      end
+
+
       it 'parses multiple commodities and tags' do
         register = subject.register 'Personal:Expenses', from_s: <<~JOURNAL
           2023-02-14 Food Lion
