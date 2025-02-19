@@ -125,9 +125,9 @@ module RVGP
             super xml, options
 
             @transactions = doc.xpath('//transactions/transaction').collect do |xt|
+              # TODO: Clean this up
               date = Date.strptime(xt.at('date').content, '%Y/%m/%d')
-              # This is returned on an --effective query
-              aux_date = xt.xpath('(postings/posting)[1]')&.at('aux-date')&.content
+              aux_date = xt.xpath('(postings/posting)[1]')&.at('aux-date')&.content if options[:effective]
               aux_date = Date.strptime(aux_date, '%Y/%m/%d') if aux_date
 
               RVGP::Pta::RegisterTransaction.new(
@@ -292,6 +292,7 @@ module RVGP
         # that this matches HLedger's default sort order
         RVGP::Pta::Ledger::Output::Register.new command('xml', *args, { sort: 'date' }.merge(opts)),
                                                 monthly: (opts[:monthly] == true),
+                                                effective: (opts[:effective] == true),
                                                 empty: opts[:empty],
                                                 pricer: pricer,
                                                 translate_meta_accounts: translate_meta_accounts

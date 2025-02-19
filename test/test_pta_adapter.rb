@@ -172,6 +172,32 @@ require_relative '../lib/rvgp'
         end
       end
 
+      it 'supports primary/secondary date' do
+        journal = <<~JOURNAL
+          2024-09-01 Amy Rosenfeld on for 3 nights via Booking.com (Paid)
+            Hotel:Income:Visa:Room113        $ -300.03
+            Transfers:VisaProcessingProvider_HotelChecking
+
+          2024-09-04 Henry Jonhnson on for 10 nights via Hotels.com (Paid)
+            Hotel:Income:Visa:Room204        $ -1500.04  ; [=2025-02-14]
+            Transfers:VisaProcessingProvider_HotelChecking
+        JOURNAL
+
+        # TODO: I think our interface here is just not smart.
+        # In the ledger adapter, we need xaccounts = doc.xpath('//accounts//*/account')
+        # and something like:
+        #   amounts = xaccount.xpath('account-amount/amount|account-amount/*/amount')
+        #   total_amounts = xaccount.xpath('//account/account-amount')
+
+        #balance = subject.balance 'Hotel:Income', end: '2024-09-05', from_s: journal
+        #assert_equal ['$ -300.03'], balance.accounts[0].amounts.map(&:to_s).sort
+
+        #balance2 = subject.balance 'Hotel:Income', end: '2025-02-15', from_s: journal
+        #assert_equal ['$ -1800.07'], balance2.accounts[0].amounts.map(&:to_s).sort
+        #
+        skip 'TODO: renovate the balances output to support smarter hierarchies'
+      end
+
       it 'converts commodities, given a pricer' do
         # TODO: Put the TestLedger#test_balance_multiple_with_empty here. Refactored
         skip 'TODO: Put the TestLedger#test_balance_multiple_with_empty here. Refactored'
@@ -280,16 +306,19 @@ require_relative '../lib/rvgp'
         end
       end
 
-      it 'supports effective date' do
-        register = subject.register 'Hotel:Income:Visa:Room204', effective: true, from_s: <<~JOURNAL
+      it 'supports primary/secondary date' do
+        journal = <<~JOURNAL
           2024-09-04 Henry Jonhnson on for 10 nights via Hotels.com (Paid)
             Hotel:Income:Visa:Room204        $ -1500.04  ; [=2025-02-14]
             Transfers:VisaProcessingProvider_HotelChecking
         JOURNAL
 
+        register = subject.register 'Hotel:Income:Visa:Room204', effective: true, from_s: journal
         value(register.transactions[0].date.to_s).must_equal '2025-02-14'
-      end
 
+        register2 = subject.register 'Hotel:Income:Visa:Room204', from_s: journal
+        value(register2.transactions[0].date.to_s).must_equal '2024-09-04'
+      end
 
       it 'parses multiple commodities and tags' do
         register = subject.register 'Personal:Expenses', from_s: <<~JOURNAL
