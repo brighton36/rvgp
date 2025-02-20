@@ -9,7 +9,7 @@ module RVGP
     # there is no rake integration in this command, as that function is irrelevent
     # to the notion of an 'export'.
     class Ireconcile < RVGP::Base::Command
-      accepts_options OPTION_ALL, OPTION_LIST, %i[vsplit v]
+      accepts_options OPTION_ALL, OPTION_LIST, %i[hsplit h]
 
       # @!visibility private
       ELISP_HEADER = <<~ELISP_HEADER
@@ -18,7 +18,8 @@ module RVGP
                         (concat "%<rvgp_path>s reconcile --concise " (buffer-file-name))))
           )
 
-        (defun rvgp-ireconcile-workspace-new (path_reconciler path_journal isHorizontal)
+        (defun rvgp-ireconcile-workspace-new (name path_reconciler path_journal isHorizontal)
+          (+workspace/new name)
           (switch-to-buffer (find-file path_journal))
           (read-only-mode 1)
           (auto-revert-mode)
@@ -32,8 +33,10 @@ module RVGP
 
       # @!visibility private
       ELISP_TARGET = <<~ELISP_TARGET
-        (+workspace/new "%<label>s")
-        (rvgp-ireconcile-workspace-new "%<input_file>s" "%<output_file>s" %<split>s)
+        (if (+workspace-exists-p "%<label>s")
+          (+workspace-switch "%<label>s")
+          (rvgp-ireconcile-workspace-new "%<label>s" "%<input_file>s" "%<output_file>s" %<split>s)
+        )
       ELISP_TARGET
 
       # @!visibility private
@@ -122,7 +125,7 @@ module RVGP
         Tempfile.create format('ireconcile.%s', script[:ext]) do |file|
           file.write [format(script[:header], rvgp_path: $PROGRAM_NAME),
                       targets.map do |target|
-                        target.to_script(script[:target], script[options[:vsplit] ? :vsplit : :hsplit])
+                        target.to_script(script[:target], script[options[:hsplit] ? :hsplit : :vsplit])
                       end.join(script[:separator])].join # NOTE: We understand and expect :separator is nil for emacs
 
           file.close
