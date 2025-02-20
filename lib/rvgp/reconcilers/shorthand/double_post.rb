@@ -3,6 +3,24 @@
 module RVGP
   module Reconcilers
     module Shorthand
+      # This reconciler shorthand will transcribe an additonal pair of transfers, whose amount matches the matched
+      # transaction
+      #
+      # The shorthand parameters we support are:
+      # - **additional_to** [String] - This is the account which will be used for the credit transfer
+      # - **additional_from** [String] - This is the account which will be used for the debit transfer
+      #
+      # # Example
+      # Here's how this shorthand might be used in your reconciler:
+      # ```
+      # ...
+      # - match: /AcmeFinance Payments/
+      #   # ...
+      #   to_shorthand: DoublePost
+      #   shorthand_params:
+      #     additional_from: Transfers:PersonalChecking_VendorChecking
+      #     additional_to: Personal:Liabilities:VendorReimbursal
+      # ...
       class DoublePost
         # @!visibility private
         attr_reader :tag, :targets, :to, :amount, :additional_to, :additional_from

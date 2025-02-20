@@ -7,7 +7,7 @@ require_relative './finance_gem_hacks'
 module RVGP
   module Reconcilers
     module Shorthand
-      # This reconciler module will automatically allocate the the escrow, principal, and interest components of a
+      # This reconciler shorthand will automatically allocate the the escrow, principal, and interest components of a
       # mortage debit, into constituent accounts. The amounts of each, are automatically calculated, based on the loan
       # terms, and taking the residual leftover, into a escrow account, presumably for taxes and insurance to be paid by
       # the mortgage provider.
@@ -26,7 +26,7 @@ module RVGP
       # - Download a csv from your mortgage provider, of your escrow account (if they offer one), and define a
       #   reconciler to allocate escrow payments.
       #
-      # The module parameters we support are:
+      # The shorthand parameters we support are:
       # - **label** [String] - This is a prefix, used in the description of Principal, Interest, and Escrow transactions
       # - **principal** [Commodity] - The mortgage principal
       # - **rate** [Float] - The mortgage rate
@@ -36,7 +36,7 @@ module RVGP
       # - **intermediary_account** [String] - The account to ascribe intermediary payments to, from the source account,
       #   before being assigned to principal, interest, and escrow break-outs.
       # - **start_at_installment_number** [Integer] - The installment number, of the first matching transaction,
-      #   encountered by this module. Year one of a mortgage would start at zero. Subsequent annual reconcilers would
+      #   encountered by this shorthand. Year one of a mortgage would start at zero. Subsequent annual reconcilers would
       #   be expected to define an installment number from which calculations can automatically pick-up the work
       #   from years prior.
       # - **additional_payments** [Array<Hash>] - Any additional payments, to apply to the principal, can be listed
@@ -55,7 +55,7 @@ module RVGP
       #     we assume the same commodity as the :principle.
       #
       # # Example
-      # Here's how this module might be used in your reconciler:
+      # Here's how this shorthand might be used in your reconciler:
       # ```
       # ...
       # - match: /AcmeFinance Servicing/
