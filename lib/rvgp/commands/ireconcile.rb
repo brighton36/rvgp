@@ -9,7 +9,7 @@ module RVGP
     # there is no rake integration in this command, as that function is irrelevent
     # to the notion of an 'export'.
     class Ireconcile < RVGP::Base::Command
-      accepts_options OPTION_ALL, OPTION_LIST, %i[hsplit h]
+      accepts_options OPTION_ALL, OPTION_LIST, %i[hsplit s]
 
       # @!visibility private
       ELISP_HEADER = <<~ELISP_HEADER

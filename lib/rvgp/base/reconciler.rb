@@ -208,11 +208,12 @@ module RVGP
         # This is kind of rudimentary, and only supports named_caputers atm
         # but I think it's fine for now. Probably it's broken wrt cash back or
         # something...
+        rule_to = rule[:to].dup
         if rule[:captures]
-          rule[:to].scan(/\$([0-9a-z]+)/i).each do |substitutes|
+          rule_to.scan(/\$([0-9a-z]+)/i).each do |substitutes|
             substitutes.each do |substitute|
               replace = rule[:captures][substitute]
-              rule[:to].sub! format('$%s', substitute), replace if replace
+              rule_to.sub! format('$%s', substitute), replace if replace
             end
           end
         end
@@ -231,7 +232,7 @@ module RVGP
               raise StandardError, format('Unknown shorthand %s', shorthand_klass)
             end
 
-            mod = Object.const_get(shorthand_klass).new rule
+            mod = Object.const_get(shorthand_klass).new rule.merge(to: rule_to)
 
             @shorthand[rule_key][rule[:index]] = mod
           end
@@ -279,7 +280,7 @@ module RVGP
 
           posting.targets << {
             effective_date: posting.effective_date,
-            to: rule[:to],
+            to: rule_to,
             commodity: residual_commodity,
             tags: rule[:to_tag] ? [rule[:to_tag]] : nil
           }
@@ -400,6 +401,9 @@ module RVGP
       end
 
       private
+
+      def apply_captures_to_string()
+      end
 
       def yaml_rule_matches_string(*args)
         yaml_rule_matches_string_with_capture(*args).first

@@ -49,7 +49,7 @@ en:
         options: 
           all: 'Process all available reconcilers'
           list: 'List all available reconcilers'
-          vsplit: 'Split the input and output panes vertically, instead of horizontally (the default)'
+          hsplit: 'Split the input and output panes horizontally, instead of vertically (the default)'
       grid:
         description: "Generate Grid csv's in build/grids"
         options: 
