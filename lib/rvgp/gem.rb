@@ -45,7 +45,7 @@ module RVGP
 
           s.add_dependency 'open3', '~> 0.2.1'
           s.add_dependency 'shellwords', '~> 0.2.0'
-          s.add_dependency 'google-apis-sheets_v4', '~> 0.38.0'
+          s.add_dependency 'google-apis-sheets_v4', '~> 0.41.0'
           s.add_dependency 'faker', '~> 3.5.0'
           s.add_dependency 'finance', '~> 2.0.0'
           s.add_dependency 'tty-table', '~> 0.12.0'

@@ -213,10 +213,11 @@ module RVGP
           rule_to.scan(/\$([0-9a-z]+)/i).each do |substitutes|
             substitutes.each do |substitute|
               replace = rule[:captures][substitute]
-              rule_to.sub! format('$%s', substitute), replace if replace
+              rule_to = rule_to.sub format('$%s', substitute), replace if replace
             end
           end
         end
+
 
         if rule.key? :to_shorthand
           rule_key = posting.commodity.positive? ? :expense : :income
@@ -232,12 +233,29 @@ module RVGP
               raise StandardError, format('Unknown shorthand %s', shorthand_klass)
             end
 
-            mod = Object.const_get(shorthand_klass).new rule.merge(to: rule_to)
+            mod = Object.const_get(shorthand_klass).new rule
 
             @shorthand[rule_key][rule[:index]] = mod
           end
 
-          mod.to_tx posting
+          # TODO: Dry this out with the above rule[:captures]? This got a little ridiculous... maybe
+          # just do this at the end of the function?
+          shorthand_ret = mod.to_tx posting
+          if rule[:captures]
+            [shorthand_ret].flatten.each do |posting|
+              posting.targets.each do |target|
+                target[:to].scan(/\$([0-9a-z]+)/i).each do |substitutes|
+                  substitutes.each do |substitute|
+                    replace = rule[:captures][substitute]
+                    target[:to] = target[:to].sub format('$%s', substitute), replace if replace
+                  end
+                end
+              end
+            end
+          end
+
+          shorthand_ret
+
         elsif rule.key?(:targets)
           # NOTE: I guess we don't support cashback when multiple targets are
           # specified ATM
@@ -401,9 +419,6 @@ module RVGP
       end
 
       private
-
-      def apply_captures_to_string()
-      end
 
       def yaml_rule_matches_string(*args)
         yaml_rule_matches_string_with_capture(*args).first
