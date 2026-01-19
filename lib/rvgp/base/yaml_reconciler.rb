@@ -40,16 +40,17 @@ module RVGP
       # @param [RVGP::Utilities::Yaml] yaml A file containing the settings to use in the construction of this reconciler
       #                                   . (see above)
       def initialize(yaml)
-        @label = yaml[:label]
-        @file = yaml.path
-        @dependencies = yaml.dependencies
-
-        @starts_on = yaml.key?(:starts_on) ? Date.strptime(yaml[:starts_on], '%Y-%m-%d') : nil
-        @ends_on = yaml.key?(:ends_on) ? Date.strptime(yaml[:ends_on], '%Y-%m-%d') : nil
-
         missing_fields = %i[label output input from income expense].find_all { |attr| !yaml.key? attr }
 
         raise MissingFields.new(*missing_fields) unless missing_fields.empty?
+
+        @starts_on = yaml.key?(:starts_on) ? Date.strptime(yaml[:starts_on], '%Y-%m-%d') : nil
+        @ends_on = yaml.key?(:ends_on) ? Date.strptime(yaml[:ends_on], '%Y-%m-%d') : nil
+        @from = yaml[:from]
+        @income_rules = yaml[:income]
+        @expense_rules = yaml[:expense]
+        @transform_commodities = yaml[:transform_commodities] || {}
+        @balances = yaml[:balances]
 
         if RVGP.app
           @output_file = RVGP.app.config.build_path format('journals/%s', yaml[:output])
@@ -60,13 +61,6 @@ module RVGP
           @output_file = yaml[:output]
           @input_file = yaml[:input]
         end
-
-        @from = yaml[:from]
-        @income_rules = yaml[:income]
-        @expense_rules = yaml[:expense]
-        @transform_commodities = yaml[:transform_commodities] || {}
-        @balances = yaml[:balances]
-        @disable_checks = yaml[:disable_checks]&.map(&:to_sym) if yaml.key?(:disable_checks)
 
         if yaml.key? :tag_accounts
           @tag_accounts = yaml[:tag_accounts]
@@ -86,8 +80,122 @@ module RVGP
           end
         end
 
-        super
+        super(yaml.path,
+              label: yaml[:label],
+              dependencies: yaml.dependencies,
+              disable_checks: yaml.key?(:disable_checks) ? yaml[:disable_checks]&.map(&:to_sym) : nil)
       end
+
+      # @!visibility private
+      def reconcile_posting(rule, posting)
+        # NOTE: The shorthand(s) produce more than one tx per csv line, sometimes:
+
+        posting.from = rule[:from] if rule.key? :from
+
+        posting.tags << rule[:tag] if rule.key? :tag
+
+        # Let's do a find and replace on the :to if we have anything captured
+        # This is kind of rudimentary, and only supports named_caputers atm
+        # but I think it's fine for now. Probably it's broken wrt cash back or
+        # something...
+        rule_to = rule[:to].dup
+        if rule[:captures]
+          rule_to.scan(/\$([0-9a-z]+)/i).each do |substitutes|
+            substitutes.each do |substitute|
+              replace = rule[:captures][substitute]
+              rule_to = rule_to.sub format('$%s', substitute), replace if replace
+            end
+          end
+        end
+
+        if rule.key? :to_shorthand
+          rule_key = posting.commodity.positive? ? :expense : :income
+
+          @shorthand ||= {}
+          @shorthand[rule_key] ||= {}
+          mod = @shorthand[rule_key][rule[:index]]
+
+          unless mod
+            shorthand_klass = format 'RVGP::Reconcilers::Shorthand::%s', rule[:to_shorthand]
+
+            unless Object.const_defined?(shorthand_klass)
+              raise StandardError, format('Unknown shorthand %s', shorthand_klass)
+            end
+
+            mod = Object.const_get(shorthand_klass).new rule
+
+            @shorthand[rule_key][rule[:index]] = mod
+          end
+
+          # TODO: Dry this out with the above rule[:captures]? This got a little ridiculous... maybe
+          # just do this at the end of the function?
+          shorthand_ret = mod.to_tx posting
+          if rule[:captures]
+            [shorthand_ret].flatten.each do |posting|
+              posting.targets.each do |target|
+                target[:to].scan(/\$([0-9a-z]+)/i).each do |substitutes|
+                  substitutes.each do |substitute|
+                    replace = rule[:captures][substitute]
+                    target[:to] = target[:to].sub format('$%s', substitute), replace if replace
+                  end
+                end
+              end
+            end
+          end
+
+          shorthand_ret
+
+        elsif rule.key?(:targets)
+          # NOTE: I guess we don't support cashback when multiple targets are
+          # specified ATM
+
+          # If it turns out we need this feature in the future, I guess,
+          # implement it?
+          raise StandardError, 'Unimplemented.' if cash_back&.match(posting.description)
+
+          posting.targets = rule[:targets].map do |rule_target|
+            if rule_target.key? :currency
+              commodity = RVGP::Journal::Commodity.from_symbol_and_amount(
+                rule_target[:currency] || default_currency,
+                rule_target[:amount].to_s
+              )
+            elsif rule_target.key? :complex_commodity
+              complex_commodity = RVGP::Journal::ComplexCommodity.from_s(rule_target[:complex_commodity])
+            else
+              commodity = rule_target[:amount].to_s.to_commodity
+            end
+
+            { to: rule_target[:to],
+              commodity: commodity,
+              complex_commodity: complex_commodity,
+              tags: rule_target[:tags] }
+          end
+
+          posting
+        else
+          # We unroll some of the allocation in here, since (I think) the logic
+          # relating to cash backs and such are in 'the bank' and not 'the transaction'
+          residual_commodity = posting.commodity
+
+          if cash_back&.match(posting.description)
+            cash_back_commodity = RVGP::Journal::Commodity.from_symbol_and_amount(
+              ::Regexp.last_match(1), Regexp.last_match(2)
+            )
+            residual_commodity -= cash_back_commodity
+            posting.targets << { to: cash_back_to, commodity: cash_back_commodity }
+          end
+
+          posting.targets << {
+            effective_date: posting.effective_date,
+            to: rule_to,
+            commodity: residual_commodity,
+            tags: rule[:to_tag] ? [rule[:to_tag]] : nil
+          }
+
+          posting
+        end
+      end
+
       # @!visibility private
       def postings
         @postings ||= (reverse_order ? source_postings.reverse! : source_postings).map do |source_posting|

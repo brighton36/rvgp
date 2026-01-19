@@ -9,6 +9,8 @@ module RVGP
     # @attr_reader [String] file The full path to the reconciler yaml file this class was parsed from
     # @attr_reader [String] input_file The contents of the yaml :input parameter (see above)
     # @attr_reader [String] output_file The contents of the yaml :output parameter (see above)
+    # @attr_reader [String] taskname The taskname to use by rake, for this reconciler. Defaults to
+    # the :file's basename
     # @attr_reader [Array<String>] disable_checks The JournalValidations that are disabled on this reconciler (see
     #                                             above)
     class Reconciler
@@ -52,28 +54,27 @@ module RVGP
         end
       end
 
-      REQUIRED_ATTRS = %i[label file output_file input_file]
+      REQUIRED_ATTRS = %i[taskname label file output_file input_file]
       attr_reader(*REQUIRED_ATTRS, :disable_checks)
 
       # @!visibility private
       HEADER = ";;; %s --- Description -*- mode: ledger; -*-\n; vim: syntax=ledger"
 
       # Create a Reconciler
-      def initialize(from_file)
-        @file ||= from_file
-        @disable_checks ||= []
-        @dependencies ||= []
+      def initialize(file, label: nil, taskname: nil, dependencies: nil, disable_checks: nil)
+        @file ||= file
+        @label ||= label
+        @disable_checks ||= disable_checks || []
+        @dependencies ||= dependencies || []
+        @taskname ||= taskname || File.basename(file, File.extname(file)).tr('^a-z0-9', '-')
+
+        @input_file ||= RVGP.app.config.project_path format('feeds/%s', taskname)
+        @output_file ||= RVGP.app.config.build_path format('journals/%s.journal', taskname)
         missing_attrs = REQUIRED_ATTRS.select { |attr| send(attr).nil? }
 
         unless missing_attrs.empty?
-          raise StandardError, format('Missing required attributes %s', missing_attrs.join(','))
+          raise StandardError, format('Missing required attributes %s', missing_attrs.join(', '))
         end
-      end
-
-      # Returns the taskname to use by rake, for this reconciler
-      # @return [String] The taskname, based off the :file basename
-      def as_taskname
-        File.basename(file, File.extname(file)).tr('^a-z0-9', '-')
       end
 
       # @!visibility private
@@ -83,10 +84,7 @@ module RVGP
       def matches_argument?(str)
         str_as_file = File.expand_path str
 
-        as_taskname == str ||
-          label == str ||
-          file == str_as_file ||
-          input_file == str_as_file ||
+        taskname == str || label == str || file == str_as_file || input_file == str_as_file ||
           output_file == str_as_file
       end
 
@@ -129,116 +127,6 @@ module RVGP
         end
 
         from
-      end
-
-      # @!visibility private
-      def reconcile_posting(rule, posting)
-        # NOTE: The shorthand(s) produce more than one tx per csv line, sometimes:
-
-        posting.from = rule[:from] if rule.key? :from
-
-        posting.tags << rule[:tag] if rule.key? :tag
-
-        # Let's do a find and replace on the :to if we have anything captured
-        # This is kind of rudimentary, and only supports named_caputers atm
-        # but I think it's fine for now. Probably it's broken wrt cash back or
-        # something...
-        rule_to = rule[:to].dup
-        if rule[:captures]
-          rule_to.scan(/\$([0-9a-z]+)/i).each do |substitutes|
-            substitutes.each do |substitute|
-              replace = rule[:captures][substitute]
-              rule_to = rule_to.sub format('$%s', substitute), replace if replace
-            end
-          end
-        end
-
-        if rule.key? :to_shorthand
-          rule_key = posting.commodity.positive? ? :expense : :income
-
-          @shorthand ||= {}
-          @shorthand[rule_key] ||= {}
-          mod = @shorthand[rule_key][rule[:index]]
-
-          unless mod
-            shorthand_klass = format 'RVGP::Reconcilers::Shorthand::%s', rule[:to_shorthand]
-
-            unless Object.const_defined?(shorthand_klass)
-              raise StandardError, format('Unknown shorthand %s', shorthand_klass)
-            end
-
-            mod = Object.const_get(shorthand_klass).new rule
-
-            @shorthand[rule_key][rule[:index]] = mod
-          end
-
-          # TODO: Dry this out with the above rule[:captures]? This got a little ridiculous... maybe
-          # just do this at the end of the function?
-          shorthand_ret = mod.to_tx posting
-          if rule[:captures]
-            [shorthand_ret].flatten.each do |posting|
-              posting.targets.each do |target|
-                target[:to].scan(/\$([0-9a-z]+)/i).each do |substitutes|
-                  substitutes.each do |substitute|
-                    replace = rule[:captures][substitute]
-                    target[:to] = target[:to].sub format('$%s', substitute), replace if replace
-                  end
-                end
-              end
-            end
-          end
-
-          shorthand_ret
-
-        elsif rule.key?(:targets)
-          # NOTE: I guess we don't support cashback when multiple targets are
-          # specified ATM
-
-          # If it turns out we need this feature in the future, I guess,
-          # implement it?
-          raise StandardError, 'Unimplemented.' if cash_back&.match(posting.description)
-
-          posting.targets = rule[:targets].map do |rule_target|
-            if rule_target.key? :currency
-              commodity = RVGP::Journal::Commodity.from_symbol_and_amount(
-                rule_target[:currency] || default_currency,
-                rule_target[:amount].to_s
-              )
-            elsif rule_target.key? :complex_commodity
-              complex_commodity = RVGP::Journal::ComplexCommodity.from_s(rule_target[:complex_commodity])
-            else
-              commodity = rule_target[:amount].to_s.to_commodity
-            end
-
-            { to: rule_target[:to],
-              commodity: commodity,
-              complex_commodity: complex_commodity,
-              tags: rule_target[:tags] }
-          end
-
-          posting
-        else
-          # We unroll some of the allocation in here, since (I think) the logic
-          # relating to cash backs and such are in 'the bank' and not 'the transaction'
-          residual_commodity = posting.commodity
-
-          if cash_back&.match(posting.description)
-            cash_back_commodity = RVGP::Journal::Commodity.from_symbol_and_amount(
-              ::Regexp.last_match(1), Regexp.last_match(2)
-            )
-            residual_commodity -= cash_back_commodity
-            posting.targets << { to: cash_back_to, commodity: cash_back_commodity }
-          end
-
-          posting.targets << {
-            effective_date: posting.effective_date,
-            to: rule_to,
-            commodity: residual_commodity,
-            tags: rule[:to_tag] ? [rule[:to_tag]] : nil
-          }
-
-          posting
-        end
       end
 
       # Builds the contents of this reconcilere's output file, and returns it. This is the finished

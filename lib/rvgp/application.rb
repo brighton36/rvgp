@@ -81,8 +81,8 @@ module RVGP
 
       rake_main.instance_eval do
         default_tasks = %i[reconcile validate_journal validate_system]
-        multitask reconcile: RVGP.app.reconcilers.map { |tf| "reconcile:#{tf.as_taskname}" }
-        multitask validate_journal: RVGP.app.reconcilers.map { |tf| "validate_journal:#{tf.as_taskname}" }
+        multitask reconcile: RVGP.app.reconcilers.map { |tf| "reconcile:#{tf.taskname}" }
+        multitask validate_journal: RVGP.app.reconcilers.map { |tf| "validate_journal:#{tf.taskname}" }
         multitask validate_system: RVGP.system_validations.task_names
 
         # There's a chicken-and-an-egg problem that's due:

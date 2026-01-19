@@ -87,7 +87,7 @@ module RVGP
         #                                             {RVGP::Reconcilers::JournalReconciler}, to use as the basis
         #                                             for this target.
         def initialize(reconciler)
-          super reconciler.as_taskname, reconciler.label
+          super reconciler.taskname, reconciler.label
           @reconciler = reconciler
         end
 
