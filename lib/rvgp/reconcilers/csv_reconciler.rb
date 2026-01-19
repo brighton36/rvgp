@@ -314,31 +314,27 @@ module RVGP
     # This reconciler is instantiated for input files of type csv. Additional parameters are supported in the
     # :format section of this reconciler, which are documented in {RVGP::Reconcilers} under the
     # 'CSV specific format parameters' section.
-    # @attr_reader [Hash<String, <Proc,String,Integer>>] fields_format A hash of field names, to their location in
-    #   the input file. Supported key names include: date, effective_date, amount, description. These keys can map
-    #   to either a 'string' type (indicating which column of the input file contains the key's value). An Integer
-    #   (indicating which column offset contains the key's value). Or, a Proc (which executes for every row in the
-    #   input file, and whose return value will be used)
-    # @attr_reader [Hash] csv_format This hash is sent to the options parameter of CSV.parse
-    # @attr_reader [Boolean] invert_amount Whether or not to multiple the :amount field by negative one.
-    # @attr_reader [<Regexp, Integer>] skip_lines Given a regex, the input file will discard the match for the
-    #   provided regex from the start of the input file. Given an integer, the provided number of lines will be
-    #   removed from the start of the input file.
-    # @attr_reader [<Regexp, Integer>] trim_lines Given a regex, the input file will discard the match for the
-    #   provided regex from the end of the input file. Given an integer, the provided number of lines will be
-    #   removed from the end of the input file.
-    # @attr_reader [<Proc>] filter_contents A procedure, provided in the yaml, that is used to modify the csv
-    #   contents.
     class CsvReconciler < RVGP::Base::YamlReconciler
-      attr_reader :fields_format, :csv_format, :invert_amount, :skip_lines, :trim_lines, :filter_contents
+      # TODO Let's see where this goes before we document it... I'm not sure what we want this to be
+      # yet.
+      class CsvRow
+        attr_reader :date, :description, :amount, :effective_date
+
+        def initialize(date: nil, description: nil, amount: nil, effective_date: nil)
+          @date = date
+          @description = description
+          @amount = amount
+          @effective_date = effective_date
+        end
+      end
 
       def initialize(yaml)
-        super yaml
+        super
 
-        missing_fields = if yaml.key? :format
-                           if yaml[:format].key?(:fields)
+        missing_fields = if input_format
+                           if input_format.key?(:fields)
                              %i[date amount description].map do |attr|
-                               format('format/fields/%s', attr) unless yaml[:format][:fields].key?(attr)
+                               format('format/fields/%s', attr) unless input_format[:fields].key?(attr)
                              end.compact
                            else
                              ['format/fields']
@@ -348,39 +344,31 @@ module RVGP
                          end
 
         raise MissingFields.new(*missing_fields) unless missing_fields.empty?
-
-        @fields_format = yaml[:format][:fields] if yaml[:format].key? :fields
-        @encoding_format = yaml[:format][:encoding] if yaml[:format].key? :encoding
-        @invert_amount = yaml[:format][:invert_amount] || false if yaml[:format].key? :invert_amount
-        @skip_lines = yaml[:format][:skip_lines]
-        @trim_lines = yaml[:format][:trim_lines]
-        @filter_contents = yaml[:format][:filter_contents]
-        @csv_format = { headers: yaml[:format][:csv_headers] } if yaml[:format].key? :csv_headers
       end
 
       class << self
         include RVGP::Utilities
 
         # Mostly this is a class method, to make testing easier
-        def input_file_contents(input_file, options = {})
-          open_args = {}
-          open_args[:encoding] = options[:encoding] if options[:encoding]
-          contents = File.read(input_file, **open_args)
+        def path_to_rows(path, fields:, encoding: nil, trim_lines: nil, default_currency: nil,
+                         skip_lines: nil, filter_contents: nil, csv_headers: nil, invert_amount: false,
+                         reverse_order: false)
+          contents = File.read path, **(encoding ? { encoding: } : {})
 
           start_offset = 0
           end_offset = contents.length
 
-          if options[:trim_lines]
-            trim_lines_regex = string_to_regex options[:trim_lines].to_s
-            trim_lines_regex ||= /(?:[^\n]*\n?){0,#{options[:trim_lines]}}\Z/m
+          if trim_lines
+            trim_lines_regex = string_to_regex trim_lines.to_s
+            trim_lines_regex ||= /(?:[^\n]*\n?){0,#{trim_lines}}\Z/m
             match = trim_lines_regex.match contents
             end_offset = match.begin 0 if match
             return String.new if end_offset.zero?
           end
 
-          if options[:skip_lines]
-            skip_lines_regex = string_to_regex options[:skip_lines].to_s
-            skip_lines_regex ||= /(?:[^\n]*\n){0,#{options[:skip_lines]}}/m
+          if skip_lines
+            skip_lines_regex = string_to_regex skip_lines.to_s
+            skip_lines_regex ||= /(?:[^\n]*\n){0,#{skip_lines}}/m
             match = skip_lines_regex.match contents
             start_offset = match.end 0 if match
           end
@@ -390,7 +378,28 @@ module RVGP
 
           contents = contents[start_offset..(end_offset - 1)]
 
-          options[:filter_contents]&.call({ contents: contents }.merge(options[:proc_options])) || contents
+          parse_options = csv_headers ? { headers: csv_headers } : {}
+
+          ret = CSV.parse(
+            filter_contents&.call({ contents: contents }.merge({ path: })) || contents,
+            **parse_options
+          ).map do |csv_row|
+            # Set the object values, return the reconciled row:
+            attrs = fields.collect do |field, formatter|
+              # TODO: I think we can stick formatter as a key, if it's a string, or int
+              [field.to_sym, formatter.respond_to?(:call) ? formatter.call(row: csv_row) : csv_row[field]]
+            end.compact.to_h
+
+            unless attrs[:amount].is_a?(RVGP::Journal::ComplexCommodity) ||
+                   attrs[:amount].is_a?(RVGP::Journal::Commodity)
+              attrs[:amount] = RVGP::Journal::Commodity.from_symbol_and_amount(default_currency, attrs[:amount])
+            end
+            attrs[:amount].invert! if invert_amount
+
+            CsvRow.new(**attrs)
+          end
+
+          reverse_order ? ret.reverse : ret
         end
       end
 
@@ -400,40 +409,15 @@ module RVGP
       # some remedial parsing before rule application, as well as reversing the order
       # which, is needed for the to_shorthand to run in sequence.
       def source_postings
-        @source_postings ||= begin
-          rows = CSV.parse(
-            self.class.input_file_contents(input_file,
-                                           encoding: @encoding_format,
-                                           proc_options: { path: input_file },
-                                           skip_lines: skip_lines,
-                                           trim_lines: trim_lines,
-                                           filter_contents: filter_contents),
-            **csv_format
+        self.class.path_to_rows(input_file, **input_format).map.with_index do |tx, i|
+          RVGP::Base::Reconciler::Posting.new(
+            i + 1,
+            date: tx.date,
+            effective_date: tx.effective_date,
+            description: tx.description,
+            commodity: transform_commodity(tx.amount),
+            from: from
           )
-
-          rows.collect.with_index do |csv_row, i|
-            # Set the object values, return the reconciled row:
-            tx = fields_format.collect do |field, formatter|
-              # TODO: I think we can stick formatter as a key, if it's a string, or int
-              [field.to_sym, formatter.respond_to?(:call) ? formatter.call(row: csv_row) : csv_row[field]]
-            end.compact.to_h
-
-            # Amount is a special case, which, we have now converted into
-            # commodity
-            if [RVGP::Journal::ComplexCommodity, RVGP::Journal::Commodity].any? { |klass| tx[:amount].is_a? klass }
-              commodity = tx[:amount]
-            end
-            commodity ||= RVGP::Journal::Commodity.from_symbol_and_amount(default_currency, tx[:amount])
-
-            commodity.invert! if invert_amount
-
-            RVGP::Base::Reconciler::Posting.new i + 1,
-                                                date: tx[:date],
-                                                effective_date: tx[:effective_date],
-                                                description: tx[:description],
-                                                commodity: transform_commodity(commodity),
-                                                from: from
-          end
         end
       end
     end

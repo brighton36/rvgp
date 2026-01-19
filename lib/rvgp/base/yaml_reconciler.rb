@@ -23,8 +23,26 @@ module RVGP
     #                                 above)
     # @attr_reader [String] cash_back_to The contents of the :to parameter, inside the yaml's :cash_back parameter (see
     #                                 above)
-    # @attr_reader [TrueClass,FalseClass] reverse_order The contents of the yaml :reverse_order parameter (see above)
-    # @attr_reader [String] default_currency The contents of the yaml :default_currency parameter (see above)
+    # @attr_reader [Hash] input_format These are (usually shared) formatting directives to use in the
+    # transformation of the input file, into the intermediate format used to construct a posting
+    # @option input_format [Hash<String, <Proc,String,Integer>>] fields_format A hash of field names, to their location in
+    #   the input file. Supported key names include: date, effective_date, amount, description. These keys can map
+    #   to either a 'string' type (indicating which column of the input file contains the key's value). An Integer
+    #   (indicating which column offset contains the key's value). Or, a Proc (which executes for every row in the
+    #   input file, and whose return value will be used)
+    # @option input_format [Boolean] csv_headers True if the first row of the provided csv contains field
+    # header names
+    # @option input_format [Boolean] invert_amount Whether or not to multiple the :amount field by negative one.
+    # @option input_format [<Regexp, Integer>] skip_lines Given a regex, the input file will discard the match for the
+    #   provided regex from the start of the input file. Given an integer, the provided number of lines will be
+    #   removed from the start of the input file.
+    # @option input_format [<Regexp, Integer>] trim_lines Given a regex, the input file will discard the match for the
+    #   provided regex from the end of the input file. Given an integer, the provided number of lines will be
+    #   removed from the end of the input file.
+    # @option input_format [<Proc>] filter_contents A procedure, provided in the yaml, that is used to modify the csv
+    #   contents.
+    # @option input_format [String] default_currency The contents of the yaml :default_currency parameter (see above)
+    # @option input_format [Boolean] reverse_order The contents of the yaml :reverse_order parameter (see above)
     class YamlReconciler < RVGP::Base::Reconciler
       # This error is thrown when a reconciler yaml is missing one or more require parameters
       class MissingFields < StandardError
@@ -34,7 +52,7 @@ module RVGP
       end
 
       attr_reader :starts_on, :ends_on, :balances, :from, :income_rules, :expense_rules, :tag_accounts,
-                  :cash_back, :cash_back_to, :reverse_order, :default_currency
+                  :cash_back, :cash_back_to, :input_format
 
       # Create a Reconciler from the provided yaml
       # @param [RVGP::Utilities::Yaml] yaml A file containing the settings to use in the construction of this reconciler
@@ -70,14 +88,13 @@ module RVGP
           end
         end
 
-        if yaml.key? :format
-          @default_currency = yaml[:format][:default_currency] || '$'
-          @reverse_order = yaml[:format][:reverse_order] if yaml[:format].key? :reverse_order
+        @input_format = yaml[:format].to_h || {}
+        @input_format[:default_currency] || '$'
 
-          if yaml[:format].key?(:cash_back)
-            @cash_back = string_to_regex yaml[:format][:cash_back][:match]
-            @cash_back_to = yaml[:format][:cash_back][:to]
-          end
+        cash_back = @input_format.delete(:cash_back)
+        if cash_back
+          @cash_back = string_to_regex cash_back[:match]
+          @cash_back_to = cash_back[:to]
         end
 
         super(yaml.path,
@@ -156,7 +173,7 @@ module RVGP
           posting.targets = rule[:targets].map do |rule_target|
             if rule_target.key? :currency
               commodity = RVGP::Journal::Commodity.from_symbol_and_amount(
-                rule_target[:currency] || default_currency,
+                rule_target[:currency] || @format[:default_currency],
                 rule_target[:amount].to_s
               )
             elsif rule_target.key? :complex_commodity
@@ -198,7 +215,7 @@ module RVGP
 
       # @!visibility private
       def postings
-        @postings ||= (reverse_order ? source_postings.reverse! : source_postings).map do |source_posting|
+        @postings ||= source_postings.map do |source_posting|
           # See what rule applies to this posting:
           rule = match_rule source_posting.commodity.positive? ? expense_rules : income_rules, source_posting
 
