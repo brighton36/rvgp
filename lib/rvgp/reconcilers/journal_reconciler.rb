@@ -10,7 +10,7 @@ module RVGP
       private
 
       def journal
-        RVGP::Journal.parse File.read(input_file)
+        RVGP::Journal::PtaFile.parse File.read(input_file)
       end
 
       def source_postings

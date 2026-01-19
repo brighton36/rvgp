@@ -11,7 +11,7 @@ class TestFakeJournal < Minitest::Test
   def test_basic_cash
     journal = RVGP::Fakers::FakeJournal.basic_cash from: Date.new(2020, 1, 1), to: Date.new(2020, 1, 10)
 
-    assert_kind_of RVGP::Journal, journal
+    assert_kind_of RVGP::Journal::PtaFile, journal
     assert_equal 10, journal.postings.length
     assert_equal %w[2020-01-01 2020-01-02 2020-01-03 2020-01-04 2020-01-05
                     2020-01-06 2020-01-07 2020-01-08 2020-01-09 2020-01-10],
@@ -38,7 +38,7 @@ class TestFakeJournal < Minitest::Test
 
       journal = RVGP::Fakers::FakeJournal.basic_cash from: Date.new(2020, 1, 1), sum: amount
 
-      assert_kind_of RVGP::Journal, journal
+      assert_kind_of RVGP::Journal::PtaFile, journal
       assert_equal(10, journal.postings.length)
 
       balance = RVGP::Pta::Ledger.new.balance 'Expense', from_s: journal.to_s

@@ -3,7 +3,7 @@
 require 'bigdecimal'
 
 module RVGP
-  class Journal
+  module Journal
     # This class takes a value, denominated in one commodity, and returns the equivalent value, in another commodity.
     # This process is also known as price (or currency) exchange. The basis for exchanges are rates, affixed to a
     # date. These exchange rates are expected to be provided in the same format that ledger and hledger use. Here's an

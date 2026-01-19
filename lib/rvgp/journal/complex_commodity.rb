@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module RVGP
-  class Journal
+  module Journal
     # These 'complex currency' specifications appear to be mostly for non-register
     # and non-balance reports. The ledger manual labels these 'Cost Expressions'.
     # We really don't use these much, and I'm not entirely sure the parsing rules

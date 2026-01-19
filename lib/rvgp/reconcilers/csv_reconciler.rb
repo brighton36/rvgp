@@ -362,7 +362,11 @@ module RVGP
         include RVGP::Utilities
 
         # Mostly this is a class method, to make testing easier
-        def input_file_contents(contents, options = {})
+        def input_file_contents(input_file, options = {})
+          open_args = {}
+          open_args[:encoding] = options[:encoding] if options[:encoding]
+          contents = File.read(input_file, **open_args)
+
           start_offset = 0
           end_offset = contents.length
 
@@ -392,22 +396,20 @@ module RVGP
 
       private
 
-      def input_file_contents
-        open_args = {}
-        open_args[:encoding] = @encoding_format if @encoding_format
-        self.class.input_file_contents File.read(input_file, **open_args),
-                                       proc_options: { path: input_file },
-                                       skip_lines: skip_lines,
-                                       trim_lines: trim_lines,
-                                       filter_contents: filter_contents
-      end
-
       # We actually returned semi-reconciled transactions here. That lets us do
       # some remedial parsing before rule application, as well as reversing the order
       # which, is needed for the to_shorthand to run in sequence.
       def source_postings
         @source_postings ||= begin
-          rows = CSV.parse input_file_contents, **csv_format
+          rows = CSV.parse(
+            self.class.input_file_contents(input_file,
+                                           encoding: @encoding_format,
+                                           proc_options: { path: input_file },
+                                           skip_lines: skip_lines,
+                                           trim_lines: trim_lines,
+                                           filter_contents: filter_contents),
+            **csv_format
+          )
 
           rows.collect.with_index do |csv_row, i|
             # Set the object values, return the reconciled row:

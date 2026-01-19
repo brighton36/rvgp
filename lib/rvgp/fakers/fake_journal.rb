@@ -38,7 +38,7 @@ module RVGP
 
             simple_posting date, post_amount
           end
-          RVGP::Journal.new((postings + generated_postings).sort_by(&:date))
+          RVGP::Journal::PtaFile.new((postings + generated_postings).sort_by(&:date))
         end
 
         private

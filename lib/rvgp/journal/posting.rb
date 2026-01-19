@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 module RVGP
-  class Journal
+  module Journal
     # This class represents a single posting, in a PTA journal. A posting is
     # typically of the following form:
     # ```

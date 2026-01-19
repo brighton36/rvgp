@@ -17,7 +17,6 @@ require_relative 'rvgp/reconcilers/shorthand/double_post'
 
 require_relative 'rvgp/base/validation'
 
-require_relative 'rvgp/journal'
 require_relative 'rvgp/pta/ledger'
 require_relative 'rvgp/pta/hledger'
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative 'journal/journal'
+require_relative 'journal/pta_journal'
 require_relative 'journal/currency'
 require_relative 'journal/commodity'
 require_relative 'journal/complex_commodity'

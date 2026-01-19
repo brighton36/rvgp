@@ -2,7 +2,6 @@
 
 require 'faker'
 
-require_relative '../journal'
 require_relative '../journal/commodity'
 
 module RVGP

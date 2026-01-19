@@ -9,7 +9,7 @@ module RVGP
       # any given entry. Unlike most of the validations in RVGP, this one doesn't use ledger or hledger
       # to validate. This validation parses the file itself, in ruby, and ensures based on the contents.
       def validate
-        journal = RVGP::Journal.parse File.read(reconciler.output_file)
+        journal = RVGP::Journal::PtaFile.parse File.read(reconciler.output_file)
         dupe_messages = []
 
         journal.postings.each do |posting|

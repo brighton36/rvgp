@@ -98,7 +98,7 @@ class TestJournalParse < Minitest::Test
   JOURNAL
 
   def test_journal_tag_parsing
-    journal = RVGP::Journal.parse SAMPLE_TAG_FORMATS_JOURNAL
+    journal = RVGP::Journal::PtaFile.parse SAMPLE_TAG_FORMATS_JOURNAL
 
     assert_equal 6, journal.postings.length
 
@@ -206,7 +206,7 @@ class TestJournalParse < Minitest::Test
   end
 
   def test_currency_purchase_parsing
-    journal = RVGP::Journal.parse SAMPLE_CURRENCY_DECLARATION_JOURNAL
+    journal = RVGP::Journal::PtaFile.parse SAMPLE_CURRENCY_DECLARATION_JOURNAL
 
     assert_equal 11, journal.postings.length
 

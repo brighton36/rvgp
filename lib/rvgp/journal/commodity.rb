@@ -3,7 +3,7 @@
 require 'bigdecimal'
 
 module RVGP
-  class Journal
+  module Journal
     # This abstraction defines a simple commodity entry, as would be found in a pta journal.
     # Such commodities can appear in the form of currency, such as '$ 1.30' or in any other
     # format that hledger and ledger parse. ie '1 HOUSE'.

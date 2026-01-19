@@ -3,7 +3,7 @@
 require 'json'
 
 module RVGP
-  class Journal
+  module Journal
     # This abstraction offers a repository by which currencies can be defined,
     # and by which their rules can be queried. An instance of this class, is an
     # entry in the currency table, that we support. The default currencies that RVGP
