@@ -131,7 +131,7 @@ en:
       list_targets: 'The following reconcilers are available:'
       target_description: 'Reconcile the "%{input_file}" journal'
       errors:
-        journal_missing: 'Journal(s) Missing.'
+        journal_missing: '"%{path}" Journal Missing.'
         either_concise_or_stdout: 'Either -concise or -stdout mode can be specified. But, alas, not both.'
     validate_journal:
       list_targets: 'The following journal validations are available:'

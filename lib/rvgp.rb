@@ -4,6 +4,7 @@ require_relative 'rvgp/utilities/yaml'
 require_relative 'rvgp/application'
 require_relative 'rvgp/commands'
 require_relative 'rvgp/base/reconciler'
+require_relative 'rvgp/base/yaml_reconciler'
 
 # NOTE: Reconcilers & shorthand may want to go into a registry system at
 # some point, akin to grids/validations.

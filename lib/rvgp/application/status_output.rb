@@ -100,7 +100,7 @@ module RVGP
         fill = if available_width <= desc.length
                  # The plus one is due to the compact'd nil below, which, removes a space
                  # character, that would have otherwise been placed next to the @fill
-                 desc = desc[0...available_width - @truncated.length - 1] + @truncated
+                 desc = desc[0...(available_width - @truncated.length - 1)] + @truncated
                  ' '
                elsif (available_width - desc.length) > 1
                  [' ', @fill * (available_width - desc.length - 2), ' '].join

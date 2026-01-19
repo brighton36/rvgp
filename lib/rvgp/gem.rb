@@ -7,7 +7,7 @@ module RVGP
   # used to produce a gemspec.
   class Gem
     # This is the current version of the ruby gem
-    VERSION = '0.3.4'
+    VERSION = '0.4.0'
 
     # @!visibility private
     GEM_DIR = File.expand_path format('%s/../..', File.dirname(__FILE__))
@@ -43,12 +43,18 @@ module RVGP
           s.add_development_dependency 'yard', '~> 0.9.34'
           s.add_development_dependency 'redcarpet', '~> 3.6.0'
 
+          s.add_dependency 'rake'
+          s.add_dependency 'csv'
+          s.add_dependency 'bigdecimal'
+          s.add_dependency 'ostruct'
+          s.add_dependency 'pstore'
           s.add_dependency 'open3', '~> 0.2.1'
           s.add_dependency 'shellwords', '~> 0.2.0'
           s.add_dependency 'google-apis-sheets_v4', '~> 0.41.0'
           s.add_dependency 'faker', '~> 3.5.0'
           s.add_dependency 'finance', '~> 2.0.0'
           s.add_dependency 'tty-table', '~> 0.12.0'
+          s.add_dependency 'nokogiri', '~> 1.18'
         end
       end
 

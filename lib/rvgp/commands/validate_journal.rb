@@ -8,6 +8,7 @@ module RVGP
       accepts_options OPTION_ALL, OPTION_LIST
 
       include RakeTask
+
       rake_tasks :validate_journal
 
       # @!visibility private
@@ -33,7 +34,12 @@ module RVGP
           disable_checks = @reconciler.disable_checks.map(&:to_sym)
 
           # Make sure the file exists, before proceeding with anything:
-          return [I18n.t('commands.reconcile.errors.journal_missing')], [] unless File.exist? @reconciler.output_file
+          unless File.exist? @reconciler.output_file
+            return [
+              nil,
+              [[I18n.t('commands.reconcile.errors.journal_missing', path: @reconciler.output_file)]]
+            ]
+          end
 
           warnings = []
           errors = []

@@ -329,7 +329,7 @@ module RVGP
     #   removed from the end of the input file.
     # @attr_reader [<Proc>] filter_contents A procedure, provided in the yaml, that is used to modify the csv
     #   contents.
-    class CsvReconciler < RVGP::Base::Reconciler
+    class CsvReconciler < RVGP::Base::YamlReconciler
       attr_reader :fields_format, :csv_format, :invert_amount, :skip_lines, :trim_lines, :filter_contents
 
       def initialize(yaml)

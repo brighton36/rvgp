@@ -1,5 +1,6 @@
 AllCops:
   NewCops: enable
+  TargetRubyVersion: 3.4
 Gemspec/RequiredRubyVersion:
   Enabled: false
 Metrics/AbcSize:
@@ -14,8 +15,10 @@ Style/GuardClause:
   Enabled: false
 Metrics/CyclomaticComplexity:
   Enabled: false
+Lint/DisjunctiveAssignmentInConstructor:
+  enabled: false
 Metrics/PerceivedComplexity:
-  Max: 30
+  Max: 40
 Metrics/ParameterLists:
   Max: 15
   MaxOptionalParameters: 5

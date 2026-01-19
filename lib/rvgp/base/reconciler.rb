@@ -4,47 +4,23 @@ require_relative '../utilities'
 
 module RVGP
   module Base
-    # See {RVGP::Reconcilers} for extensive detail on the structure and function of reconciler yaml files, and
-    # reconciler functionality.
-    #
+    # TODO: Document this new, large feature
     # @attr_reader [String] label The contents of the yaml :label parameter (see above)
     # @attr_reader [String] file The full path to the reconciler yaml file this class was parsed from
-    # @attr_reader [String] output_file The contents of the yaml :output parameter (see above)
     # @attr_reader [String] input_file The contents of the yaml :input parameter (see above)
-    # @attr_reader [Date] starts_on The contents of the yaml :starts_on parameter (see above)
-    # @attr_reader [Date] ends_on The contents of the yaml :ends_on parameter (see above)
-    # @attr_reader [Hash<String, String>] balances A hash of dates (in 'YYYY-MM-DD') to commodities (as string)
-    #                                              corresponding to the balance that are expected on those dates.
-    #                                              See {RVGP::Validations::BalanceValidation} for details on this
-    #                                              feature.
+    # @attr_reader [String] output_file The contents of the yaml :output parameter (see above)
     # @attr_reader [Array<String>] disable_checks The JournalValidations that are disabled on this reconciler (see
     #                                             above)
-    # @attr_reader [String] from The contents of the yaml :from parameter (see above)
-    # @attr_reader [Array<Hash>] income_rules The contents of the yaml :income_rules parameter (see above)
-    # @attr_reader [Array<Hash>] expense_rules The contents of the yaml :expense_rules parameter (see above)
-    # @attr_reader [Array<Hash>] tag_accounts The contents of the yaml :tag_accounts parameter (see above)
-    # @attr_reader [Regexp] cash_back The contents of the :match parameter, inside the yaml's :cash_back parameter (see
-    #                                 above)
-    # @attr_reader [String] cash_back_to The contents of the :to parameter, inside the yaml's :cash_back parameter (see
-    #                                 above)
-    # @attr_reader [TrueClass,FalseClass] reverse_order The contents of the yaml :reverse_order parameter (see above)
-    # @attr_reader [String] default_currency The contents of the yaml :default_currency parameter (see above)
     class Reconciler
       include RVGP::Utilities
-
-      # This error is thrown when a reconciler yaml is missing one or more require parameters
-      class MissingFields < StandardError
-        def initialize(*args)
-          super format('One or more required keys %s, were missing in the yaml', args.map(&:inspect).join(', '))
-        end
-      end
 
       # @!visibility private
       # This class exists as an intermediary class, mostly to support the source
       # formats of both .csv and .journal files, without forcing one conform to the
       # other.
       class Posting
-        attr_accessor :line_number, :date, :effective_date, :description, :commodity, :complex_commodity, :from, :to, :tags, :targets
+        attr_accessor :line_number, :date, :effective_date, :description, :commodity, :complex_commodity, :from, :to,
+                      :tags, :targets
 
         def initialize(line_number, opts = {})
           @line_number = line_number
@@ -66,72 +42,31 @@ module RVGP
                                                  effective_date: target[:effective_date],
                                                  commodity: target[:commodity],
                                                  complex_commodity: target[:complex_commodity],
-                                                 tags: target[:tags] ? target[:tags].map(&:to_tag) : nil
+                                                 tags: target[:tags]&.map(&:to_tag)
           end
 
           RVGP::Journal::Posting.new date,
                                      description,
-                                     tags: tags ? tags.map(&:to_tag) : nil,
+                                     tags: tags&.map(&:to_tag),
                                      transfers: transfers + [RVGP::Journal::Posting::Transfer.new(from)]
         end
       end
 
-      attr_reader :label, :file, :output_file, :input_file, :starts_on, :ends_on, :balances, :disable_checks,
-                  :from, :income_rules, :expense_rules, :tag_accounts, :cash_back, :cash_back_to,
-                  :reverse_order, :default_currency
+      REQUIRED_ATTRS = %i[label file output_file input_file]
+      attr_reader(*REQUIRED_ATTRS, :disable_checks)
 
       # @!visibility private
       HEADER = ";;; %s --- Description -*- mode: ledger; -*-\n; vim: syntax=ledger"
 
-      # Create a Reconciler from the provided yaml
-      # @param [RVGP::Utilities::Yaml] yaml A file containing the settings to use in the construction of this reconciler
-      #                                   . (see above)
-      def initialize(yaml)
-        @label = yaml[:label]
-        @file = yaml.path
-        @dependencies = yaml.dependencies
-
-        @starts_on = yaml.key?(:starts_on) ? Date.strptime(yaml[:starts_on], '%Y-%m-%d') : nil
-        @ends_on = yaml.key?(:ends_on) ? Date.strptime(yaml[:ends_on], '%Y-%m-%d') : nil
-
-        missing_fields = %i[label output input from income expense].find_all { |attr| !yaml.key? attr }
-
-        raise MissingFields.new(*missing_fields) unless missing_fields.empty?
-
-        if RVGP.app
-          @output_file = RVGP.app.config.build_path format('journals/%s', yaml[:output])
-          @input_file = RVGP.app.config.project_path format('feeds/%s', yaml[:input])
-        else
-          # ATM this path is found in the test environment... possibly we should
-          # decouple RVGP.app from this class....
-          @output_file = yaml[:output]
-          @input_file = yaml[:input]
-        end
-
-        @from = yaml[:from]
-        @income_rules = yaml[:income]
-        @expense_rules = yaml[:expense]
-        @transform_commodities = yaml[:transform_commodities] || {}
-        @balances = yaml[:balances]
-        @disable_checks = yaml[:disable_checks]&.map(&:to_sym) if yaml.key?(:disable_checks)
+      # Create a Reconciler
+      def initialize(from_file)
+        @file ||= from_file
         @disable_checks ||= []
+        @dependencies ||= []
+        missing_attrs = REQUIRED_ATTRS.select { |attr| send(attr).nil? }
 
-        if yaml.key? :tag_accounts
-          @tag_accounts = yaml[:tag_accounts]
-
-          unless @tag_accounts.all? { |ta| %i[account tag].all? { |k| ta.key? k } }
-            raise StandardError, 'One or more tag_accounts entries is missing an :account or :tag key'
-          end
-        end
-
-        if yaml.key? :format
-          @default_currency = yaml[:format][:default_currency] || '$'
-          @reverse_order = yaml[:format][:reverse_order] if yaml[:format].key? :reverse_order
-
-          if yaml[:format].key?(:cash_back)
-            @cash_back = string_to_regex yaml[:format][:cash_back][:match]
-            @cash_back_to = yaml[:format][:cash_back][:to]
-          end
+        unless missing_attrs.empty?
+          raise StandardError, format('Missing required attributes %s', missing_attrs.join(','))
         end
       end
 
@@ -147,12 +82,12 @@ module RVGP
       # this is mostly (only?) used by the command objects, to resolve parameters
       def matches_argument?(str)
         str_as_file = File.expand_path str
-        (as_taskname == str ||
-        from == str ||
-        label == str ||
-        file == str_as_file ||
-        input_file == str_as_file ||
-        output_file == str_as_file)
+
+        as_taskname == str ||
+          label == str ||
+          file == str_as_file ||
+          input_file == str_as_file ||
+          output_file == str_as_file
       end
 
       # Returns the file paths that were referenced by this reconciler in one form or another.
@@ -217,7 +152,6 @@ module RVGP
             end
           end
         end
-
 
         if rule.key? :to_shorthand
           rule_key = posting.commodity.positive? ? :expense : :income
@@ -307,76 +241,6 @@ module RVGP
         end
       end
 
-      # @!visibility private
-      def postings
-        @postings ||= (reverse_order ? source_postings.reverse! : source_postings).map do |source_posting|
-          # See what rule applies to this posting:
-          rule = match_rule source_posting.commodity.positive? ? expense_rules : income_rules, source_posting
-
-          # Reconcile the posting, according to that rule:
-          Array(reconcile_posting(rule, source_posting)).flatten.compact.map do |posting|
-            tag_accounts&.each do |tag_rule|
-              # Note that we're operating under a kind of target model here, where
-              # the posting itself isnt tagged, but the targets of the posting are.
-              # This is a bit different than the reconcile_posting
-              posting.targets.each do |target|
-                # NOTE: This section should possibly DRY up with the
-                # reconcile_posting() method
-                next if yaml_rule_matches_string(tag_rule[:account_is_not], target[:to]) ||
-                        yaml_rule_matches_string(tag_rule[:from_is_not], posting.from) ||
-                        yaml_rule_matches_string(tag_rule[:account], target[:to], :!=) ||
-                        yaml_rule_matches_string(tag_rule[:from], posting.from, :!=)
-
-                target[:tags] ||= []
-                target[:tags] << tag_rule[:tag]
-              end
-            end
-
-            # And now we can convert it to the journal posting format
-            journal_posting = posting.to_journal_posting
-
-            # NOTE: Might want to return a row number here if it ever triggers:
-            raise format('Invalid Transaction found %s', journal_posting.inspect) unless journal_posting.valid?
-
-            # Cull only the transactions after the specified date:
-            next if starts_on && journal_posting.date < starts_on
-            next if ends_on && journal_posting.date > ends_on
-
-            journal_posting
-          end
-        end.flatten.compact
-      end
-
-      # @!visibility private
-      def match_rule(rules, posting)
-        rules.each_with_index do |rule, i|
-          captures = nil
-
-          if rule.key? :match
-            isnt_matching, captures = *yaml_rule_matches_string_with_capture(rule[:match], posting.description, :!=)
-            next if isnt_matching
-          end
-
-          if rule.key? :account
-            # :account was added when we added journal_reconcile
-            isnt_matching, captures = *yaml_rule_matches_string_with_capture(rule[:account], posting.to, :!=)
-            next if isnt_matching
-          end
-
-          next if yaml_rule_asserts_commodity(rule[:amount_less_than], posting.commodity, :>=) ||
-                  yaml_rule_asserts_commodity(rule[:amount_greater_than], posting.commodity, :<=) ||
-                  yaml_rule_asserts_commodity(rule[:amount_equals], posting.commodity, :!=) ||
-                  yaml_rule_matches_date(rule[:on_date], posting.date, :!=) ||
-                  (rule.key?(:before_date) && posting.date >= rule[:before_date]) ||
-                  (rule.key?(:after_date) && posting.date < rule[:after_date])
-
-          # Success, there was a match:
-          return rule.merge(index: i, captures: captures)
-        end
-
-        nil
-      end
-
       # Builds the contents of this reconcilere's output file, and returns it. This is the finished
       # product of this class
       # @return [String] a PTA journal, composed of the input_file's transactions, after all rules are applied.
@@ -384,7 +248,7 @@ module RVGP
         [HEADER % label, postings.map(&:to_ledger), ''].flatten.join("\n\n")
       end
 
-      # Writes the contents of #to_ledger, to the :output_file specified in the reconciler yaml.
+      # Writes the contents of #to_ledger, to the :output_file 
       # @return [void]
       def to_ledger!
         File.write output_file, to_ledger
@@ -401,59 +265,30 @@ module RVGP
         # Nonetheless, this code works for now. Maybe if we add another
         # driver, we can renovate it, and add some kind of registry for drivers.
 
-        Dir.glob(format('%s/app/reconcilers/*.yml', directory_path)).map do |path|
-          yaml = RVGP::Utilities::Yaml.new path, RVGP.app.config.project_path
-
-          raise MissingFields.new, :input unless yaml.key? :input
+        base = format('%s/app/reconcilers', directory_path)
+        Dir.glob(['*.yml', '*.rb'], base:).map do |filename|
+          fullpath = [base, filename].join('/')
 
           # We could probably make this a registry, though, I'd like to support
-          # web addresses eventually. So, probably this designe pattern would
+          # web addresses eventually. So, probably this design pattern would
           # have to just be reconsidered entirely around that time.
-          case File.extname(yaml[:input])
-          when '.csv' then RVGP::Reconcilers::CsvReconciler.new(yaml)
-          when '.journal' then RVGP::Reconcilers::JournalReconciler.new(yaml)
-          else
-            raise StandardError, format('Unrecognized file extension for input file "%s"', yaml[:input])
-          end
-        end
+          if File.extname(filename).downcase == '.yml'
+            YamlReconciler
+          else # .rb
+            require fullpath
+            begin
+              klass_name = string_to_classname(File.basename(filename, '.rb'))
+              const_get klass_name
+            rescue NameError
+              raise StandardError, "Missing #{klass_name} class in #{fullpath}"
+            end
+          end.all(fullpath)
+        end.flatten
       end
 
-      private
-
-      def yaml_rule_matches_string(*args)
-        yaml_rule_matches_string_with_capture(*args).first
-      end
-
-      def yaml_rule_matches_date(*args)
-        yaml_rule_matches_string_with_capture(*args) { |date| date.strftime('%Y-%m-%d') }.first
-      end
-
-      def yaml_rule_matches_string_with_capture(rule_value, target_value, operation = :==, &block)
-        return [false, nil] unless rule_value
-
-        if (matcher = string_to_regex(rule_value.to_s))
-          target_value_as_s = block_given? ? block.call(target_value) : target_value.to_s
-
-          matches = matcher.match target_value_as_s
-
-          [(operation == :== && matches) || (operation == :!= && matches.nil?),
-           matches && matches.length > 1 ? matches.named_captures.dup : nil]
-        else
-          [rule_value.send(operation, target_value), nil]
-        end
-      end
-
-      # NOTE: We compare a little unintuitively, wrt to testing the code, before testing the equivalence.
-      # this is because we may be comparing a Commodity to a ComplexCommodity. And, in that case, we can
-      # offer some asserting based on the code, by doing so.
-      def yaml_rule_asserts_commodity(rule_value, target_value, operation = :==)
-        return false unless rule_value
-
-        rule_commodity = rule_value.to_s.to_commodity
-        target_commodity = target_value.to_s.to_commodity
-
-        target_commodity.alphabetic_code != rule_commodity.alphabetic_code ||
-          target_commodity.abs.send(operation, rule_commodity)
+      # @!visibility private
+      def self.string_to_classname(str)
+        str.split(/[^a-zA-Z0-9]/).map(&:capitalize).join.to_sym
       end
     end
   end
