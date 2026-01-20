@@ -318,7 +318,7 @@ module RVGP
       # TODO Let's see where this goes before we document it... I'm not sure what we want this to be
       # yet.
       class CsvRow
-        attr_reader :date, :description, :amount, :effective_date
+        attr_accessor :date, :description, :amount, :effective_date
 
         def initialize(date: nil, description: nil, amount: nil, effective_date: nil)
           @date = date

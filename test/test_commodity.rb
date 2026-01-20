@@ -258,6 +258,18 @@ class TestCommodity < Minitest::Test
     assert_equal '0', zero.to_s
   end
 
+  def test_commodity_invert
+    one_buck = '$ 1.00'.to_commodity
+    assert_equal '$ 1.00', one_buck.to_s(precision: 2)
+
+    assert_equal '$ -1.00', one_buck.invert.to_s(precision: 2)
+    assert_equal '$ 1.00', one_buck.to_s(precision: 2)
+
+    one_buck.invert!
+    assert_equal '$ -1.00', one_buck.to_s(precision: 2)
+  end
+
+
   private
 
   def commodity(str)

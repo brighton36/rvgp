@@ -111,6 +111,10 @@ module RVGP
         @yaml&.key? attr
       end
 
+      def to_h
+        @yaml.to_h
+      end
+
       alias has_key? key?
 
       private

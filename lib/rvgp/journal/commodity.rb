@@ -153,6 +153,12 @@ module RVGP
         self
       end
 
+      # Return a copy of self, with quantity multiplied by -1
+      # @return [RVGP::Journal::Commodity] self, after the transformation is applied
+      def invert
+        self.dup.tap(&:invert!)
+      end
+
       # Returns a copy of the current Commodity, with the absolute value of quanity.
       # @return [RVGP::Journal::Commodity] self, with quantity.abs applied
       def abs

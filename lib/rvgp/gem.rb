@@ -48,6 +48,7 @@ module RVGP
           s.add_dependency 'bigdecimal'
           s.add_dependency 'ostruct'
           s.add_dependency 'pstore'
+          s.add_dependency 'reline'
           s.add_dependency 'open3', '~> 0.2.1'
           s.add_dependency 'shellwords', '~> 0.2.0'
           s.add_dependency 'google-apis-sheets_v4', '~> 0.41.0'

@@ -89,13 +89,21 @@ module RVGP
       # @param [Date] date see {Posting#date}
       # @param [String] description see {Posting#description}
       # @param [Hash] opts Additional parts of this Posting
-      # @option opts [Array<RVGP::Journal::Posting::Transfer>] transfers see {Posting#transfers}
+      # @option opts [Array<RVGP::Journal::Posting::Transfer>, Array] transfers See
+      # {Posting#transfers}. NOTE: If an array is passed, it's feed as arguments to the
+      # {Posting::Transfer#initialize} constructor
       # @option opts [Array<RVGP::Journal::Posting::Tag>] tags see {Posting#transfers}
       def initialize(date, description, opts = {})
         @line_number = opts[:line_number]
         @date = date
         @description = description
-        @transfers = opts.key?(:transfers) ? opts[:transfers] : []
+        @transfers = if opts.key?(:transfers)
+                       opts[:transfers].map do |transfer|
+                         transfer.is_a?(Array) ? Journal::Posting::Transfer.new(*transfer) : transfer
+                       end
+                     else
+                       []
+                     end
         @tags = opts.key?(:tags) ? opts[:tags] : []
       end
 
