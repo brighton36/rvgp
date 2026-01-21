@@ -88,7 +88,7 @@ module RVGP
           end
         end
 
-        @input_format = yaml[:format].to_h || {}
+        @input_format = yaml[:format].to_h
         @input_format[:default_currency] || '$'
 
         cash_back = @input_format.delete(:cash_back)

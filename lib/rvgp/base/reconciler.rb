@@ -61,15 +61,16 @@ module RVGP
       HEADER = ";;; %s --- Description -*- mode: ledger; -*-\n; vim: syntax=ledger"
 
       # Create a Reconciler
-      def initialize(file, label: nil, taskname: nil, dependencies: nil, disable_checks: nil)
+      def initialize(file, label: nil, disable_checks: nil, dependencies: nil, taskname: nil,
+                     input_file: nil, output_file: nil)
         @file ||= file
         @label ||= label
         @disable_checks ||= disable_checks || []
         @dependencies ||= dependencies || []
         @taskname ||= taskname || File.basename(file, File.extname(file)).tr('^a-z0-9', '-')
 
-        @input_file ||= RVGP.app.config.project_path format('feeds/%s', taskname)
-        @output_file ||= RVGP.app.config.build_path format('journals/%s.journal', taskname)
+        @input_file ||= input_file || RVGP.app.config.project_path(format('feeds/%s.csv', taskname))
+        @output_file ||= output_file || RVGP.app.config.build_path(format('journals/%s.journal', taskname))
         missing_attrs = REQUIRED_ATTRS.select { |attr| send(attr).nil? }
 
         unless missing_attrs.empty?
