@@ -20,6 +20,8 @@ module RVGP
     # @attr_reader [Array<RVGP::Journal::Posting::Transfer>] transfers An array of transfers, that apply to this
     #                                                                  posting.
     # @attr_reader [Array<RVGP::Journal::Posting::Tag>] tags An array of tags, that apply to this posting.
+    # @attr_reader [Array<String>] comments An array of strings, that represent lines of comments to
+    # apply to the posting.
     class Posting
       # This class represents an indented 'transfer' line, within a posting.
       # Typically, such lines takes the form of :
@@ -83,7 +85,7 @@ module RVGP
         end
       end
 
-      attr :line_number, :date, :description, :transfers, :tags
+      attr :line_number, :date, :description, :transfers, :tags, :comments
 
       # Create a posting, from constituent parts
       # @param [Date] date see {Posting#date}
@@ -93,6 +95,7 @@ module RVGP
       # {Posting#transfers}. NOTE: If an array is passed, it's feed as arguments to the
       # {Posting::Transfer#initialize} constructor
       # @option opts [Array<RVGP::Journal::Posting::Tag>] tags see {Posting#transfers}
+      # @option opts [Array<String>] comments see {Posting#comments}
       def initialize(date, description, opts = {})
         @line_number = opts[:line_number]
         @date = date
@@ -105,6 +108,7 @@ module RVGP
                        []
                      end
         @tags = opts.key?(:tags) ? opts[:tags] : []
+        @comments = opts.key?(:comments) ? opts[:comments] : []
       end
 
       # Indicates whether or not this instance contains all required fields
@@ -121,8 +125,11 @@ module RVGP
           transfer.commodity || transfer.complex_commodity ? transfer.account.length : 0
         end.max
 
-        lines = [[date, description].join(' ')]
-        lines.insert(lines.length > 1 ? -2 : 1, format('  ; %s', tags.join(', '))) if tags && !tags.empty?
+        lines = [
+          [date, description].join(' '),
+          comments && !comments.empty? ? comments.map { |comment| format('  ; %s', comment) } : nil,
+          tags && !tags.empty? ? format('  ; %s', tags.join(', ')) : nil
+        ].compact.flatten
         lines += transfers.map do |transfer|
           [
             if transfer.commodity || transfer.complex_commodity

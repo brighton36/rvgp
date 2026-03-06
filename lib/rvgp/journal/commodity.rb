@@ -145,6 +145,12 @@ module RVGP
       def negative?
         quantity.negative?
       end
+      
+      # Returns whether or not the quantity is zero.
+      # @return [TrueClass,FalseClass] yes or no
+      def zero?
+        quantity.zero?
+      end
 
       # Multiply the quantity by -1. This mutates the state of self.
       # @return [RVGP::Journal::Commodity] self, after the transformation is applied

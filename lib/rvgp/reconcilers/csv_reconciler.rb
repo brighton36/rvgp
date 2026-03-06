@@ -315,19 +315,7 @@ module RVGP
     # :format section of this reconciler, which are documented in {RVGP::Reconcilers} under the
     # 'CSV specific format parameters' section.
     class CsvReconciler < RVGP::Base::YamlReconciler
-      # TODO Let's see where this goes before we document it... I'm not sure what we want this to be
-      # yet.
-      class CsvRow
-        attr_accessor :date, :description, :amount, :effective_date
-
-        def initialize(date: nil, description: nil, amount: nil, effective_date: nil)
-          @date = date
-          @description = description
-          @amount = amount
-          @effective_date = effective_date
-        end
-      end
-
+      # @!visibility private
       def initialize(yaml)
         super
 
@@ -380,24 +368,28 @@ module RVGP
 
           parse_options = csv_headers ? { headers: csv_headers } : {}
 
-          ret = CSV.parse(
+          ret = CsvObject.from_string(
             filter_contents&.call({ contents: contents }.merge({ path: })) || contents,
-            **parse_options
-          ).map do |csv_row|
-            # Set the object values, return the reconciled row:
-            attrs = fields.collect do |field, formatter|
-              # TODO: I think we can stick formatter as a key, if it's a string, or int
-              [field.to_sym, formatter.respond_to?(:call) ? formatter.call(row: csv_row) : csv_row[field]]
-            end.compact.to_h
+            **parse_options,
+            decorator: proc {
+              # Set the object values, return the reconciled row:
+              attrs = fields.collect do |field, formatter|
+                # TODO: I think we can stick formatter as a key, if it's a string, or int
+                [field.to_sym, formatter.respond_to?(:call) ? formatter.call(row: self) : self.send(field)]
+              end.compact.to_h
 
-            unless attrs[:amount].is_a?(RVGP::Journal::ComplexCommodity) ||
-                   attrs[:amount].is_a?(RVGP::Journal::Commodity)
-              attrs[:amount] = RVGP::Journal::Commodity.from_symbol_and_amount(default_currency, attrs[:amount])
-            end
-            attrs[:amount].invert! if invert_amount
+              unless attrs[:amount].is_a?(RVGP::Journal::ComplexCommodity) ||
+                    attrs[:amount].is_a?(RVGP::Journal::Commodity)
+                attrs[:amount] = RVGP::Journal::Commodity.from_symbol_and_amount(default_currency, attrs[:amount])
+              end
+              attrs[:amount].invert! if invert_amount
 
-            CsvRow.new(**attrs)
-          end
+              @date = attrs[:date]
+              @description = attrs[:description]
+              @amount = attrs[:amount]
+              @effective_date = attrs[:effective_date]
+            }
+          )
 
           reverse_order ? ret.reverse : ret
         end

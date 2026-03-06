@@ -4,6 +4,51 @@ module RVGP
   # This module contains helper methods used throughout RVGP. These are just common
   # codepaths, that have little in common, save for their general utility.
   module Utilities
+    class CsvObject
+      HEADER_SPLITTER = /(?:[A-Z]?[a-z]+|[A-Z]+)/
+
+      def initialize(row, &)
+        if row.is_a? Array
+          @row = row
+        else
+          row.each_pair { |attr, val| instance_variable_set "@#{snake_case(attr)}", val unless attr.nil? }
+        end
+        instance_eval(&) if block_given?
+      end
+
+      def [](num)
+        @row[num]
+      end
+
+      def method_missing(sym, *_args, &)
+        instance_variable_defined?("@#{sym}") ? instance_variable_get("@#{sym}") : super
+      end
+
+      def respond_to_missing?(sym, include_priv)
+        instance_variable_defined?("@#{sym}") || super
+      end
+
+      def snake_case(str)
+        str.scan(HEADER_SPLITTER).map(&:downcase).join('_')
+      end
+
+      class << self
+        def from_file(path, **)
+          transform_rows [:read, path], **
+        end
+
+        def from_string(str, **)
+          transform_rows [:parse, str], **
+        end
+
+        private
+
+        def transform_rows(csv_send, decorator: nil, reverse: false, **)
+          CSV.send(*csv_send, **).map { |row| new(row, &decorator) }.tap { |rows| rows.reverse! if reverse }
+        end
+      end
+    end
+
     # This returns each month in a series from the first date, to the last, in the
     # provided array of dates
     # @overload months_through(date, ...)

@@ -47,4 +47,26 @@ class TestPosting < Minitest::Test
                   '  Personal:Assets:Vanguard:MoneyMarket'].join("\n"),
                  posting.to_ledger
   end
+
+  def test_posting_with_comment_to_ledger
+    posting = RVGP::Journal::Posting.new(
+      Date.new(2026, 2, 28),
+      'Basic Posting',
+      comments: ['Row One', 'Row Two'],
+      tags: ['Basics: Food'.to_tag],
+      transfers: [
+        ['Expenses:Groceries', { commodity: '$ 10.00'.to_commodity }],
+        ['Cash']
+      ].collect { |args| RVGP::Journal::Posting::Transfer.new(*args) }
+    )
+
+    assert_equal [
+      '2026-02-28 Basic Posting',
+      '  ; Row One',
+      '  ; Row Two',
+      '  ; Basics: Food',
+      '  Expenses:Groceries    $ 10.00',
+      '  Cash'
+    ].join("\n"), posting.to_ledger
+  end
 end
