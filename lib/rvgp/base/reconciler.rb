@@ -4,7 +4,6 @@ require_relative '../utilities'
 
 module RVGP
   module Base
-    # TODO: Document this new, large feature
     # @attr_reader [String] label The contents of the yaml :label parameter (see above)
     # @attr_reader [String] file The full path to the reconciler yaml file this class was parsed from
     # @attr_reader [String] input_file The contents of the yaml :input parameter (see above)
@@ -55,8 +54,7 @@ module RVGP
       end
 
       REQUIRED_ATTRS = %i[taskname label file output_file input_file]
-      attr_reader(*REQUIRED_ATTRS, :disable_checks)
-      attr_reader :input_options
+      attr_reader(*REQUIRED_ATTRS, :disable_checks, :input_options)
 
       # @!visibility private
       HEADER = ";;; %s --- Description -*- mode: ledger; -*-\n; vim: syntax=ledger"

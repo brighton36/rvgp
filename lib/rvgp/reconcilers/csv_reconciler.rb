@@ -42,7 +42,7 @@ module RVGP
   # label: "Personal AcmeBank:Checking (2023)"
   # input: 2023-personal-basic-checking.csv
   # output: 2023-personal-basic-checking.journal
-  # format:
+  # input_options:
   #   csv_headers: true
   #   fields:
   #     date: !!proc Date.strptime(row['Date'], '%m/%d/%Y')
@@ -66,7 +66,7 @@ module RVGP
   # - **output** [String] - The filename to output in the project's 'build/journals' directory.
   # - **starts_on** [String] - A cut-off date, before which, transactions in the input file are ignored. Date is
   #                          expected to be provided in YYYY-MM-DD format.
-  # - **format** [Hash] - This section defines the logic used to decode a csv into fields. Typically, this section is
+  # - **input_options** [Hash] - This section defines the logic used to decode a csv into fields. Typically, this section is
   #   shared between multiple reconcilers by way of an 'include' directive, to a file in your
   #   config/ directory. More on this below.<br><br>
   #   Note the use of the !!proc directive. These values are explained in the 'Special yaml features'
@@ -115,8 +115,8 @@ module RVGP
   #   this feature came out, so, I'm disinclined to document it for now. If there's an interest in this feature, I can
   #   stabilize it's support, and better document it.
   #
-  # ## Understanding 'format' parameters
-  # The format section applies rules to the parsing of the input file. Some of these parameters are
+  # ## Understanding 'input_options' parameters
+  # The input_options section applies rules to the parsing of the input file. Some of these parameters are
   # specific to the format of the input file. These rules are typically specific to a financial instution's specific
   # output formatting. And are typically shared between multiple reconciler files in the form of an
   # !!include directive (see below).
@@ -281,12 +281,12 @@ module RVGP
   # some of the fields outlined above.
   # - <b>!!include</b> [String] - Include another yaml file, in place of this directive. The file is expected to be
   #   provided, immediately followed by this declaration (separated by a space). It's common to see this directive
-  #   used as a shortcut to shared :format sections. But, these can be used almost anywhere. Here's an example:
+  #   used as a shortcut to shared :input_options sections. But, these can be used almost anywhere. Here's an example:
   #
   #         ...
   #         from: "Personal:Assets:AcmeBank:Checking"
   #         label: "Personal AcmeBank:Checking (2023)"
-  #         format: !!include config/csv-format-acmebank.yml
+  #         input_options: !!include config/csv-format-acmebank.yml
   #         ...
   # - <b>!!proc</b> [String] - Convert the contents of the text following this directive, into a Proc object. It'
   #   common to see this directive used in the format section of a reconciler yaml. Here's an example:
@@ -312,23 +312,24 @@ module RVGP
   #   files)
   module Reconcilers
     # This reconciler is instantiated for input files of type csv. Additional parameters are supported in the
-    # :format section of this reconciler, which are documented in {RVGP::Reconcilers} under the
+    # :input_options section of this reconciler, which are documented in {RVGP::Reconcilers} under the
     # 'CSV specific format parameters' section.
     class CsvReconciler < RVGP::Base::YamlReconciler
+
       # @!visibility private
       def initialize(yaml)
         super
 
-        missing_fields = if input_format
-                           if input_format.key?(:fields)
+        missing_fields = if input_options
+                           if input_options.key?(:fields)
                              %i[date amount description].map do |attr|
-                               format('format/fields/%s', attr) unless input_format[:fields].key?(attr)
+                               format('input_options/fields/%s', attr) unless input_options[:fields].key?(attr)
                              end.compact
                            else
-                             ['format/fields']
+                             ['input_options/fields']
                            end
                          else
-                           ['format']
+                           ['input_options']
                          end
 
         raise MissingFields.new(*missing_fields) unless missing_fields.empty?
@@ -338,60 +339,29 @@ module RVGP
         include RVGP::Utilities
 
         # Mostly this is a class method, to make testing easier
-        def path_to_rows(path, fields:, encoding: nil, trim_lines: nil, default_currency: nil,
-                         skip_lines: nil, filter_contents: nil, csv_headers: nil, invert_amount: false,
-                         reverse_order: false)
-          contents = File.read path, **(encoding ? { encoding: } : {})
+        def path_to_rows(path, fields:, default_currency: nil, invert_amount: false,
+                         csv_headers: nil, reverse_order: false, **parse_options)
+          # TODO: Rename these keys wherever they are and remove these two lines
+          parse_options[:headers] = csv_headers
+          parse_options[:reverse] = reverse_order
 
-          start_offset = 0
-          end_offset = contents.length
-
-          if trim_lines
-            trim_lines_regex = string_to_regex trim_lines.to_s
-            trim_lines_regex ||= /(?:[^\n]*\n?){0,#{trim_lines}}\Z/m
-            match = trim_lines_regex.match contents
-            end_offset = match.begin 0 if match
-            return String.new if end_offset.zero?
-          end
-
-          if skip_lines
-            skip_lines_regex = string_to_regex skip_lines.to_s
-            skip_lines_regex ||= /(?:[^\n]*\n){0,#{skip_lines}}/m
-            match = skip_lines_regex.match contents
-            start_offset = match.end 0 if match
-          end
-
-          # If our cursors overlapped, that means we're just returning an empty string
-          return String.new if end_offset < start_offset
-
-          contents = contents[start_offset..(end_offset - 1)]
-
-          parse_options = csv_headers ? { headers: csv_headers } : {}
-
-          ret = CsvObject.from_string(
-            filter_contents&.call({ contents: contents }.merge({ path: })) || contents,
+          CsvObject.from_file(
+            path,
             **parse_options,
-            decorator: proc {
-              # Set the object values, return the reconciled row:
-              attrs = fields.collect do |field, formatter|
-                # TODO: I think we can stick formatter as a key, if it's a string, or int
-                [field.to_sym, formatter.respond_to?(:call) ? formatter.call(row: self) : self.send(field)]
-              end.compact.to_h
+            decorator: proc do
+              %i[date description amount effective_date].each do |attr|
+                next unless fields[attr].respond_to?(:call)
 
-              unless attrs[:amount].is_a?(RVGP::Journal::ComplexCommodity) ||
-                    attrs[:amount].is_a?(RVGP::Journal::Commodity)
-                attrs[:amount] = RVGP::Journal::Commodity.from_symbol_and_amount(default_currency, attrs[:amount])
+                instance_variable_set "@#{attr}", fields[attr].call(row: self)
               end
-              attrs[:amount].invert! if invert_amount
 
-              @date = attrs[:date]
-              @description = attrs[:description]
-              @amount = attrs[:amount]
-              @effective_date = attrs[:effective_date]
-            }
+              unless @amount.is_a?(RVGP::Journal::ComplexCommodity) || @amount.is_a?(RVGP::Journal::Commodity)
+                @amount = RVGP::Journal::Commodity.from_symbol_and_amount(default_currency, @amount)
+              end
+
+              @amount.invert! if invert_amount
+            end
           )
-
-          reverse_order ? ret.reverse : ret
         end
       end
 
@@ -401,11 +371,11 @@ module RVGP
       # some remedial parsing before rule application, as well as reversing the order
       # which, is needed for the to_shorthand to run in sequence.
       def source_postings
-        self.class.path_to_rows(input_file, **input_format).map.with_index do |tx, i|
+        self.class.path_to_rows(input_file, **input_options).map.with_index do |tx, i|
           RVGP::Base::Reconciler::Posting.new(
             i + 1,
             date: tx.date,
-            effective_date: tx.effective_date,
+            effective_date: tx.respond_to?(:effective_date) ? tx.effective_date : nil,
             description: tx.description,
             commodity: transform_commodity(tx.amount),
             from: from

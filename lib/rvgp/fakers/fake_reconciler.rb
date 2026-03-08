@@ -15,11 +15,11 @@ module RVGP
           reverse_order: true
           default_currency: $
           fields:
-            date: !!proc Date.strptime(row['Date'], '%m/%d/%Y')
+            date: !!proc Date.strptime(row.date, '%m/%d/%Y')
             amount: !!proc >
-              withdrawal, deposit = row[3..4].collect {|a| a.to_commodity unless a.empty?};
+              withdrawal, deposit = [row.withdrawal, row.deposit].collect {|a| a.to_commodity unless a.empty?};
               ( deposit ? deposit.invert! : withdrawal ).quantity_as_s
-            description: !!proc row['Description']
+            description: !!proc row.description
         FORMAT_TEMPLATE
 
         # @!visibility private

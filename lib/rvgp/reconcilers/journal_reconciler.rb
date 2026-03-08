@@ -35,7 +35,7 @@ module RVGP
                                                 to: transfer.account
           end
         end.flatten
-        input_format[:reverse_order] ? ret.reverse : ret
+        input_options[:reverse_order] ? ret.reverse : ret
       end
     end
   end

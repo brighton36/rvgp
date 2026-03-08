@@ -5,6 +5,8 @@ module RVGP
   # codepaths, that have little in common, save for their general utility.
   module Utilities
     class CsvObject
+      # TODO Let's see where this object before we document it... I'm not sure what we want this to be
+      # yet.
       HEADER_SPLITTER = /(?:[A-Z]?[a-z]+|[A-Z]+)/
 
       def initialize(row, &)
@@ -33,18 +35,43 @@ module RVGP
       end
 
       class << self
-        def from_file(path, **)
-          transform_rows [:read, path], **
+        include RVGP::Utilities
+
+        def from_file(path, encoding: nil, **)
+          from_string(File.read(path, encoding:), **)
         end
 
-        def from_string(str, **)
-          transform_rows [:parse, str], **
+        def from_string(str, decorator: nil, skip_lines: nil, trim_lines: nil, reverse: false, **)
+          CSV.parse(skip_and_trim(str, skip_lines:, trim_lines:), **)
+             .map { |row| new(row, &decorator) }
+             .tap { |rows| rows.reverse! if reverse }
         end
 
         private
 
-        def transform_rows(csv_send, decorator: nil, reverse: false, **)
-          CSV.send(*csv_send, **).map { |row| new(row, &decorator) }.tap { |rows| rows.reverse! if reverse }
+        def skip_and_trim(str, skip_lines: nil, trim_lines: nil)
+          start_offset = 0
+          end_offset = str.length
+
+          if trim_lines
+            trim_lines_regex = string_to_regex trim_lines.to_s
+            trim_lines_regex ||= /(?:[^\n]*\n?){0,#{trim_lines}}\Z/m
+            match = trim_lines_regex.match str
+            end_offset = match.begin 0 if match
+            return String.new if end_offset.zero?
+          end
+
+          if skip_lines
+            skip_lines_regex = string_to_regex skip_lines.to_s
+            skip_lines_regex ||= /(?:[^\n]*\n){0,#{skip_lines}}/m
+            match = skip_lines_regex.match str
+            start_offset = match.end 0 if match
+          end
+
+          # If our cursors overlapped, that means we're just returning an empty string
+          return '' if end_offset < start_offset
+
+          str[start_offset..(end_offset - 1)]
         end
       end
     end
