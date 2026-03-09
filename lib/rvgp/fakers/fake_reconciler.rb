@@ -11,8 +11,8 @@ module RVGP
 
         # @!visibility private
         DEFAULT_FORMAT = <<~FORMAT_TEMPLATE
-          csv_headers: true
-          reverse_order: true
+          headers: true
+          reverse: true
           default_currency: $
           fields:
             date: !!proc Date.strptime(row.date, '%m/%d/%Y')

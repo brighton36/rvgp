@@ -43,7 +43,7 @@ module RVGP
   # input: 2023-personal-basic-checking.csv
   # output: 2023-personal-basic-checking.journal
   # input_options:
-  #   csv_headers: true
+  #   headers: true
   #   fields:
   #     date: !!proc Date.strptime(row['Date'], '%m/%d/%Y')
   #     amount: !!proc row['Amount']
@@ -133,7 +133,7 @@ module RVGP
   # - **encoding** [String] - This parameter is passed to the :encoding parameter of File.read, during the parsing of
   #   the supplied input file. This can be used to prevent CSV::MalformedCSVError in cases such as a bom encoded
   #   input file.
-  # - **csv_headers** [bool] (default: false) - Whether or not the first row of the input file, contains column headers
+  # - **headers** [bool] (default: false) - Whether or not the first row of the input file, contains column headers
   #   for the rows that follow.
   # - **skip_lines** [Integer, String] - This option will direct the reconciler to skip over lines at the beginning of
   #   the input file. This can be specified either as a number, which indicates the number of lines to ignore. Or,
@@ -151,7 +151,7 @@ module RVGP
   # ### CSV and Journal file format parameters
   # These parameters are available to both .journal as well as .csv files.
   # - **default_currency** [String] (default: '$') - A currency to default amount's to, if a currency isn't specified
-  # - **reverse_order** [bool] (default: false) - Whether to output transactions in the opposite order of how they were
+  # - **reverse** [bool] (default: false) - Whether to output transactions in the opposite order of how they were
   #   encoded in the input file.
   # - **cash_back** [Hash] - This feature enables you to match transaction descriptions for a cash back indication and
   #   amount, and to break that component of the charge into a separate account. The valid keys in this hash are
@@ -335,19 +335,18 @@ module RVGP
         raise MissingFields.new(*missing_fields) unless missing_fields.empty?
       end
 
-      class << self
-        include RVGP::Utilities
+      private
 
-        # Mostly this is a class method, to make testing easier
-        def path_to_rows(path, fields:, default_currency: nil, invert_amount: false,
-                         csv_headers: nil, reverse_order: false, **parse_options)
-          # TODO: Rename these keys wherever they are and remove these two lines
-          parse_options[:headers] = csv_headers
-          parse_options[:reverse] = reverse_order
+      # We actually returned semi-reconciled transactions here. That lets us do
+      # some remedial parsing before rule application, as well as reversing the order
+      # which, is needed for the to_shorthand to run in sequence.
+      def source_postings
+        csv_options = input_options.dup
+        fields = csv_options.delete(:fields)
+        default_currency = csv_options.delete(:default_currency)
+        invert_amount = csv_options.delete(:invert_amount)
 
-          CsvObject.from_file(
-            path,
-            **parse_options,
+        CsvObject.from_file(input_file, **csv_options,
             decorator: proc do
               %i[date description amount effective_date].each do |attr|
                 next unless fields[attr].respond_to?(:call)
@@ -360,18 +359,7 @@ module RVGP
               end
 
               @amount.invert! if invert_amount
-            end
-          )
-        end
-      end
-
-      private
-
-      # We actually returned semi-reconciled transactions here. That lets us do
-      # some remedial parsing before rule application, as well as reversing the order
-      # which, is needed for the to_shorthand to run in sequence.
-      def source_postings
-        self.class.path_to_rows(input_file, **input_options).map.with_index do |tx, i|
+            end).map.with_index do |tx, i|
           RVGP::Base::Reconciler::Posting.new(
             i + 1,
             date: tx.date,

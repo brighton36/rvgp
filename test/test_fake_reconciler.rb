@@ -38,7 +38,7 @@ class TestFakeReconciler < Minitest::Test
       expense: expenses
     )
 
-    assert_equal true, reconciler['format']['csv_headers']
+    assert_equal true, reconciler['format']['headers']
     assert_equal true, reconciler['format']['reverse_order']
     assert_equal '$', reconciler['format']['default_currency']
     assert_equal %w[date amount description], reconciler['format']['fields'].keys

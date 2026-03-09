@@ -9,12 +9,8 @@ module RVGP
     class JournalReconciler < RVGP::Base::YamlReconciler
       private
 
-      def journal
-        RVGP::Journal::PtaFile.parse File.read(input_file)
-      end
-
       def source_postings
-        ret = journal.postings.map do |posting|
+        ret = RVGP::Journal::PtaFile.parse(File.read(input_file)).postings.map do |posting|
           unless posting.transfers.first.commodity && posting.transfers.last.commodity.nil?
             raise StandardError, format('Unimplemented posting on: %<file>s:%<line_no>d',
                                         file: input_file, line_no: posting.line_number)
@@ -35,7 +31,8 @@ module RVGP
                                                 to: transfer.account
           end
         end.flatten
-        input_options[:reverse_order] ? ret.reverse : ret
+
+        input_options[:reverse] ? ret.reverse : ret
       end
     end
   end

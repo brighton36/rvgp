@@ -30,7 +30,7 @@ module RVGP
     #   to either a 'string' type (indicating which column of the input file contains the key's value). An Integer
     #   (indicating which column offset contains the key's value). Or, a Proc (which executes for every row in the
     #   input file, and whose return value will be used)
-    # @option input_options [Boolean] csv_headers True if the first row of the provided csv contains field
+    # @option input_options [Boolean] headers True if the first row of the provided csv contains field
     # header names
     # @option input_options [Boolean] invert_amount Whether or not to multiple the :amount field by negative one.
     # @option input_options [<Regexp, Integer>] skip_lines Given a regex, the input file will discard the match for the
@@ -42,7 +42,7 @@ module RVGP
     # @option input_options [<Proc>] filter_contents A procedure, provided in the yaml, that is used to modify the csv
     #   contents.
     # @option input_options [String] default_currency The contents of the yaml :default_currency parameter (see above)
-    # @option input_options [Boolean] reverse_order The contents of the yaml :reverse_order parameter (see above)
+    # @option input_options [Boolean] reverse The contents of the yaml :reverse parameter (see above)
     class YamlReconciler < RVGP::Base::Reconciler
       # This error is thrown when a reconciler yaml is missing one or more require parameters
       class MissingFields < StandardError
