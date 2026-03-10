@@ -1,5 +1,5 @@
-csv_headers: true
-reverse_order: true
+headers: true
+reverse: true
 default_currency: $
 fields:
   date: !!proc Date.strptime(row['Date'], '%m/%d/%Y')

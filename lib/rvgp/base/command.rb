@@ -83,9 +83,8 @@ module RVGP
       # re-implementing the wheel.
       class ReconcilerTarget < RVGP::Base::Command::Target
         # Create a new ReconcilerTarget
-        # @param [RVGP::Base::Reconciler] reconciler An instance of either {RVGP::Reconcilers::CsvReconciler}, or
-        #                                             {RVGP::Reconcilers::JournalReconciler}, to use as the basis
-        #                                             for this target.
+        # @param [RVGP::Base::Reconciler] reconciler An instance of either {RVGP::Base::Reconciler}, to use as the basis
+        #                                            for this target.
         def initialize(reconciler)
           super reconciler.taskname, reconciler.label
           @reconciler = reconciler

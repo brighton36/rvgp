@@ -3,13 +3,12 @@
 require_relative 'rvgp/utilities/yaml'
 require_relative 'rvgp/application'
 require_relative 'rvgp/commands'
+require_relative 'rvgp/journal/currency'
 require_relative 'rvgp/base/reconciler'
-require_relative 'rvgp/base/yaml_reconciler'
+require_relative 'rvgp/reconcilers/yaml_reconciler'
 
 # NOTE: Reconcilers & shorthand may want to go into a registry system at
 # some point, akin to grids/validations.
-require_relative 'rvgp/reconcilers/csv_reconciler'
-require_relative 'rvgp/reconcilers/journal_reconciler'
 require_relative 'rvgp/reconcilers/shorthand/mortgage'
 require_relative 'rvgp/reconcilers/shorthand/investment'
 require_relative 'rvgp/reconcilers/shorthand/international_atm'

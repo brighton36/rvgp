@@ -57,8 +57,7 @@ module RVGP
         end
 
         # Create a new RotateYear::Target
-        # @param [RVGP::Base::Reconciler] reconciler An instance of either {RVGP::Reconcilers::CsvReconciler}, or
-        #                                             {RVGP::Reconcilers::JournalReconciler}, to use as the basis
+        # @param [RVGP::Base::Reconciler] reconciler An instance of {RVGP::Reconcilers::YamlReconciler}, to use as the basis
         #                                             for this target.
         def initialize(reconciler)
           super reconciler.taskname, reconciler.label

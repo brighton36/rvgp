@@ -147,7 +147,7 @@ module RVGP
                        label: format('Personal AcmeBank:Checking (%<year>s)', year: year),
                        input_path: format('%<year>d-personal-basic-checking.csv', year: year),
                        output_path: format('%<year>d-personal-basic-checking.journal', year: year),
-                       format_path: 'config/csv-format-acme-checking.yml',
+                       input_options_path: 'config/csv-format-acme-checking.yml',
                        income: [{ match: '/\AAmerican Express/', to: 'Personal:Liabilities:AmericanExpress' }] +
                                income_companies.map do |company|
                                  { 'match' => format('/%s/', company),

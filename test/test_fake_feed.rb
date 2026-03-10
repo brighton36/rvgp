@@ -211,14 +211,15 @@ class TestFakeFeed < Minitest::Test
     yaml_file = Tempfile.open %w[rvgp_test .yaml]
 
     yaml_file.write RVGP::Fakers::FakeReconciler.basic_checking(
-      **{ label: 'Personal AcmeBank:Checking',
-          input_path: feed_file.path,
-          output_path: journal_file.path }.merge(reconciler_opts)
+      **reconciler_opts,
+      label: 'Personal AcmeBank:Checking',
+      input_path: feed_file.path,
+      output_path: journal_file.path
     )
 
     yaml_file.close
 
-    RVGP::Reconcilers::CsvReconciler.new(RVGP::Utilities::Yaml.new(yaml_file.path)).to_ledger
+    RVGP::Reconcilers::YamlReconciler.new(RVGP::Utilities::Yaml.new(yaml_file.path)).to_ledger
   ensure
     [feed_file, yaml_file, journal_file].each do |f|
       f.close

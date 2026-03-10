@@ -51,12 +51,12 @@ module RVGP
           targets << { to: additional_from, commodity: reported_amount.dup.invert! } if additional_from
 
           # Additional target:
-          RVGP::Base::Reconciler::Posting.new from_posting.line_number,
-                                              date: from_posting.date,
-                                              description: from_posting.description,
-                                              from: from_posting.from,
-                                              tags: from_posting.tags,
-                                              targets: targets
+          RVGP::Reconcilers::YamlReconciler::Posting.new from_posting.line_number,
+                                                         date: from_posting.date,
+                                                         description: from_posting.description,
+                                                         from: from_posting.from,
+                                                         tags: from_posting.tags,
+                                                         targets: targets
         end
       end
     end

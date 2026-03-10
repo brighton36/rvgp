@@ -26,7 +26,7 @@ module RVGP
         BASIC_CHECKING_FEED = <<~FEED_TEMPLATE
           from: "%<from>s"
           label: "%<label>s"
-          format: %<format>s
+          input_options: %<input_options>s
           input: %<input_path>s
           output: %<output_path>s
           balances:
@@ -40,7 +40,7 @@ module RVGP
         # Generates a basic reconciler, for use in reconciling a basic_checking feed
         # @param from [String] The from parameter to write into our yaml
         # @param label [String] The label parameter to write into our yaml
-        # @param format_path [String] A path to the format yaml, for use in the format parameter of our yaml
+        # @param input_options_path [String] A path to the input_options yaml, for use in the input_options parameter of our yaml
         # @param input_path [String] A path to the input feed, for use in the input parameter of our yaml
         # @param output_path [String] A path to the output journal, for use in the output parameter of our yaml
         # @param income [Array] An array of hashes, containing the income rules, to write into our yaml
@@ -48,21 +48,20 @@ module RVGP
         # @return [String] A YAML file, containing the generated reconciler
         def basic_checking(from: 'Personal:Assets:AcmeBank:Checking',
                            label: nil,
-                           format_path: nil,
+                           input_options_path: nil,
                            input_path: nil,
                            output_path: nil,
                            income: nil,
                            expense: nil)
-
           raise StandardError if [from, label, input_path, output_path].any?(&:nil?)
 
-          format = "!!include #{format_path}" if format_path
-          format ||= format("\n%s", DEFAULT_FORMAT.gsub(/^/, '  ').chomp)
+          input_options = "!!include #{input_options_path}" if input_options_path
+          input_options ||= format("\n%s", DEFAULT_FORMAT.gsub(/^/, '  ').chomp)
 
           format BASIC_CHECKING_FEED,
                  from: from,
                  label: label,
-                 format: format,
+                 input_options: input_options,
                  input_path: input_path,
                  output_path: output_path,
                  income: hashes_to_yaml_array(

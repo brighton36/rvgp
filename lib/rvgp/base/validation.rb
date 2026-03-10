@@ -164,7 +164,7 @@ module RVGP
 
     # A base class, from which your journal validations should inherit. For more information on validations, and your
     # options, see the documentation notes on {RVGP::Base::JournalValidation}.
-    # @attr_reader [RVGP::Reconcilers::CsvReconciler,RVGP::Reconcilers::JournalReconciler] reconciler
+    # @attr_reader [RVGP::Base::Reconciler] reconciler
     #   The reconciler whose output will be inspected by this journal validation instance.
     class JournalValidation < Validation
       include RVGP::Application::DescendantRegistry
@@ -174,7 +174,7 @@ module RVGP
       attr_reader :reconciler
 
       # Create a new Journal Validation
-      # @param [RVGP::Reconcilers::CsvReconciler,RVGP::Reconcilers::JournalReconciler] reconciler
+      # @param [RVGP::Base::Reconciler] reconciler
       #    see {RVGP::Base::JournalValidation#reconciler}
       def initialize(reconciler)
         super()

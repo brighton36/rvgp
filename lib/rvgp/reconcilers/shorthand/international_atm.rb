@@ -139,12 +139,12 @@ module RVGP
                                                                               operation: :per_lot,
                                                                               right: remitted) }
 
-          RVGP::Base::Reconciler::Posting.new from_posting.line_number,
-                                              date: from_posting.date,
-                                              description: from_posting.description,
-                                              from: from_posting.from,
-                                              tags: from_posting.tags,
-                                              targets: targets.reverse
+          RVGP::Reconcilers::YamlReconciler::Posting.new from_posting.line_number,
+                                                         date: from_posting.date,
+                                                         description: from_posting.description,
+                                                         from: from_posting.from,
+                                                         tags: from_posting.tags,
+                                                         targets: targets.reverse
         end
       end
     end

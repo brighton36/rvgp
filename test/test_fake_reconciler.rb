@@ -8,19 +8,19 @@ require_relative '../lib/rvgp/fakers/fake_reconciler'
 
 # Minitest class, used to test RVGP::Fakers::FakeReconciler
 class TestFakeReconciler < Minitest::Test
-  def test_basic_reconciler_with_format_path
+  def test_basic_reconciler_with_input_options_path
     reconciler = Psych.load RVGP::Fakers::FakeReconciler.basic_checking(
       label: 'Personal AcmeBank:Checking (2020)',
       input_path: '2020-personal-basic-checking.csv',
       output_path: '2020-personal-basic-checking.journal',
-      format_path: 'config/csv-format-acme-checking.yml',
+      input_options_path: 'config/csv-format-acme-checking.yml',
       income: incomes,
       expense: expenses
     )
 
     assert_equal 'Personal:Assets:AcmeBank:Checking', reconciler['from']
     assert_equal 'Personal AcmeBank:Checking (2020)', reconciler['label']
-    assert_equal 'config/csv-format-acme-checking.yml', reconciler['format'].path
+    assert_equal 'config/csv-format-acme-checking.yml', reconciler['input_options'].path
     assert_equal '2020-personal-basic-checking.csv', reconciler['input']
     assert_equal '2020-personal-basic-checking.journal', reconciler['output']
     assert_nil reconciler['balances']
@@ -29,7 +29,7 @@ class TestFakeReconciler < Minitest::Test
     assert_equal expenses + [{ 'match' => '/.*/', 'to' => 'Personal:Expenses:Unknown' }], reconciler['expense']
   end
 
-  def test_basic_reconciler_without_format
+  def test_basic_reconciler_without_input_options
     reconciler = Psych.load RVGP::Fakers::FakeReconciler.basic_checking(
       label: 'Personal AcmeBank:Checking (2020)',
       input_path: '2020-personal-basic-checking.csv',
@@ -38,10 +38,10 @@ class TestFakeReconciler < Minitest::Test
       expense: expenses
     )
 
-    assert_equal true, reconciler['format']['headers']
-    assert_equal true, reconciler['format']['reverse_order']
-    assert_equal '$', reconciler['format']['default_currency']
-    assert_equal %w[date amount description], reconciler['format']['fields'].keys
+    assert_equal true, reconciler['input_options']['headers']
+    assert_equal true, reconciler['input_options']['reverse']
+    assert_equal '$', reconciler['input_options']['default_currency']
+    assert_equal %w[date amount description], reconciler['input_options']['fields'].keys
   end
 
   private

@@ -1,7 +1,10 @@
 # frozen_string_literal: true
 
 require 'psych'
+require 'csv'
 require 'pathname'
+
+require_relative '../journal'
 
 Psych.add_builtin_type('proc') { |_, val| RVGP::Utilities::Yaml::PsychProc.new val }
 Psych.add_builtin_type('include') { |_, val| RVGP::Utilities::Yaml::PsychInclude.new val }

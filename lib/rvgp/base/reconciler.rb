@@ -15,44 +15,6 @@ module RVGP
     class Reconciler
       include RVGP::Utilities
 
-      # @!visibility private
-      # This class exists as an intermediary class, mostly to support the source
-      # formats of both .csv and .journal files, without forcing one conform to the
-      # other.
-      class Posting
-        attr_accessor :line_number, :date, :effective_date, :description, :commodity, :complex_commodity, :from, :to,
-                      :tags, :targets
-
-        def initialize(line_number, opts = {})
-          @line_number = line_number
-          @date = opts[:date]
-          @effective_date = opts[:effective_date]
-          @description = opts[:description]
-          @commodity = opts[:commodity]
-          @complex_commodity = opts[:complex_commodity]
-          @from = opts[:from]
-          @to = opts[:to]
-          @tags = opts[:tags] || []
-          @targets = opts[:targets] || []
-        end
-
-        # @!visibility private
-        def to_journal_posting
-          transfers = targets.map do |target|
-            RVGP::Journal::Posting::Transfer.new target[:to],
-                                                 effective_date: target[:effective_date],
-                                                 commodity: target[:commodity],
-                                                 complex_commodity: target[:complex_commodity],
-                                                 tags: target[:tags]&.map(&:to_tag)
-          end
-
-          RVGP::Journal::Posting.new date,
-                                     description,
-                                     tags: tags&.map(&:to_tag),
-                                     transfers: transfers + [RVGP::Journal::Posting::Transfer.new(from)]
-        end
-      end
-
       REQUIRED_ATTRS = %i[taskname label file output_file input_file]
       attr_reader(*REQUIRED_ATTRS, :disable_checks, :input_options)
 
@@ -146,7 +108,7 @@ module RVGP
 
       # Returns an array of all of the reconcilers found in the specified path.
       # @param [String] directory_path The path containing your yml reconciler files
-      # @return [Array<RVGP::Reconcilers::CsvReconciler, RVGP::Reconcilers::JournalReconciler>]
+      # @return [Array<RVGP::Base::Reconciler]
       #   An array of parsed reconcilers.
       def self.all(directory_path)
         # NOTE: I'm not crazy about this method. Probably we should have
@@ -162,7 +124,7 @@ module RVGP
           # web addresses eventually. So, probably this design pattern would
           # have to just be reconsidered entirely around that time.
           if File.extname(filename).downcase == '.yml'
-            YamlReconciler
+            RVGP::Reconcilers::YamlReconciler
           else # .rb
             require fullpath
             begin
