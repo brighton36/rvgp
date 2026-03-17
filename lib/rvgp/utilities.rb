@@ -5,7 +5,7 @@ module RVGP
   # codepaths, that have little in common, save for their general utility.
   module Utilities
     class CsvObject
-      # TODO Let's see where this object before we document it... I'm not sure what we want this to be
+      # TODO Let's see where this object goes before we document it... I'm not sure what we want this to be
       # yet.
       HEADER_SPLITTER = /(?:[A-Z]?[a-z]+|[A-Z]+)/
 
@@ -41,10 +41,13 @@ module RVGP
           from_string(File.read(path, encoding:), **)
         end
 
-        def from_string(str, decorator: nil, skip_lines: nil, trim_lines: nil, reverse: false, **)
+        def from_string(str, decorator: nil, skip_lines: nil, trim_lines: nil, reverse: false, sort_by: nil, **)
           CSV.parse(skip_and_trim(str, skip_lines:, trim_lines:), **)
              .map { |row| new(row, &decorator) }
-             .tap { |rows| rows.reverse! if reverse }
+             .tap do |rows|
+               rows.sort_by!(&sort_by) if sort_by
+               rows.reverse! if reverse
+             end
         end
 
         private
@@ -91,7 +94,7 @@ module RVGP
         d = Date.new dates.first.year, dates.first.month, 1 # start_at
         while d <= Date.new(dates.last.year, dates.last.month, 1) # end_at
           ret << d
-          d = d >> 1
+          d >>= 1
         end
       end
       ret

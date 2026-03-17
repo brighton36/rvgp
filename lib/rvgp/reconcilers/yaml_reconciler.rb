@@ -442,7 +442,7 @@ module RVGP
           @cash_back_to = cash_back[:to]
         end
 
-        super(yaml.path,
+        super(file: yaml.path,
               label: yaml[:label],
               dependencies: yaml.dependencies,
               disable_checks: yaml.key?(:disable_checks) ? yaml[:disable_checks]&.map(&:to_sym) : nil,
@@ -657,8 +657,8 @@ module RVGP
         nil
       end
 
-      def self.all(from_path)
-        yaml = RVGP::Utilities::Yaml.new from_path, RVGP.app.config.project_path
+      def self.all(file:)
+        yaml = RVGP::Utilities::Yaml.new file, RVGP.app.config.project_path
 
         raise MissingFields.new, :input unless yaml.key? :input
 

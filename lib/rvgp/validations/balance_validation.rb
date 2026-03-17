@@ -20,7 +20,7 @@ module RVGP
       # matches the ledger/hledger balance, on that date. (and if it doesnt,
       # fires an error)
       def validate
-        if reconciler.balances.nil? || reconciler.balances.empty?
+        if !reconciler.respond_to?(:balances) || !reconciler.balances || reconciler.balances.empty?
           warning! 'No balance checkpoints found.'
         else
           is_account_valid = true
