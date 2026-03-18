@@ -5,9 +5,9 @@ module RVGP
   # codepaths, that have little in common, save for their general utility.
   module Utilities
     class CsvObject
+      include RVGP::Utilities
       # TODO Let's see where this object goes before we document it... I'm not sure what we want this to be
       # yet.
-      HEADER_SPLITTER = /(?:[A-Z]?[a-z]+|[A-Z]+)/
 
       def initialize(row, &)
         if row.is_a? Array
@@ -28,10 +28,6 @@ module RVGP
 
       def respond_to_missing?(sym, include_priv)
         instance_variable_defined?("@#{sym}") || super
-      end
-
-      def snake_case(str)
-        str.scan(HEADER_SPLITTER).map(&:downcase).join('_')
       end
 
       class << self
@@ -114,6 +110,14 @@ module RVGP
           end
         end.reduce(:|))
       end
+    end
+
+    def snake_case(str, map_using = :downcase, join_with = '_')
+      str.scan(/(?:[A-Z]?[a-z]+|[A-Z]+)/).map(&map_using.to_proc).join(join_with)
+    end
+
+    def camel_case(str)
+      snake_case(str, :capitalize, nil)
     end
   end
 end

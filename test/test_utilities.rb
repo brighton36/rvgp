@@ -42,4 +42,12 @@ class TestUtilities < Minitest::Test
     assert_equal %w[2021-01-01 2021-02-01].collect(&string_to_date),
                  months_through(Date.new(2021, 1, 10), Date.new(2021, 2, 10))
   end
+
+  def test_snake_case
+    assert_equal 'whatever_the_word_is', snake_case('whatever-the word Is')
+  end
+
+  def test_camel_case
+    assert_equal 'WhateverTheWordIs', camel_case('whatever-the word Is')
+  end
 end
