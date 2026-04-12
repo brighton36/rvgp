@@ -318,10 +318,6 @@ module RVGP
     # @attr_reader [String] output_file The contents of the yaml :output parameter (see above)
     # @attr_reader [Date] starts_on The contents of the yaml :starts_on parameter (see above)
     # @attr_reader [Date] ends_on The contents of the yaml :ends_on parameter (see above)
-    # @attr_reader [Hash<String, String>] balances A hash of dates (in 'YYYY-MM-DD') to commodities (as string)
-    #                                              corresponding to the balance that are expected on those dates.
-    #                                              See {RVGP::Validations::BalanceValidation} for details on this
-    #                                              feature.
     # @attr_reader [String] from The contents of the yaml :from parameter (see above)
     # @attr_reader [Array<Hash>] income_rules The contents of the yaml :income_rules parameter (see above)
     # @attr_reader [Array<Hash>] expense_rules The contents of the yaml :expense_rules parameter (see above)
@@ -396,7 +392,7 @@ module RVGP
         end
       end
 
-      attr_reader :starts_on, :ends_on, :balances, :from, :income_rules, :expense_rules, :tag_accounts,
+      attr_reader :starts_on, :ends_on, :from, :income_rules, :expense_rules, :tag_accounts,
                   :cash_back, :cash_back_to, :input_options
 
       # Create a Reconciler from the provided yaml
@@ -413,7 +409,6 @@ module RVGP
         @income_rules = yaml[:income]
         @expense_rules = yaml[:expense]
         @transform_commodities = yaml[:transform_commodities] || {}
-        @balances = yaml[:balances]
 
         if RVGP.app
           @output_file = RVGP.app.config.build_path format('journals/%s', yaml[:output])
@@ -446,7 +441,8 @@ module RVGP
               label: yaml[:label],
               dependencies: yaml.dependencies,
               disable_checks: yaml.key?(:disable_checks) ? yaml[:disable_checks]&.map(&:to_sym) : nil,
-              input_options:)
+              input_options:,
+              balances: yaml[:balances])
 
         if input_type == :csv
           missing_fields = if input_options

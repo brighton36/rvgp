@@ -27,7 +27,9 @@ module RVGP
           cite_balances = reconciler.balances.map do |d, expected_balance_s|
             expected_balance = expected_balance_s.to_commodity
 
-            balances_on_day = pta.balance format('^%s$', reconciler.from),
+            from = reconciler.respond_to?(:from) ? reconciler.from : reconciler.class.defaults[:from]
+
+            balances_on_day = pta.balance format('^%s$', from),
                                           depth: 1,
                                           end: d.to_s,
                                           file: RVGP.app.config.project_journal_path

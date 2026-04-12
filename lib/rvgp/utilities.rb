@@ -6,6 +6,7 @@ module RVGP
   module Utilities
     class CsvObject
       include RVGP::Utilities
+
       # TODO Let's see where this object goes before we document it... I'm not sure what we want this to be
       # yet.
 
@@ -53,17 +54,33 @@ module RVGP
           end_offset = str.length
 
           if trim_lines
-            trim_lines_regex = string_to_regex trim_lines.to_s
-            trim_lines_regex ||= /(?:[^\n]*\n?){0,#{trim_lines}}\Z/m
-            match = trim_lines_regex.match str
+            match = case trim_lines
+                    when Regexp
+                      trim_lines
+                    when String
+                      # TODO This shouldn't be here, do this lower in the call stack:
+                      string_to_regex trim_lines.to_s
+                    when Numeric
+                      /(?:[^\n]*\n?){0,#{trim_lines}}\Z/m
+                    else
+                      raise "Unsupported trim_lines: #{trim_lines.inspect}"
+                    end.match str
             end_offset = match.begin 0 if match
             return String.new if end_offset.zero?
           end
 
           if skip_lines
-            skip_lines_regex = string_to_regex skip_lines.to_s
-            skip_lines_regex ||= /(?:[^\n]*\n){0,#{skip_lines}}/m
-            match = skip_lines_regex.match str
+            match = case skip_lines
+                    when Regexp
+                      skip_lines
+                    when String
+                      # TODO This shouldn't be here, do this lower in the call stack:
+                      string_to_regex skip_lines.to_s
+                    when Numeric
+                      /(?:[^\n]*\n){0,#{skip_lines}}/m
+                    else
+                      raise "Unsupported skip_lines: #{skip_lines.inspect}"
+                    end.match str
             start_offset = match.end 0 if match
           end
 

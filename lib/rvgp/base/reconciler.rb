@@ -9,21 +9,25 @@ module RVGP
     # @attr_reader [String] input_file The contents of the yaml :input parameter (see above)
     # @attr_reader [String] output_file The contents of the yaml :output parameter (see above)
     # @attr_reader [String] taskname The taskname to use by rake, for this reconciler. Defaults to
-    # the :file's basename
+    # @attr_reader [Hash] input_options These are (usually shared) formatting directives to use in the
+    # transformation of the input file, into the intermediate format used to construct a posting
+    # @attr_reader [Hash<String, String>] balances A hash of dates (in 'YYYY-MM-DD') to commodities (as string)
+    # corresponding to the balance that are expected on those dates. See
+    # {RVGP::Validations::BalanceValidation} for details on this feature.
     # @attr_reader [Array<String>] disable_checks The JournalValidations that are disabled on this reconciler (see
-    #                                             above)
+    # above)
     class Reconciler
       include RVGP::Utilities
 
       REQUIRED_ATTRS = %i[taskname label file output_file input_file]
-      attr_reader(*REQUIRED_ATTRS, :disable_checks, :input_options)
+      attr_reader(*REQUIRED_ATTRS, :disable_checks, :input_options, :balances)
 
       # @!visibility private
       HEADER = ";;; %s --- Description -*- mode: ledger; -*-\n; vim: syntax=ledger"
 
       # Create a Reconciler
       def initialize(file:, label: nil, disable_checks: nil, dependencies: nil, taskname: nil,
-                     input_file: nil, input_options: nil, output_file: nil)
+                     input_file: nil, input_options: nil, output_file: nil, balances: nil)
         @file = file
         @disable_checks = disable_checks || []
         @dependencies = dependencies || []
@@ -45,6 +49,8 @@ module RVGP
         unless missing_attrs.empty?
           raise StandardError, format('Missing required attributes %s', missing_attrs.join(', '))
         end
+
+        @balances = balances
       end
 
       # @!visibility private

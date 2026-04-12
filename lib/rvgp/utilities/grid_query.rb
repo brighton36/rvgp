@@ -180,7 +180,10 @@ module RVGP
         @data[series_name] ||= {}
 
         colname_to_value.each do |colname, value|
-          raise StandardError, 'Unimplemented. How to merge?' if @data[series_name].key? colname
+          if @data[series_name].key? colname
+            raise StandardError, "Unimplemented. How to merge? series_name: #{series_name.inspect} " \
+                                 "colname: #{colname.inspect} value: #{value.inspect}"
+          end
 
           @data[series_name][colname] = value
         end
