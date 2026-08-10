@@ -31,6 +31,10 @@ module RVGP
         instance_variable_defined?("@#{sym}") || super
       end
 
+      def to_h
+        instance_variables.to_h { |iv| [iv.to_s.tr('@', '').to_sym, instance_variable_get(iv)] }
+      end
+
       class << self
         include RVGP::Utilities
 
@@ -130,7 +134,7 @@ module RVGP
     end
 
     def snake_case(str, map_using = :downcase, join_with = '_')
-      str.scan(/(?:[A-Z]?[a-z]+|[A-Z]+)/).map(&map_using.to_proc).join(join_with)
+      str.to_s.scan(/(?:[A-Z]?[a-z]+|[A-Z]+)/).map(&map_using.to_proc).join(join_with)
     end
 
     def camel_case(str)

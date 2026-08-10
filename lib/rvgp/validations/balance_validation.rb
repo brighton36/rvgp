@@ -27,6 +27,8 @@ module RVGP
           cite_balances = reconciler.balances.map do |d, expected_balance_s|
             expected_balance = expected_balance_s.to_commodity
 
+            # TODO : I don't like the interface here, the .from is probably close to what we want.
+            # But the new reconciler syntax doesn't feature that (yet?) not sure what we want here
             from = reconciler.respond_to?(:from) ? reconciler.from : reconciler.class.defaults[:from]
 
             balances_on_day = pta.balance format('^%s$', from),

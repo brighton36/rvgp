@@ -326,8 +326,6 @@ module RVGP
     #                                 above)
     # @attr_reader [String] cash_back_to The contents of the :to parameter, inside the yaml's :cash_back parameter (see
     #                                 above)
-    # @attr_reader [Hash] input_options These are (usually shared) formatting directives to use in the
-    # transformation of the input file, into the intermediate format used to construct a posting
     # @option input_options [Hash<String, <Proc,String,Integer>>] fields_format A hash of field names, to their location in
     #   the input file. Supported key names include: date, effective_date, amount, description. These keys can map
     #   to either a 'string' type (indicating which column of the input file contains the key's value). An Integer

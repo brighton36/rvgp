@@ -54,7 +54,7 @@ describe RVGP::Utilities::CsvObject do
       csv_file.unlink
     end
 
-    describe ':sort_by' do
+    describe '.from_string(:sort_by)' do
       it 'sorts simple csv' do
         rows = RVGP::Utilities::CsvObject.from_string(
           simple_header_csv,
@@ -68,6 +68,13 @@ describe RVGP::Utilities::CsvObject do
         expect(rows[1].date).must_equal '2025-01-01'
         expect(rows[1].description).must_equal 'Lawn Mower'
         expect(rows[1].amount).must_equal '$300.00'
+      end
+    end
+
+    describe '#to_h' do
+      it 'returns key-symbolized hash' do 
+        h = { date: '2025-01-02', description: 'Gasoline', amount: '$10.00' }
+        expect(RVGP::Utilities::CsvObject.new(h).to_h).must_equal h
       end
     end
 

@@ -42,6 +42,7 @@ module RVGP
           s.add_development_dependency 'minitest', '~> 5.16.0'
           s.add_development_dependency 'yard', '~> 0.9.34'
           s.add_development_dependency 'redcarpet', '~> 3.6.0'
+          s.add_development_dependency 'faker', '~> 3.5.0'
 
           s.add_dependency 'rake'
           s.add_dependency 'csv'
@@ -51,8 +52,7 @@ module RVGP
           s.add_dependency 'reline'
           s.add_dependency 'open3', '~> 0.2.1'
           s.add_dependency 'shellwords', '~> 0.2.0'
-          s.add_dependency 'google-apis-sheets_v4', '~> 0.41.0'
-          s.add_dependency 'faker', '~> 3.5.0'
+          s.add_dependency 'google-apis-sheets_v4'
           s.add_dependency 'finance', '~> 2.0.0'
           s.add_dependency 'tty-table', '~> 0.12.0'
           s.add_dependency 'nokogiri', '~> 1.18'
